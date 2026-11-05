@@ -10,6 +10,8 @@ export interface PickupLocation {
   coordinates: GeoCoordinates;
   senderName?: string;
   senderPhone?: string;
+  riderNote?: string;
+  imageUrl?: string;
   isDefault?: boolean;
 }
 
@@ -18,6 +20,7 @@ export interface RecipientInfo {
   phoneNumber: string;
   alternatePhone?: string;
   notes?: string;
+  imageUrl?: string;
 }
 
 export interface DropoffLocation {
@@ -31,6 +34,7 @@ export interface DropoffStop {
   recipient: RecipientInfo;
   dropoff: DropoffLocation;
   parcelNote?: string;
+  imageUrl?: string;
 }
 
 export interface ParcelInfo {

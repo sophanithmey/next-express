@@ -4,7 +4,8 @@ import React from 'react';
 import { DropoffStop, RecipientInfo, DropoffLocation } from '@/features/booking/types/booking-types';
 import { Input } from '../../atoms/input';
 import { Label } from '../../atoms/label';
-import { Navigation, User, Phone, MapPin, Trash2, FileText } from 'lucide-react';
+import { RiderNoteInput } from '../../molecules/rider-note-input';
+import { Navigation, User, Phone, MapPin, Trash2 } from 'lucide-react';
 
 interface DropoffStopItemProps {
   stop: DropoffStop;
@@ -144,25 +145,24 @@ export function DropoffStopItem({
         {addressError && <p className="text-xs font-medium text-rose-600">{addressError}</p>}
       </div>
 
-      {/* Rider Note (Optional) */}
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <Label htmlFor={`rider-note-${index}`} className="text-xs text-slate-600">
-            Rider Note
-          </Label>
-          <span className="text-[10px] text-slate-400 font-medium">(Optional)</span>
-        </div>
-        <Input
-          id={`rider-note-${index}`}
-          placeholder="e.g. Call before arrival, leave at security gate, house #12B"
-          value={stop.recipient.notes || ''}
-          onChange={(e) =>
-            onUpdateStop(index, { ...stop.recipient, notes: e.target.value }, stop.dropoff)
-          }
-          leftIcon={<FileText className="h-4 w-4 text-slate-400" />}
-          className="h-9 text-xs"
-        />
-      </div>
+      {/* Rider Note (Optional) with Photo Upload */}
+      <RiderNoteInput
+        id={`rider-note-${index}`}
+        label="Destination Rider Note"
+        placeholder="e.g. Call before arrival, leave at security gate, house #12B"
+        noteValue={stop.recipient.notes || ''}
+        imageValue={stop.imageUrl || stop.recipient.imageUrl}
+        onChangeNote={(note) =>
+          onUpdateStop(index, { ...stop.recipient, notes: note }, stop.dropoff)
+        }
+        onChangeImage={(img) =>
+          onUpdateStop(
+            index,
+            { ...stop.recipient, imageUrl: img },
+            { ...stop.dropoff }
+          )
+        }
+      />
     </div>
   );
 }
