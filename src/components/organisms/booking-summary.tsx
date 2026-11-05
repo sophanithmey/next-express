@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import {
   PickupLocation,
   DropoffLocation,
+  DropoffStop,
   RecipientInfo,
   ParcelInfo,
   CodInfo,
@@ -25,6 +26,7 @@ import {
 interface BookingSummaryProps {
   pickup: PickupLocation;
   dropoff: DropoffLocation;
+  dropoffs?: DropoffStop[];
   recipient: RecipientInfo;
   parcel: ParcelInfo;
   cod: CodInfo;
@@ -35,6 +37,7 @@ interface BookingSummaryProps {
 export function BookingSummary({
   pickup,
   dropoff,
+  dropoffs,
   recipient,
   parcel,
   cod,
@@ -43,6 +46,7 @@ export function BookingSummary({
 }: BookingSummaryProps) {
   const [isMobileExpanded, setIsMobileExpanded] = useState(false);
   const deliveryFee = feeQuote?.totalDeliveryFee ?? 1.75;
+  const isMultiDrop = dropoffs && dropoffs.length > 1;
 
   return (
     <div className="w-full">
@@ -70,15 +74,39 @@ export function BookingSummary({
 
           <div className="flex items-start gap-2.5">
             <Navigation className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <span className="text-[11px] font-medium text-slate-400 block uppercase tracking-wider">
-                Drop-off Destination
+                {isMultiDrop
+                  ? `Drop-off Destinations (${dropoffs.length} Stops)`
+                  : 'Drop-off Destination'}
               </span>
-              <p className="font-semibold text-slate-900 truncate">
-                {dropoff.address || 'Enter destination address'}
-              </p>
-              <p className="text-slate-500 text-[11px]">
+              {isMultiDrop ? (
+                <div className="mt-1 space-y-1">
+                  {dropoffs.map((stop, idx) => (
+                    <div
+                      key={stop.id || idx}
+                      className="text-[11px] text-slate-700 flex items-start gap-1"
+                    >
+                      <span className="font-bold text-emerald-700 font-mono flex-shrink-0">
+                        {idx + 1}.
+                      </span>
+                      <span className="font-semibold text-slate-900 truncate">
+                        {stop.recipient.name || 'Recipient'}:
+                      </span>
+                      <span className="text-slate-500 truncate">
+                        {stop.dropoff.address || 'Address pending'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="font-semibold text-slate-900 truncate">
+                  {dropoff.address || 'Enter destination address'}
+                </p>
+              )}
+              <p className="text-slate-500 text-[11px] mt-0.5">
                 Est. Distance: ~{feeQuote?.distanceKm || 3.5} km
+                {isMultiDrop && ` • ${dropoffs.length} sequential stops`}
               </p>
             </div>
           </div>
@@ -180,7 +208,7 @@ export function BookingSummary({
             <div className="flex justify-between">
               <span className="text-slate-400">Drop-off:</span>
               <span className="font-semibold text-slate-800 truncate max-w-[200px]">
-                {dropoff.address || 'Pending'}
+                {isMultiDrop ? `${dropoffs.length} Destinations (Multi-Drop)` : dropoff.address || 'Pending'}
               </span>
             </div>
             <div className="flex justify-between">

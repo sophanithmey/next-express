@@ -26,6 +26,7 @@ function BookingSuccessContent() {
   const dropoff = searchParams.get('dropoff') || 'BKK1, Khan Boeng Keng Kang, Phnom Penh';
   const recipient = searchParams.get('recipient') || 'Sokha Chan';
   const cod = searchParams.get('cod') || '0';
+  const stops = searchParams.get('stops') || '1';
 
   const [copied, setCopied] = useState(false);
   const [copiedMsg, setCopiedMsg] = useState(false);
@@ -98,9 +99,16 @@ function BookingSuccessContent() {
 
           <div className="flex items-start gap-2.5">
             <Navigation className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-            <div className="min-w-0">
-              <span className="text-[11px] text-slate-400 block font-medium">Drop-off Destination</span>
-              <p className="font-semibold text-slate-900 truncate">{dropoff}</p>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-slate-400 block font-medium">Drop-off Destination</span>
+                {parseInt(stops) > 1 && (
+                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-300">
+                    {stops} Stops (Multi-Drop)
+                  </span>
+                )}
+              </div>
+              <p className="font-semibold text-slate-900 truncate mt-0.5">{dropoff}</p>
             </div>
           </div>
 

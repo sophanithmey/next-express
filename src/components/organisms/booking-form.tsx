@@ -5,6 +5,7 @@ import {
   BookingFormData,
   PickupLocation,
   DropoffLocation,
+  DropoffStop,
   RecipientInfo,
   ParcelInfo,
   CodInfo,
@@ -21,6 +22,7 @@ interface BookingFormProps {
   onChangePickup: (pickup: PickupLocation) => void;
   onChangeDropoff: (dropoff: DropoffLocation) => void;
   onChangeRecipient: (recipient: RecipientInfo) => void;
+  onChangeDropoffs?: (stops: DropoffStop[]) => void;
   onChangeParcel: (parcel: ParcelInfo) => void;
   onChangeCod: (cod: CodInfo) => void;
   onSubmit: () => void;
@@ -33,6 +35,7 @@ export function BookingForm({
   onChangePickup,
   onChangeDropoff,
   onChangeRecipient,
+  onChangeDropoffs,
   onChangeParcel,
   onChangeCod,
   onSubmit,
@@ -40,6 +43,7 @@ export function BookingForm({
   errors,
 }: BookingFormProps) {
   const [modalMode, setModalMode] = useState<'pickup' | 'dropoff' | null>(null);
+  const [activeStopIndex, setActiveStopIndex] = useState(0);
 
   return (
     <>
@@ -48,7 +52,7 @@ export function BookingForm({
           e.preventDefault();
           onSubmit();
         }}
-        className="space-y-5"
+        className='space-y-5'
       >
         {/* Section A: Pickup Location */}
         <PickupSection
@@ -58,13 +62,18 @@ export function BookingForm({
           error={errors['pickup.address']}
         />
 
-        {/* Section B: Drop-off Destination & Recipient */}
+        {/* Section B: Drop-off Destinations & Recipients (Multi-Drop) */}
         <DropoffSection
           dropoff={formData.dropoff}
           recipient={formData.recipient}
+          dropoffs={formData.dropoffs}
           onChangeDropoff={onChangeDropoff}
           onChangeRecipient={onChangeRecipient}
-          onOpenMap={() => setModalMode('dropoff')}
+          onChangeDropoffs={onChangeDropoffs}
+          onOpenMap={(index = 0) => {
+            setActiveStopIndex(index);
+            setModalMode('dropoff');
+          }}
           errors={errors}
         />
 
@@ -78,18 +87,18 @@ export function BookingForm({
         />
 
         {/* Primary Action: Confirm Booking */}
-        <div className="pt-2">
+        <div className='pt-2'>
           <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            className="w-full py-4 text-base font-bold shadow-md hover:shadow-lg transition-all"
+            type='submit'
+            variant='primary'
+            size='lg'
+            className='w-full py-4 text-base font-bold shadow-md hover:shadow-lg transition-all'
             isLoading={isSubmitting}
-            rightIcon={<ArrowRight className="h-5 w-5" />}
+            rightIcon={<ArrowRight className='h-5 w-5' />}
           >
             Confirm Booking
           </Button>
-          <p className="text-center text-xs text-slate-400 mt-2.5">
+          <p className='text-center text-xs text-slate-400 mt-2.5'>
             Instant courier dispatch upon confirmation • No upfront fees
           </p>
         </div>
@@ -99,15 +108,46 @@ export function BookingForm({
       <LocationPickerModal
         isOpen={modalMode !== null}
         onClose={() => setModalMode(null)}
-        title={modalMode === 'pickup' ? 'Select Pickup Hub (Demo)' : 'Select Drop-off Zone (Demo)'}
+        title={
+          modalMode === 'pickup'
+            ? 'Select Pickup Hub (Demo)'
+            : `Select Drop-off Destination ${activeStopIndex + 1} (Demo)`
+        }
         selectedAddress={
-          modalMode === 'pickup' ? formData.pickup.address : formData.dropoff.address
+          modalMode === 'pickup'
+            ? formData.pickup.address
+            : formData.dropoffs?.[activeStopIndex]?.dropoff.address ||
+              formData.dropoff.address
         }
         onSelect={(loc) => {
           if (modalMode === 'pickup') {
             onChangePickup(loc);
           } else {
-            onChangeDropoff({ address: loc.address, coordinates: loc.coordinates });
+            if (formData.dropoffs && formData.dropoffs.length > 0) {
+              const nextStops = formData.dropoffs.map((s, idx) =>
+                idx === activeStopIndex
+                  ? {
+                      ...s,
+                      dropoff: {
+                        address: loc.address,
+                        coordinates: loc.coordinates,
+                      },
+                    }
+                  : s
+              );
+              onChangeDropoffs?.(nextStops);
+              if (activeStopIndex === 0) {
+                onChangeDropoff({
+                  address: loc.address,
+                  coordinates: loc.coordinates,
+                });
+              }
+            } else {
+              onChangeDropoff({
+                address: loc.address,
+                coordinates: loc.coordinates,
+              });
+            }
           }
         }}
       />

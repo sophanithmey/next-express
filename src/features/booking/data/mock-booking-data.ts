@@ -69,10 +69,12 @@ export const SAMPLE_RECIPIENTS: RecipientRecord[] = [
 
 export function calculateMockFee(
   pickupCoords?: GeoCoordinates,
-  dropoffCoords?: GeoCoordinates
+  dropoffCoords?: GeoCoordinates,
+  additionalStopsCount: number = 0
 ): BookingFeeQuote {
   if (!pickupCoords || !dropoffCoords) {
-    return { baseFee: 1.25, distanceKm: 3.5, totalDeliveryFee: 1.75 };
+    const extra = Math.max(0, additionalStopsCount) * 0.75;
+    return { baseFee: 1.25, distanceKm: 3.5, totalDeliveryFee: Math.round((1.75 + extra) * 100) / 100 };
   }
   // Rough distance calculation in km
   const dx = (pickupCoords.lng - dropoffCoords.lng) * 111.32 * Math.cos((pickupCoords.lat * Math.PI) / 180);
@@ -80,7 +82,8 @@ export function calculateMockFee(
   const distanceKm = Math.max(1, Math.round(Math.sqrt(dx * dx + dy * dy) * 10) / 10);
   const baseFee = 1.25;
   const distanceCharge = Math.max(0, distanceKm - 2) * 0.25;
-  const total = Math.round((baseFee + distanceCharge) * 100) / 100;
+  const additionalStopCharge = Math.max(0, additionalStopsCount) * 0.75;
+  const total = Math.round((baseFee + distanceCharge + additionalStopCharge) * 100) / 100;
   return { baseFee, distanceKm, totalDeliveryFee: total };
 }
 

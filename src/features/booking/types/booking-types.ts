@@ -26,6 +26,13 @@ export interface DropoffLocation {
   coordinates: GeoCoordinates;
 }
 
+export interface DropoffStop {
+  id: string;
+  recipient: RecipientInfo;
+  dropoff: DropoffLocation;
+  parcelNote?: string;
+}
+
 export interface ParcelInfo {
   description?: string;
   sellerOrderRef?: string;
@@ -54,6 +61,7 @@ export interface BookingFormData {
   senderName?: string;
   senderPhone?: string;
   dropoff: DropoffLocation;
+  dropoffs?: DropoffStop[];
   parcel: ParcelInfo;
   cod: CodInfo;
 }
@@ -61,6 +69,7 @@ export interface BookingFormData {
 export interface CreateBookingPayload {
   pickup: PickupLocation;
   dropoff: DropoffLocation;
+  dropoffs?: DropoffStop[];
   recipient: RecipientInfo;
   parcel: ParcelInfo;
   cod: CodInfo;
@@ -75,6 +84,7 @@ export interface BookingOrder {
   status: 'pending' | 'confirmed' | 'assigned' | 'out_for_delivery' | 'delivered' | 'cancelled';
   pickup: PickupLocation;
   dropoff: DropoffLocation;
+  dropoffs?: DropoffStop[];
   recipient: RecipientInfo;
   parcel: ParcelInfo;
   cod: CodInfo;

@@ -6,6 +6,7 @@ import {
   BookingFormData,
   PickupLocation,
   DropoffLocation,
+  DropoffStop,
   RecipientInfo,
   ParcelInfo,
   CodInfo,
@@ -44,6 +45,20 @@ export function BookingPageClient({ initialLocations = [] }: BookingPageClientPr
       phoneNumber: '012 998 877',
       notes: '',
     },
+    dropoffs: [
+      {
+        id: 'stop-1',
+        recipient: {
+          name: 'Sokha Chan',
+          phoneNumber: '012 998 877',
+          notes: '',
+        },
+        dropoff: {
+          address: 'BKK1, Khan Boeng Keng Kang, Phnom Penh',
+          coordinates: { lat: 11.5512, lng: 104.9256 },
+        },
+      },
+    ],
     parcel: {
       description: 'Apparel / Retail Parcel',
       sellerOrderRef: 'LIVE-0914',
@@ -60,26 +75,47 @@ export function BookingPageClient({ initialLocations = [] }: BookingPageClientPr
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Live estimated delivery fee
+  // Live estimated delivery fee (accounting for extra stops)
   const feeQuote = useMemo(() => {
-    return calculateMockFee(formData.pickup.coordinates, formData.dropoff.coordinates);
-  }, [formData.pickup.coordinates, formData.dropoff.coordinates]);
+    const additionalStops = Math.max(0, (formData.dropoffs?.length || 1) - 1);
+    return calculateMockFee(
+      formData.pickup.coordinates,
+      formData.dropoff.coordinates,
+      additionalStops
+    );
+  }, [formData.pickup.coordinates, formData.dropoff.coordinates, formData.dropoffs]);
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.pickup.address.trim()) {
+    if (!formData.pickup.address?.trim()) {
       newErrors['pickup.address'] = 'Pickup address is required.';
     }
-    if (!formData.dropoff.address.trim()) {
-      newErrors['dropoff.address'] = 'Drop-off address is required.';
+
+    if (formData.dropoffs && formData.dropoffs.length > 0) {
+      formData.dropoffs.forEach((stop, idx) => {
+        if (!stop.recipient.name?.trim()) {
+          newErrors[`dropoffs.${idx}.name`] = `Recipient name for Destination ${idx + 1} is required.`;
+        }
+        if (!stop.recipient.phoneNumber?.trim() || stop.recipient.phoneNumber.length < 8) {
+          newErrors[`dropoffs.${idx}.phoneNumber`] = `Valid phone for Destination ${idx + 1} is required (at least 8 digits).`;
+        }
+        if (!stop.dropoff.address?.trim()) {
+          newErrors[`dropoffs.${idx}.address`] = `Drop-off address for Destination ${idx + 1} is required.`;
+        }
+      });
+    } else {
+      if (!formData.dropoff.address?.trim()) {
+        newErrors['dropoff.address'] = 'Drop-off address is required.';
+      }
+      if (!formData.recipient.name?.trim()) {
+        newErrors['recipient.name'] = 'Recipient full name is required.';
+      }
+      if (!formData.recipient.phoneNumber?.trim() || formData.recipient.phoneNumber.length < 8) {
+        newErrors['recipient.phoneNumber'] = 'Valid phone number is required (at least 8 digits).';
+      }
     }
-    if (!formData.recipient.name.trim()) {
-      newErrors['recipient.name'] = 'Recipient full name is required.';
-    }
-    if (!formData.recipient.phoneNumber.trim() || formData.recipient.phoneNumber.length < 8) {
-      newErrors['recipient.phoneNumber'] = 'Valid phone number is required (at least 8 digits).';
-    }
+
     if (formData.cod.isCod && (!formData.cod.amount || formData.cod.amount <= 0)) {
       newErrors['cod.amount'] = 'Please enter a COD amount greater than 0.';
     }
@@ -96,13 +132,19 @@ export function BookingPageClient({ initialLocations = [] }: BookingPageClientPr
 
     const ref = generateMockReference();
     const tracking = generateMockTracking();
+    const stopsCount = formData.dropoffs?.length || 1;
+    const dropoffSummary =
+      stopsCount > 1
+        ? `${formData.dropoff.address} (+${stopsCount - 1} more stop${stopsCount > 2 ? 's' : ''})`
+        : formData.dropoff.address;
 
     const query = new URLSearchParams({
       ref,
       tracking,
       pickup: formData.pickup.name || formData.pickup.address,
-      dropoff: formData.dropoff.address,
+      dropoff: dropoffSummary,
       recipient: formData.recipient.name,
+      stops: String(stopsCount),
       cod: formData.cod.isCod ? String(formData.cod.amount) : '0',
     });
 
@@ -157,6 +199,14 @@ export function BookingPageClient({ initialLocations = [] }: BookingPageClientPr
                 'recipient.phoneNumber': '',
               }));
             }}
+            onChangeDropoffs={(dropoffs) => {
+              setFormData((prev) => ({
+                ...prev,
+                dropoffs,
+                recipient: dropoffs[0]?.recipient || prev.recipient,
+                dropoff: dropoffs[0]?.dropoff || prev.dropoff,
+              }));
+            }}
             onChangeParcel={(parcel) => setFormData((prev) => ({ ...prev, parcel }))}
             onChangeCod={(cod) => {
               setFormData((prev) => ({ ...prev, cod }));
@@ -173,6 +223,7 @@ export function BookingPageClient({ initialLocations = [] }: BookingPageClientPr
           <BookingSummary
             pickup={formData.pickup}
             dropoff={formData.dropoff}
+            dropoffs={formData.dropoffs}
             recipient={formData.recipient}
             parcel={formData.parcel}
             cod={formData.cod}
