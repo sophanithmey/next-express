@@ -1,6 +1,5 @@
 import React from 'react';
 import { AppHeader } from '../organisms/app-header';
-import { AppSidebar } from '../organisms/app-sidebar';
 import { UserProfile } from '@/features/auth/types/auth-types';
 
 interface DashboardLayoutTemplateProps {
@@ -13,15 +12,11 @@ export function DashboardLayoutTemplate({
   children,
 }: DashboardLayoutTemplateProps) {
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50/50">
+    <div className="flex min-h-screen flex-col bg-slate-50/60 antialiased">
       <AppHeader user={user} />
-      <div className="flex flex-1">
-        <AppSidebar />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
-          {children}
-        </main>
-      </div>
+      <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full">
+        {children}
+      </main>
     </div>
   );
 }
-

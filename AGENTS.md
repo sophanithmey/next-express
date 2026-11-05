@@ -381,3 +381,4 @@ A feature is complete when:
 - Lint and production build pass when verification is requested.
 
 **Golden Rule: Build a simple, polished and maintainable product. Every screen and interaction must make the seller's delivery booking experience easier.**
+

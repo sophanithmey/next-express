@@ -63,44 +63,42 @@ export function RecipientInputGroup({
 
   return (
     <div ref={ref} className="relative flex-1 p-3.5 hover:bg-slate-50/80 transition-colors">
-      <label className="block text-[11px] font-semibold text-slate-400 tracking-tight uppercase leading-none mb-1.5">
-        Recipient &amp; Phone
-      </label>
-
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2">
-        <div className="relative flex-1">
-          <input
-            type="text"
-            value={recipient.name}
-            onChange={(e) => onChangeRecipient({ ...recipient, name: e.target.value })}
-            onFocus={() => setShowSuggestions(true)}
-            placeholder="Customer name"
-            className="w-full text-sm font-bold text-slate-900 placeholder:text-slate-300 placeholder:font-normal focus:outline-none bg-transparent"
-          />
-        </div>
-
-        <span className="hidden sm:inline text-slate-300 text-xs">/</span>
-
-        <div className="relative flex-1">
-          <input
-            type="tel"
-            value={recipient.phoneNumber}
-            onChange={(e) => onChangeRecipient({ ...recipient, phoneNumber: e.target.value })}
-            onFocus={() => setShowSuggestions(true)}
-            placeholder="012 998 877"
-            className="w-full text-sm font-bold text-slate-900 font-mono placeholder:text-slate-300 placeholder:font-normal focus:outline-none bg-transparent"
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between text-[11px] text-slate-400 mt-0.5">
-        <span className="truncate">{recipient.notes || 'Notes for driver (optional)'}</span>
+      <div className="flex items-center justify-between mb-1">
+        <label className="block text-[11px] font-semibold text-slate-400 tracking-tight uppercase leading-none">
+          Recipient Customer
+        </label>
         {matches.length > 0 && (
-          <span className="text-brand-600 font-semibold flex items-center gap-1 flex-shrink-0">
+          <span className="text-brand-600 font-semibold flex items-center gap-1 text-[10px]">
             <Sparkles className="h-3 w-3" />
-            <span>Match found</span>
+            <span>Autofill</span>
           </span>
         )}
+      </div>
+
+      {/* Primary Customer Name (Full Width, No Cramping) */}
+      <div className="flex items-center gap-1.5">
+        <input
+          type="text"
+          value={recipient.name}
+          onChange={(e) => onChangeRecipient({ ...recipient, name: e.target.value })}
+          onFocus={() => setShowSuggestions(true)}
+          placeholder="Recipient full name"
+          className="w-full text-sm font-bold text-slate-900 placeholder:text-slate-300 placeholder:font-normal focus:outline-none bg-transparent truncate"
+        />
+        <User className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+      </div>
+
+      {/* Secondary Phone Number & Notes (Full Width, Clear Mono) */}
+      <div className="flex items-center gap-1.5 mt-0.5">
+        <Phone className="h-3 w-3 text-slate-400 flex-shrink-0" />
+        <input
+          type="tel"
+          value={recipient.phoneNumber}
+          onChange={(e) => onChangeRecipient({ ...recipient, phoneNumber: e.target.value })}
+          onFocus={() => setShowSuggestions(true)}
+          placeholder="Phone: 012 998 877"
+          className="w-full text-xs font-semibold text-slate-600 font-mono placeholder:text-slate-300 placeholder:font-normal focus:outline-none bg-transparent truncate"
+        />
       </div>
 
       {showSuggestions && matches.length > 0 && (

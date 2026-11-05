@@ -22,7 +22,7 @@ export default function HomePage() {
               Create Express Booking
             </h1>
             <p className="text-xs text-slate-500">
-              Instant courier dispatch for daily customer deliveries. One form, no upfront hassle.
+              Instant dispatch for online shops and live sellers. No sign in required until review.
             </p>
           </div>
 

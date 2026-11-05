@@ -48,3 +48,4 @@ export function ParcelSection({ parcel, onChangeParcel }: ParcelSectionProps) {
     </FormSection>
   );
 }
+
