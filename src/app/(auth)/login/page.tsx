@@ -1,22 +1,31 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthLayout } from '@/components/templates/auth-layout';
 import { PhoneInput } from '@/components/molecules/phone-input';
 import { Button } from '@/components/atoms/button';
 import { FormField } from '@/components/molecules/form-field';
 import { ErrorMessage } from '@/components/molecules/error-message';
+import { useAuthState } from '@/features/auth/hooks/use-auth-state';
 import { ArrowRight, ShieldCheck, Truck } from 'lucide-react';
 
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect') || '';
+  const { isAuthenticated, isLoading: authLoading } = useAuthState();
 
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // If already authenticated, redirect straight to target or dashboard
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.replace(redirectUrl || '/dashboard');
+    }
+  }, [isAuthenticated, authLoading, redirectUrl, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,12 +64,20 @@ function LoginContent() {
     }
   };
 
+  if (authLoading) {
+    return (
+      <AuthLayout title="Merchant Sign In" subtitle="Checking session…">
+        <div className="py-8 text-center text-xs text-slate-400">Loading sign in…</div>
+      </AuthLayout>
+    );
+  }
+
   return (
     <AuthLayout
       title="Merchant Sign In"
       subtitle={
         redirectUrl
-          ? 'Sign in with your phone number to proceed with booking express delivery'
+          ? 'Sign in to access your dispatch operations and history'
           : 'Enter your mobile phone number to receive a secure login PIN'
       }
     >
@@ -68,7 +85,7 @@ function LoginContent() {
         {redirectUrl && (
           <div className="flex items-center gap-2 rounded-lg border border-brand-200 bg-brand-50 p-2.5 text-xs text-brand-800 font-medium">
             <Truck className="h-4 w-4 text-brand-600 flex-shrink-0" />
-            <span>Login required to dispatch express delivery</span>
+            <span>Sign in required to access this page</span>
           </div>
         )}
 

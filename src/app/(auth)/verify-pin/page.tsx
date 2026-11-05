@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthLayout } from '@/components/templates/auth-layout';
 import { Button } from '@/components/atoms/button';
 import { ErrorMessage } from '@/components/molecules/error-message';
+import { useAuthState } from '@/features/auth/hooks/use-auth-state';
 import { ArrowLeft, Check, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 
@@ -12,6 +13,8 @@ function VerifyPinContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const phone = searchParams.get('phone') || '';
+  const redirectUrl = searchParams.get('redirect') || '';
+  const { login, isAuthenticated } = useAuthState();
 
   const [pin, setPin] = useState(['', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
@@ -73,9 +76,12 @@ function VerifyPinContent() {
         return;
       }
 
-      const destination = searchParams.get('redirect') || '/dashboard';
-      router.push(destination);
-      router.refresh();
+      if (data.user) {
+        login(data.user);
+      }
+
+      const destination = redirectUrl || '/dashboard';
+      router.replace(destination);
     } catch {
       setError('Network error validating PIN.');
     } finally {
@@ -121,6 +127,10 @@ function VerifyPinContent() {
             />
           ))}
         </div>
+
+        <p className="text-center text-xs text-slate-400">
+          Demo Mode: enter any 4 digits (e.g. <strong>1234</strong>)
+        </p>
 
         <Button
           type="button"
@@ -169,4 +179,3 @@ export default function VerifyPinPage() {
     </Suspense>
   );
 }
-

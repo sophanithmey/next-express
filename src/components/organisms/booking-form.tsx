@@ -1,8 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { BookingFormData, BookingFeeQuote, BookingOrder, PickupLocation } from '@/features/booking/types/booking-types';
-import { useMockBooking } from '@/features/booking/hooks/use-mock-booking';
+import {
+  BookingFormData,
+  BookingFeeQuote,
+  BookingOrder,
+  PickupLocation,
+} from '@/features/booking/types/booking-types';
 import { LocationPicker } from './location-picker';
 import { RecipientForm } from './recipient-form';
 import { DropoffPicker } from './dropoff-picker';
@@ -21,9 +25,9 @@ interface BookingFormProps {
 }
 
 const DEFAULT_PICKUP: PickupLocation = {
-  name: 'Main Warehouse',
-  address: 'Phnom Penh, Cambodia',
-  coordinates: { lat: 11.5564, lng: 104.9282 },
+  name: 'Central Warehouse (Main)',
+  address: 'St 271, Phum 4, Sangkat Boeng Tumpun, Khan Mean Chey, Phnom Penh',
+  coordinates: { lat: 11.5321, lng: 104.9123 },
 };
 
 const DEFAULT_DROPOFF = {
@@ -45,6 +49,8 @@ export function BookingForm({ initialLocations, initialDraft }: BookingFormProps
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isReviewing, setIsReviewing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedOrder, setSubmittedOrder] = useState<BookingOrder | null>(null);
 
   const [formData, setFormData] = useState<BookingFormData>({
@@ -60,9 +66,8 @@ export function BookingForm({ initialLocations, initialDraft }: BookingFormProps
 
   const [feeQuote, setFeeQuote] = useState<BookingFeeQuote | null>(null);
   const [isLoadingFee, setIsLoadingFee] = useState(false);
-  const { submitMockBooking, isSubmitting } = useMockBooking();
 
-  // Recalculate fee whenever pickup/dropoff changes
+  // Recalculate fee quote whenever pickup or dropoff coordinates change
   useEffect(() => {
     let active = true;
     const fetchFee = async () => {
@@ -81,25 +86,85 @@ export function BookingForm({ initialLocations, initialDraft }: BookingFormProps
           setFeeQuote(quote);
         }
       } catch {
-        // Silently ignore — fee is best-effort
+        // Fallback fee calculation
       } finally {
         if (active) setIsLoadingFee(false);
       }
     };
+
     fetchFee();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [formData.pickup.coordinates, formData.dropoff.coordinates]);
 
+  const validateCurrentStep = (): boolean => {
+    if (currentStep === 2) {
+      if (!formData.recipient.name.trim()) {
+        alert('Please enter recipient full name before continuing.');
+        return false;
+      }
+      if (!formData.recipient.phoneNumber.trim() || formData.recipient.phoneNumber.length < 8) {
+        alert('Please enter a valid recipient phone number (at least 8 digits).');
+        return false;
+      }
+    }
+    if (currentStep === 3) {
+      if (!formData.dropoff.address.trim()) {
+        alert('Please enter drop-off address before continuing.');
+        return false;
+      }
+    }
+    if (currentStep === 5) {
+      if (formData.cod.isCod && (!formData.cod.amount || formData.cod.amount <= 0)) {
+        alert('Please enter a valid COD collection amount greater than 0.');
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleNext = () => {
+    if (!validateCurrentStep()) return;
+    if (currentStep === 5) {
+      setIsReviewing(true);
+    } else {
+      setCurrentStep((s) => s + 1);
+    }
+  };
+
   const handleCreateBooking = async () => {
-    const order = await submitMockBooking(formData);
-    setSubmittedOrder(order);
-    setIsReviewing(false);
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setSubmitError(data.message || 'Failed to submit booking. Please try again.');
+        return;
+      }
+
+      setSubmittedOrder(data as BookingOrder);
+      setIsReviewing(false);
+    } catch {
+      setSubmitError('Network error while booking. Please verify your connection.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleBookAnother = () => {
     setSubmittedOrder(null);
     setIsReviewing(false);
-    setCurrentStep(2); // Skip pickup — keep same warehouse
+    setSubmitError(null);
+    setCurrentStep(2); // Keep pickup location, start next parcel directly
     setFormData((prev) => ({
       ...prev,
       recipient: { name: '', phoneNumber: '', notes: '' },
@@ -117,10 +182,14 @@ export function BookingForm({ initialLocations, initialDraft }: BookingFormProps
       <BookingConfirmation
         formData={formData}
         feeQuote={feeQuote}
-        onEditStep={(step) => { setCurrentStep(step); setIsReviewing(false); }}
+        onEditStep={(step) => {
+          setCurrentStep(step);
+          setIsReviewing(false);
+        }}
         onConfirm={handleCreateBooking}
         onBack={() => setIsReviewing(false)}
         isSubmitting={isSubmitting}
+        errorMessage={submitError}
       />
     );
   }
@@ -137,7 +206,11 @@ export function BookingForm({ initialLocations, initialDraft }: BookingFormProps
             <button
               key={s.num}
               type="button"
-              onClick={() => setCurrentStep(s.num)}
+              onClick={() => {
+                if (s.num <= currentStep || validateCurrentStep()) {
+                  setCurrentStep(s.num);
+                }
+              }}
               className={cn(
                 'flex flex-1 items-center justify-center gap-2 rounded-lg py-2 px-3 text-xs font-semibold transition-all select-none',
                 isActive
@@ -163,6 +236,7 @@ export function BookingForm({ initialLocations, initialDraft }: BookingFormProps
               onSelectLocation={(loc) => setFormData({ ...formData, pickup: loc })}
             />
           )}
+
           {currentStep === 2 && (
             <RecipientForm
               recipient={formData.recipient}
@@ -181,6 +255,7 @@ export function BookingForm({ initialLocations, initialDraft }: BookingFormProps
               }
             />
           )}
+
           {currentStep === 3 && (
             <DropoffPicker
               pickupLocation={formData.pickup}
@@ -188,12 +263,14 @@ export function BookingForm({ initialLocations, initialDraft }: BookingFormProps
               onChangeDropoff={(dropoff) => setFormData({ ...formData, dropoff })}
             />
           )}
+
           {currentStep === 4 && (
             <ParcelInformation
               parcel={formData.parcel}
               onChangeParcel={(parcel) => setFormData({ ...formData, parcel })}
             />
           )}
+
           {currentStep === 5 && (
             <CodSection
               cod={formData.cod}
@@ -205,8 +282,8 @@ export function BookingForm({ initialLocations, initialDraft }: BookingFormProps
             currentStep={currentStep}
             totalSteps={5}
             onBack={() => setCurrentStep((s) => Math.max(1, s - 1))}
-            onNext={() => setCurrentStep((s) => s + 1)}
-            onSubmit={() => setIsReviewing(true)}
+            onNext={handleNext}
+            onSubmit={handleNext}
             estimatedFee={feeQuote?.totalDeliveryFee}
           />
         </div>

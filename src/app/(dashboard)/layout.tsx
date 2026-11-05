@@ -11,9 +11,8 @@ export default async function DashboardLayout({
   const user = await sessionService.getCurrentUser();
 
   if (!user) {
-    redirect('/login?redirect=/bookings/new');
+    redirect('/login?redirect=/dashboard');
   }
 
   return <DashboardLayoutTemplate user={user}>{children}</DashboardLayoutTemplate>;
 }
-
