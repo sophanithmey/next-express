@@ -296,6 +296,7 @@ Before declaring any feature complete:
 - **DO NOT** add Cash on Delivery (COD) amount to the delivery fee total.
 - **DO NOT** make recipient name mandatory. (Sellers often deliver to phone numbers + addresses only).
 - **DO NOT** duplicate map pin buttons in both the section header and next to the input.
+- **DO NOT** use Leaflet or OpenStreetMap. Use Google Maps exclusively for mapping, routing, and location pinning.
 - **DO NOT** grow single component files beyond 200 lines. Extract sub-components promptly.
 - **DO NOT** use `bg-gradient` in Tailwind classes.
 - **DO NOT** store auth tokens or sensitive credentials in `localStorage`.

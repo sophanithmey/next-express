@@ -7,14 +7,3 @@
     @apply bg-slate-50 text-slate-900 antialiased font-sans;
   }
 }
-
-.custom-pin-pickup {
-  background: transparent;
-  border: none;
-}
-
-.custom-pin-dropoff {
-  background: transparent;
-  border: none;
-}
-

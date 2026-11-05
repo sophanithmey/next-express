@@ -64,7 +64,7 @@ export function DropoffPicker({
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
               <Navigation className="h-3.5 w-3.5 text-rose-500" />
-              <span>Interactive Pin (Drag Red Marker to Adjust)</span>
+              <span>Google Maps Destination &amp; Route</span>
             </span>
             <span className="text-[11px] text-slate-500 font-mono">
               Lat: {dropoffLocation.coordinates.lat.toFixed(4)} | Lng:{' '}

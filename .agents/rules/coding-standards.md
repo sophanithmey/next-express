@@ -16,7 +16,7 @@
 ### 2. Form & Field Rules
 - **Pickup**: Address is **required**. Contact name, contact phone, rider note, and photo attachment are **optional**. Include `[ 🎯 Use current location ]` GPS button.
 - **Drop-off**: Recipient name is **optional**. Recipient phone number is **required** (8–15 digits). Drop-off address is **required**. Rider note and photo attachment are **optional**.
-- **Map Pinning**: Provide a **single** map trigger button per address field (never duplicate buttons).
+- **Map Pinning**: Use Google Maps exclusively (never Leaflet/OpenStreetMap). Provide a **single** map trigger button per address field (never duplicate buttons).
 - **COD**: Optional toggle. When enabled, amount must be positive. **Never add COD to the delivery fee total**.
 - **Multi-Drop**: Stored as `dropoffs: DropoffStop[]`. Keep `dropoffs[0]` synchronized with `recipient` and `dropoff` for backwards compatibility.
 
@@ -32,3 +32,4 @@ yarn tsc --noEmit    # Must have 0 errors
 yarn test            # Must pass all unit tests
 yarn build           # Must produce successful production build
 ```
+

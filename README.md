@@ -11,7 +11,7 @@ A high-performance, production-ready Express Seller Web Application engineered t
 - **Styling**: Tailwind CSS (clean SaaS aesthetic, subtle borders, soft shadows, no `bg-gradient`)
 - **Forms & Validation**: React Hook Form, Zod
 - **Icons**: Lucide React
-- **Mapping & Geocoding**: Leaflet + OpenStreetMap (with custom pins & interactive route preview)
+- **Mapping & Geocoding**: Google Maps (with route preview, zone quick-select, coordinate parser & direct pin links)
 - **Session Security**: JWE (AES-256-GCM) encrypted HttpOnly cookies powered by `jose`
 - **Testing**: Vitest
 - **Package Management**: Yarn managed via Corepack and NVM
@@ -108,7 +108,7 @@ Designed specifically for online merchants booking high volumes of parcels every
 
 1. **Step 1: Pickup Location**: Automatically selects the merchant's default warehouse/branch. Supports switching to other saved branches or pinning a new address with GPS or search.
 2. **Step 2: Recipient Information**: Search recipient by phone number with instant autofill suggestions. Supports "Book on behalf" for partner stores.
-3. **Step 3: Drop-off Location**: Interactive Leaflet map with draggable red pin, reverse address lookups, landmark hints, and coordinate verification.
+3. **Step 3: Drop-off Location**: Interactive Google Maps preview with coordinate verification, zone quick-select, Google Maps link parsing, and address lookups.
 4. **Step 4: Parcel Details**: Seller order reference (e.g. Facebook Live order #), description, item quantity, and driver instructions.
 5. **Step 5: Cash on Delivery (COD)**: Toggle COD collection amount. Explains that COD is money collected for the merchant, not an additional delivery expense.
 6. **Confirmation & Review**: Concise review screen with inline edit actions for each step and duplicate-submission prevention.
