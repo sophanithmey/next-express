@@ -22,7 +22,7 @@ export function PublicHeader({ onOpenAuthModal }: PublicHeaderProps) {
           </div>
           <div>
             <span className="text-sm font-bold text-slate-900 tracking-tight block leading-tight">
-              Express<span className="text-brand-600">Seller</span>
+              Wing<span className="text-yellow-500">Express</span>
             </span>
             <span className="text-[10px] text-slate-400 font-medium tracking-tight hidden sm:block">
               Book your delivery in seconds.

@@ -4,7 +4,7 @@ import { BookingPageClient } from '@/features/booking/components/booking-page-cl
 import { SAMPLE_PHNOM_PENH_LOCATIONS } from '@/features/booking/data/mock-booking-data';
 
 export const metadata = {
-  title: 'Express Seller — Simple Delivery Booking',
+  title: 'WingExpress — Simple Delivery Booking',
   description: 'Book your delivery in seconds. Fast logistics for online merchants and sellers in Cambodia.',
 };
 

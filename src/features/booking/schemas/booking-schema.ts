@@ -16,7 +16,7 @@ export const pickupSchema = z.object({
 });
 
 export const recipientSchema = z.object({
-  name: z.string().min(2, 'Recipient name is required'),
+  name: z.string().optional().default(''),
   phoneNumber: z
     .string()
     .min(8, 'Phone number must be at least 8 digits')

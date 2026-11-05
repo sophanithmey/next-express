@@ -94,9 +94,7 @@ export function BookingPageClient({ initialLocations = [] }: BookingPageClientPr
 
     if (formData.dropoffs && formData.dropoffs.length > 0) {
       formData.dropoffs.forEach((stop, idx) => {
-        if (!stop.recipient.name?.trim()) {
-          newErrors[`dropoffs.${idx}.name`] = `Recipient name for Destination ${idx + 1} is required.`;
-        }
+        // Recipient name is optional
         if (!stop.recipient.phoneNumber?.trim() || stop.recipient.phoneNumber.length < 8) {
           newErrors[`dropoffs.${idx}.phoneNumber`] = `Valid phone for Destination ${idx + 1} is required (at least 8 digits).`;
         }
@@ -107,9 +105,6 @@ export function BookingPageClient({ initialLocations = [] }: BookingPageClientPr
     } else {
       if (!formData.dropoff.address?.trim()) {
         newErrors['dropoff.address'] = 'Drop-off address is required.';
-      }
-      if (!formData.recipient.name?.trim()) {
-        newErrors['recipient.name'] = 'Recipient full name is required.';
       }
       if (!formData.recipient.phoneNumber?.trim() || formData.recipient.phoneNumber.length < 8) {
         newErrors['recipient.phoneNumber'] = 'Valid phone number is required (at least 8 digits).';

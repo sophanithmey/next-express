@@ -4,7 +4,7 @@ import { AuthProvider } from '@/features/auth/components/auth-provider';
 import { sessionService } from '@/server/auth/session-service';
 
 export const metadata: Metadata = {
-  title: 'Express Seller — High-Speed Delivery Platform',
+  title: 'WingExpress — High-Speed Delivery Platform',
   description:
     'Fast, modern delivery booking and management for online merchants and sellers',
 };
