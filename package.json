@@ -5,8 +5,7 @@
   "packageManager": "yarn@1.22.22",
   "scripts": {
     "dev": "next dev",
-    "clean": "rm -rf .next",
-    "build": "rm -rf .next && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run"
