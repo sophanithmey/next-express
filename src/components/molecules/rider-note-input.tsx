@@ -94,7 +94,7 @@ export function RiderNoteInput({
             className="h-10 w-10 rounded-lg object-cover border border-brand-200 shadow-2xs flex-shrink-0"
           />
           <div className="min-w-0 flex-1">
-            <span className="font-semibold text-brand-900 block truncate text-[11px] flex items-center gap-1">
+            <span className="font-semibold text-brand-900 truncate text-[11px] flex items-center gap-1">
               <ImageIcon className="h-3 w-3 text-brand-600" />
               <span>Location photo attached for rider</span>
             </span>
@@ -113,3 +113,4 @@ export function RiderNoteInput({
     </div>
   );
 }
+

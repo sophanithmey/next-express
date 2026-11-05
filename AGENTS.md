@@ -8,13 +8,13 @@ The main goal is to make delivery booking simple, fast and accessible.
 
 ### Core Product Principles
 
-- Booking page is the homepage.
-- Users can start booking without authentication.
+- **One page. One form. One clear action.**
+- Booking page is the homepage (`/`).
+- Users can start booking immediately without authentication.
 - Authentication is required only when submitting a booking.
-- Keep the booking experience on one page.
-- Avoid unnecessary steps, navigation and complicated interfaces.
-- Prioritize usability and speed for sellers handling multiple orders.
-- Design mobile-first while providing an excellent desktop experience.
+- Keep the booking experience on one page without unnecessary review steps or wizards.
+- Prioritize usability, speed, and space efficiency for busy sellers handling multiple orders.
+- Design mobile-first while providing a polished desktop experience.
 
 ---
 
@@ -22,20 +22,19 @@ The main goal is to make delivery booking simple, fast and accessible.
 
 Use the following technologies:
 
-- Latest stable Next.js with App Router.
-- React.
-- TypeScript with strict mode.
-- Tailwind CSS.
-- Yarn as the package manager.
-- NVM for Node.js version management.
-- Lucide React for icons.
-- React Hook Form for form management.
-- Yup or Zod for validation.
-- Vercel for deployment.
+- **Next.js**: Latest stable Next.js with App Router.
+- **Frontend**: React 19, TypeScript with strict mode.
+- **Styling**: Tailwind CSS (use `bg-linear` only if needed; never use deprecated `bg-gradient`).
+- **Package Manager**: Yarn.
+- **Runtime**: Node.js managed via NVM (`.nvmrc`).
+- **Icons**: Lucide React.
+- **Forms & Validation**: React Hook Form with Zod.
+- **Testing**: Vitest with React Testing Library.
+- **Deployment**: Vercel.
 
 Do not introduce additional libraries without a clear technical reason.
 
-Use the existing project configuration whenever possible. Do not unnecessarily replace dependencies or reinitialize the project.
+Use existing project dependencies and configurations. Do not reinitialize the project.
 
 ---
 
@@ -43,342 +42,280 @@ Use the existing project configuration whenever possible. Do not unnecessarily r
 
 Follow Clean Architecture with feature-based organization and Atomic Design.
 
-### Separation of concerns
+### Separation of Concerns
 
-- UI components handle presentation.
-- Hooks handle UI-related state and interactions.
-- Services handle business operations.
-- Repositories handle data access.
-- Schemas handle validation.
-- Types define shared contracts.
-- Utilities contain reusable pure functions.
+- **UI Components** (`src/components/`): Handle presentation only.
+  - `atoms/`: Basic reusable UI elements (buttons, inputs, badges).
+  - `molecules/`: Small combinations of UI elements (rider-note-input, location-picker-modal, auth-modal).
+  - `organisms/`: Complete interface sections (pickup-section, dropoff-section, parcel-cod-section, booking-summary).
+  - `templates/`: Page-level layouts.
+- **Features** (`src/features/`): Group domain logic by feature.
+  - `schemas/`: Zod validation schemas.
+  - `types/`: Shared TypeScript domain models and contracts.
+  - `services/`: Business logic, fee calculations, and domain orchestrators.
+  - `repositories/`: Data access layer (mock repositories for UI prototype).
+  - `data/`: Mock fixtures and test datasets.
+- **Hooks** (`src/hooks/`): Reusable UI-related state and side effects.
+- **Utilities** (`src/lib/`): Pure helper functions, formatting, and DOM helpers.
 
-Avoid mixing business logic, API logic and presentation in the same component.
-
-### Component rules
-
-- Atoms: basic reusable UI elements.
-- Molecules: small combinations of UI elements.
-- Organisms: complete interface sections.
-- Templates: page-level layouts.
-- Pages: compose features and layouts.
-
-Do not over-engineer simple components.
+Avoid mixing business logic, data fetching, and presentation in the same component.
 
 ---
 
 ## 4. Naming Conventions
 
-All project filenames and custom folder names must use kebab-case.
+All project filenames and custom folder names must use `kebab-case`.
 
 Examples:
 
 - `booking-form.tsx`
 - `booking-summary.tsx`
-- `location-picker.tsx`
+- `dropoff-stop-item.tsx`
+- `rider-note-input.tsx`
+- `location-picker-modal.tsx`
 - `authentication-modal.tsx`
 - `use-booking.ts`
 - `booking-service.ts`
 - `booking-schema.ts`
 
-React components must use PascalCase.
-
-Examples:
+React components must use `PascalCase`:
 
 - `BookingForm`
 - `BookingSummary`
-- `LocationPicker`
+- `DropoffStopItem`
+- `RiderNoteInput`
+- `LocationPickerModal`
 
-Variables and functions must use camelCase.
+Variables, functions, and hook names must use `camelCase`.
 
-Constants must use UPPER_SNAKE_CASE when appropriate.
+Constants must use `UPPER_SNAKE_CASE` when appropriate.
 
-Use meaningful names. Avoid abbreviations and unclear naming.
-
-Next.js reserved filenames must follow framework conventions, such as `page.tsx`, `layout.tsx`, `route.ts` and `loading.tsx`.
+Next.js reserved filenames must follow framework conventions (`page.tsx`, `layout.tsx`, `route.ts`, `loading.tsx`).
 
 ---
 
-## 5. Code Quality
+## 5. Code Quality & File Size Limits
 
-- Use TypeScript strict mode.
-- Avoid `any`.
-- Prefer explicit types and interfaces.
-- Keep components small and focused.
-- Aim for 150–200 lines per source file.
-- Split files when responsibilities become too large.
-- Avoid duplicated logic.
-- Use reusable components when reuse provides real value.
-- Avoid unnecessary abstractions.
-- Avoid deeply nested conditions.
-- Use early returns where appropriate.
-- Handle loading, empty and error states.
-- Remove unused imports, variables and code.
-- Do not use `console.log` for permanent application behavior.
-- Write readable and maintainable code.
-
-Do not sacrifice readability just to meet the LOC target.
+- **TypeScript Strict Mode**: Zero TypeScript errors (`yarn tsc --noEmit`).
+- **No `any`**: Use explicit interfaces and types.
+- **File Size Target: 150–200 lines of code (LOC)**:
+  - Keep components small, focused, and single-purpose.
+  - **Mandatory Component Splitting**: When an organism or feature component exceeds 200 lines (e.g. `dropoff-section.tsx`), immediately extract cohesive sub-components into their own files (e.g. `dropoff-stop-item.tsx`, `rider-note-input.tsx`).
+- **Readable & Maintainable**: Use early returns, avoid deeply nested conditions, and extract repeated patterns into reusable components.
+- **Clean Imports & Exports**: Remove unused variables, dead code, and leftover debug statements.
+- **No `console.log`**: Never leave permanent `console.log` in production code.
+- **Handle All States**: Explicitly handle loading, error, empty, and disabled states.
 
 ---
 
 ## 6. UI/UX Design Rules
 
-The interface must be modern, minimal, premium and easy to understand.
+The interface must be modern, minimal, premium, and easy to understand.
 
-### Visual style
+### Visual Style
 
-- Clean and spacious layouts.
-- Neutral backgrounds.
-- Clear typography hierarchy.
-- Consistent spacing.
-- Subtle borders and shadows.
-- Rounded corners around 12–16px.
-- Consistent icon sizes.
-- Clear visual hierarchy.
-- Accessible contrast.
-- Subtle interactions and animations.
+- **Palette**: Clean white and neutral slate backgrounds (`bg-slate-50`, `bg-white`).
+- **Brand Color**: Emerald green (`emerald-600`, `emerald-700`, `hover:bg-emerald-700`, `bg-emerald-50` for subtle active states).
+- **Typography**: Dark charcoal (`text-slate-900`), muted secondary labels (`text-slate-500`), subtle micro-copy (`text-xs`).
+- **Borders & Radii**: Subtle borders (`border-slate-200`, `border-slate-100`) and rounded corners (12–16px, `rounded-xl` or `rounded-2xl`).
+- **Spacing Efficiency**:
+  - Save vertical space for secondary or optional sections.
+  - Avoid deeply nested cards inside cards.
+  - Prefer subtle dividers (`border-t border-slate-100`) and compact groups over giant separate cards.
+  - Use clear `(Optional)` pill badges or muted labels to signal non-required fields without clutter.
 
-### Tailwind rules
+### Tailwind Rules
 
-- Use Tailwind utility classes.
-- Avoid unnecessary custom CSS.
-- Do not use `bg-gradient`.
-- Use `bg-linear` only when a gradient genuinely improves the design.
-- Avoid excessive arbitrary values.
-- Keep class names readable.
-- Extract repeated styles into reusable components when appropriate.
+- Use Tailwind CSS utility classes exclusively.
+- Do not use `bg-gradient`. Use Tailwind `bg-linear` only when a subtle gradient genuinely enhances visual hierarchy.
+- Avoid arbitrary values (`h-[37px]`) unless strictly required for third-party widget alignment.
+- Keep class names readable and logically ordered (layout → spacing → styling → interactive states).
 
-### UX rules
+### Interaction & Form UX Rules
 
-- Keep forms short and straightforward.
-- Use clear labels and helpful placeholders.
-- Show validation messages near their inputs.
-- Avoid unnecessary confirmation pages.
-- Provide immediate feedback after user actions.
-- Disable buttons during submission.
-- Prevent accidental duplicate submissions.
-- Use sensible defaults.
-- Make the primary action visually obvious.
-- Ensure touch-friendly mobile controls.
-- Avoid horizontal scrolling.
-
-Do not add UI elements simply for decoration.
+- Keep forms short, clear, and straightforward.
+- Show validation messages directly adjacent to the relevant input field.
+- **No Duplicate Buttons**: Every input must have at most one primary trigger button (e.g. avoid having "Pin on Map" in both the section header/label and beside the address input).
+- Disable submission buttons and show spinner states during async actions.
+- Prevent duplicate submissions by guarding submission flags.
+- Ensure touch-friendly target sizes (min 44px) on mobile controls.
+- Prevent horizontal scrolling on all viewport sizes.
 
 ---
 
-## 7. Booking Business Rules
+## 7. Booking Business Rules & Field Validation
 
-These rules must always be respected.
+These business rules must always be respected across forms, schemas, and state:
 
-### Public booking
+### A. Pickup Location
+- **Pickup Address / Street**: **Required** (min 3 characters).
+- **Contact Name**: **Optional** (online sellers often have default warehouse names or skip personal names).
+- **Contact Phone**: **Optional** (fallback to authenticated seller account).
+- **Rider Note & Photo Upload**: **Optional** (special pickup instructions, gate code, warehouse photo).
+- **Geolocation**: Provide a `[ 🎯 Use current location ]` button that queries browser GPS and formats Phnom Penh coordinates.
 
-- `/` opens the booking page directly.
-- Visitors do not need to log in to view or complete the form.
-- Pickup and drop-off selection are public.
-- Recipient information is public.
-- Parcel information is public.
-- COD configuration is public.
-- Booking review is public.
+### B. Drop-off Destination & Recipient (Multi-Drop)
+- **Recipient Name**: **Optional** (sellers frequently ship orders labeled only by phone and street).
+- **Recipient Phone Number**: **Required** (must be 8–15 digits; validates standard Cambodian phone formats like `012 998 877`).
+- **Drop-off Address / Street**: **Required** (min 3 characters).
+- **Destination Rider Note & Photo Upload**: **Optional** (house landmarks, delivery gate notes, recipient location photo).
+- **Single Map Pin**: Provide a single "Pin on Map" action next to the address input.
 
-### Authentication
-
-- Authentication is required only when the user submits a booking.
-- Preserve all booking form data while authentication is in progress.
-- After successful authentication, automatically continue the pending booking.
-- Never force users to re-enter their booking information.
-
-### COD
-
-- COD is optional.
-- When disabled, hide the COD amount input.
-- When enabled, require a valid positive amount.
-- Display COD separately from the delivery fee.
-- Never add COD to the delivery fee total.
-
-### Booking
-
-- Validate all required information before submission.
-- Prevent duplicate booking submissions.
-- Display meaningful error messages.
-- Show booking success only after submission succeeds.
-- Never fabricate real booking references or tracking numbers in production.
+### C. Parcel Information & Cash on Delivery (COD)
+- **Parcel Number / Seller Order ID**: **Required** (sensible default like `LIVE-0914` or seller order reference).
+- **Parcel Description**: **Optional** (e.g. "Apparel / Retail Parcel").
+- **COD Toggle**: **Optional** (defaults to disabled/off).
+- **COD Amount**:
+  - When disabled: Hide COD amount input.
+  - When enabled: **Required positive number** (`> 0`, currency USD `$`).
+  - **COD is NEVER added to the delivery fee total**. It is collected from the buyer and remitted to the seller. Always display COD separately in all summary cards.
 
 ---
 
-## 8. Authentication and Security
+## 8. Multi-Drop Destination Architecture
 
-The intended production architecture is:
+Express Seller supports sequential multi-drop deliveries within a single booking dispatch:
 
-Browser → Next.js Route Handlers → External APIs.
+### Data Model Contract
+```typescript
+export interface DropoffStop {
+  id: string;
+  recipientName?: string;
+  recipientPhone: string;
+  address: string;
+  coordinates?: Coordinates;
+  riderNote?: string;
+  imageUrl?: string;
+}
+```
 
-Never call Consumer API or Express API directly from browser code.
+### Synchronization Rule
+- The canonical list of destinations is stored in `dropoffs: DropoffStop[]`.
+- For backwards compatibility with single-stop summaries or external APIs, always keep `bookingForm.recipient` and `bookingForm.dropoff` synchronized with `dropoffs[0]`.
+- First destination (`Stop 1`) cannot be deleted.
+- Subsequent destinations (`Stop 2`, `Stop 3`, etc.) include a remove button and stop index badges (`Stop 1`, `Stop 2`, etc.).
 
-Rules:
-
-- Keep upstream API credentials server-side.
-- Never expose secrets through `NEXT_PUBLIC_` environment variables.
-- Use secure server-managed sessions.
-- Use HttpOnly, Secure and appropriate SameSite cookie settings.
-- Validate all incoming server requests.
-- Do not trust client-submitted user identity or booking information.
-- Handle expired sessions.
-- Do not log PINs, tokens or sensitive personal information.
-- Apply appropriate request validation and error handling.
-
-For the initial UI prototype, use mock authentication and mock booking submission only. Do not implement real authentication or external API integration unless explicitly requested.
-
----
-
-## 9. API and Data Layer
-
-When real integration is requested:
-
-- Use Next.js Route Handlers as the backend-for-frontend layer.
-- Create reusable server-side API clients.
-- Keep external API contracts in dedicated types.
-- Separate API communication from UI components.
-- Normalize API errors.
-- Set appropriate request timeouts.
-- Validate API responses.
-- Never invent endpoints, request fields or response structures.
-- Inspect existing API documentation before implementation.
-- Clearly identify missing API contracts instead of guessing.
-
-Use mock repositories for UI-only development.
-
-Keep mock data separate from presentation components.
+### Multi-Drop Pricing Model
+- Base delivery fee covers Stop 1 (e.g., $1.75).
+- Each additional drop-off stop adds an incremental dispatch fee (e.g., +$0.75 per extra stop).
+- Summary cards must clearly display both the stop count and the itemized delivery charge breakdown.
 
 ---
 
-## 10. Responsive Design
+## 9. Location, GPS & Map Pinning Rules
 
-Support:
+### Pin on Map Modal (`LocationPickerModal`)
+- Use a single trigger per location input.
+- Modal features:
+  - Interactive Google Maps embed preview with draggable marker coordinates.
+  - Google Maps link parser: extracts `@lat,lng` or `q=lat,lng` when sellers paste raw Google Maps share URLs.
+  - Quick-select zone presets for Phnom Penh commercial hubs (BKK1, Toul Kork, Daun Penh, Sen Sok, Chbar Ampov, etc.).
+  - Apply Coordinates & Address directly back to the targeted form stop.
 
-- Desktop.
-- Laptop.
-- Tablet.
-- Mobile.
-
-Mobile requirements:
-
-- Single-column booking form.
-- Full-width inputs and primary buttons.
-- Compact expandable booking summary.
-- Touch-friendly controls.
-- No horizontal scrolling.
-- Clear location selection experience.
-
-Desktop requirements:
-
-- Booking form as the primary content.
-- Delivery summary in a secondary column.
-- Sticky summary when useful.
-- Compact navigation.
+### Geolocation Current Location Helper
+- Pickup address supports one-tap browser geolocation (`navigator.geolocation.getCurrentPosition`).
+- On success: Format address as `Current Location (lat, lng), Phnom Penh` and store coordinate object.
+- On error/denial: Display clear inline feedback without crashing or blocking manual address entry.
 
 ---
 
-## 11. State Management
+## 10. Rider Notes & Media Attachment Rules
 
-Use local React state for simple UI interactions.
+Any pickup or drop-off location can include courier instructions and photo attachments:
 
-Use React Hook Form for booking forms.
-
-Do not introduce Redux or another global state library unless application complexity justifies it.
-
-Keep form state independent from modal state and API submission state.
-
-Persist pending booking information safely when required by the authentication flow. Never store authentication tokens in localStorage.
-
----
-
-## 12. Accessibility
-
-- Use semantic HTML.
-- Associate labels with inputs.
-- Support keyboard navigation.
-- Provide visible focus states.
-- Use accessible modal behavior.
-- Add appropriate ARIA attributes where needed.
-- Do not rely on color alone to communicate status.
-- Provide accessible error messages.
+- Use the unified `RiderNoteInput` molecule component (`src/components/molecules/rider-note-input.tsx`).
+- Provide:
+  - Clean textarea for optional instructions ("Leave with security", "Ring bell at red gate").
+  - Camera/Photo upload trigger (`<input type="file" accept="image/*">`).
+  - Thumbnail preview with instant remove action.
+  - In mock UI mode, store images via browser `URL.createObjectURL(file)` or base64 data URLs.
 
 ---
 
-## 13. Development Workflow
+## 11. Authentication & Security Flow
 
-Before implementing a feature:
+The application uses an **Unauthenticated First, Gated at Confirmation** pattern:
 
-1. Inspect the existing project structure.
-2. Understand existing components and conventions.
-3. Identify the feature's responsibilities.
-4. Plan the smallest reasonable implementation.
-5. Reuse existing utilities and components.
+1. **Public Exploration**: Anyone can visit `/`, choose pickup/drop-off stops, toggle COD, and view estimated fees.
+2. **Pending Booking Preservation**:
+   - When the user clicks "Confirm Booking", validate all required form fields.
+   - If validation fails, highlight invalid inputs with clear error messages.
+   - If validation passes and user is not authenticated, open `AuthenticationModal`.
+   - **Never clear or reset form fields during the authentication flow**.
+3. **Simulated Authentication**:
+   - Phone number input → Continue → 4-digit PIN verification.
+   - Test credentials for mock mode: Phone `012888999`, PIN `1234`.
+4. **Automatic Continuation**:
+   - Upon successful verification, authenticate the session and immediately submit the pending booking without forcing the user to click confirm again.
+   - Navigate to `/booking/success` with the completed booking details and generated tracking reference.
 
-While implementing:
-
-1. Build reusable UI components.
-2. Keep business logic outside presentation components.
-3. Implement responsive layouts.
-4. Handle all relevant UI states.
-5. Keep code organized by feature.
-
-After implementation:
-
-1. Check TypeScript errors.
-2. Run linting.
-3. Check the production build.
-4. Review changed files.
-5. Fix unused code and inconsistent naming.
-
-Do not overwrite working code unnecessarily.
-
-Do not introduce unrelated changes.
-
-Do not start or verify a development server unless explicitly requested.
+### Production Security Boundaries
+- Browser code must never call external Express or carrier APIs directly.
+- Next.js Route Handlers (`/api/...`) act as the Backend-For-Frontend (BFF).
+- API credentials, bearer tokens, and secrets remain server-side.
+- Session cookies must be `HttpOnly`, `Secure`, and `SameSite=Lax`.
 
 ---
 
-## 14. AI Agent Behavior
+## 12. State Management
 
-Act as a senior frontend engineer and UI/UX designer.
+- Use **React Hook Form** for form inputs and field-level validation with Zod schemas.
+- Use local React state (`useState`, `useCallback`, `useMemo`) for section expansions, modal visibility, and UI toggles.
+- Keep form state independent from modal state and submission network state.
+- Do not introduce Redux, Zustand, or heavy state managers unless the application scope explicitly outgrows React context.
 
-When receiving a task:
+---
 
-- Understand the user requirement before coding.
-- Prioritize the simplest solution that satisfies the requirement.
-- Follow existing architecture and naming conventions.
-- Do not invent additional product requirements.
-- Do not add unnecessary dependencies.
-- Do not over-engineer.
-- Do not replace existing functionality without justification.
-- Explain important architectural decisions briefly.
-- Identify assumptions and missing requirements.
-- Ask questions only when an essential decision cannot reasonably be made.
+## 13. Testing & Verification Requirements
 
-For large tasks, implement one feature at a time.
+Before declaring any feature complete:
 
-Do not generate the entire application in one oversized component.
+1. **TypeScript Typecheck**:
+   ```bash
+   yarn tsc --noEmit
+   ```
+   Must pass with 0 errors.
 
-Do not claim a feature works if it has only been visually implemented or simulated.
+2. **Unit & Integration Tests**:
+   ```bash
+   yarn test
+   ```
+   All test suites in `tests/` must pass. Add unit tests when adding new business logic, fee calculators, or schemas.
 
-Clearly distinguish mock functionality from real integration.
+3. **Production Build**:
+   ```bash
+   yarn build
+   ```
+   Must compile cleanly without build errors, missing exports, or bundle failures.
+
+---
+
+## 14. Common Anti-Patterns to Avoid
+
+- **DO NOT** create separate review or multi-step wizard pages. The sticky summary beside the form already provides real-time review.
+- **DO NOT** add Cash on Delivery (COD) amount to the delivery fee total.
+- **DO NOT** make recipient name mandatory. (Sellers often deliver to phone numbers + addresses only).
+- **DO NOT** duplicate map pin buttons in both the section header and next to the input.
+- **DO NOT** grow single component files beyond 200 lines. Extract sub-components promptly.
+- **DO NOT** use `bg-gradient` in Tailwind classes.
+- **DO NOT** store auth tokens or sensitive credentials in `localStorage`.
+- **DO NOT** reinitialize project configuration or install duplicate libraries.
 
 ---
 
 ## 15. Definition of Done
 
-A feature is complete when:
+A task or feature is complete only when:
 
-- It meets the requested requirements.
-- It follows project architecture.
-- Filenames follow kebab-case.
-- Components are reusable where appropriate.
-- TypeScript types are correct.
-- UI is responsive.
-- Loading, empty and error states are handled.
-- Accessibility basics are covered.
-- No unrelated code is changed.
-- Lint and production build pass when verification is requested.
+- [ ] All requested product capabilities are implemented.
+- [ ] Code adheres to Clean Architecture and Atomic Design.
+- [ ] All filenames use `kebab-case`.
+- [ ] Component files stay within the 150–200 LOC target.
+- [ ] TypeScript types are strict and explicit (no `any`).
+- [ ] UI is fully responsive (desktop two-column, mobile single-column).
+- [ ] Loading, error, empty, and disabled states are handled.
+- [ ] `yarn tsc --noEmit` succeeds with 0 errors.
+- [ ] `yarn test` passes all tests.
+- [ ] `yarn build` completes with exit code 0.
 
-**Golden Rule: Build a simple, polished and maintainable product. Every screen and interaction must make the seller's delivery booking experience easier.**
-
+**Golden Rule: Build a simple, polished, and maintainable product. Every screen and interaction must make the seller's delivery booking experience faster and easier.**
