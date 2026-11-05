@@ -11,9 +11,7 @@ import {
 } from '@/features/booking/types/booking-types';
 import { PickupSection } from './booking-sections/pickup-section';
 import { DropoffSection } from './booking-sections/dropoff-section';
-import { ParcelSection } from './booking-sections/parcel-section';
-import { FormSection } from '../molecules/form-section';
-import { CodToggle } from '../molecules/cod-toggle';
+import { ParcelCodSection } from './booking-sections/parcel-cod-section';
 import { LocationPickerModal } from '../molecules/location-picker-modal';
 import { Button } from '../atoms/button';
 import { ArrowRight } from 'lucide-react';
@@ -70,25 +68,14 @@ export function BookingForm({
           errors={errors}
         />
 
-        {/* Section C: Parcel Information */}
-        <ParcelSection parcel={formData.parcel} onChangeParcel={onChangeParcel} />
-
-        {/* Section D: Cash on Delivery (COD) */}
-        <FormSection
-          number="D"
-          title="Cash on Delivery (COD)"
-          subtitle="Collect money from buyer upon parcel delivery"
-        >
-          <CodToggle
-            isCod={formData.cod.isCod}
-            amount={formData.cod.amount}
-            onToggle={(checked) =>
-              onChangeCod({ isCod: checked, amount: checked ? (formData.cod.amount || 25) : 0 })
-            }
-            onChangeAmount={(amount) => onChangeCod({ ...formData.cod, amount })}
-            error={errors['cod.amount']}
-          />
-        </FormSection>
+        {/* Section C: Optional Parcel & Cash on Delivery (COD) Options */}
+        <ParcelCodSection
+          parcel={formData.parcel}
+          cod={formData.cod}
+          onChangeParcel={onChangeParcel}
+          onChangeCod={onChangeCod}
+          error={errors['cod.amount']}
+        />
 
         {/* Primary Action: Confirm Booking */}
         <div className="pt-2">
