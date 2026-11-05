@@ -11,3 +11,4 @@ interface BookingPageClientProps {
 export function BookingPageClient({ initialLocations }: BookingPageClientProps) {
   return <BookingForm initialLocations={initialLocations} />;
 }
+

@@ -205,13 +205,8 @@ export function BookingForm({ initialLocations, initialDraft }: BookingFormProps
             currentStep={currentStep}
             totalSteps={5}
             onBack={() => setCurrentStep((s) => Math.max(1, s - 1))}
-            onNext={() => {
-              if (currentStep === 5) {
-                setIsReviewing(true);
-              } else {
-                setCurrentStep((s) => s + 1);
-              }
-            }}
+            onNext={() => setCurrentStep((s) => s + 1)}
+            onSubmit={() => setIsReviewing(true)}
             estimatedFee={feeQuote?.totalDeliveryFee}
           />
         </div>
