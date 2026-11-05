@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { AuthProvider } from '@/features/auth/components/auth-provider';
 
 export const metadata: Metadata = {
   title: 'Express Seller — High-Speed Delivery Platform',
@@ -13,8 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-slate-50 antialiased">{children}</body>
+      <body className="min-h-screen bg-slate-50 antialiased">
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }
-

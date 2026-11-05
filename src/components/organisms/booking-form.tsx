@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BookingFormData, BookingFeeQuote, BookingOrder, PickupLocation } from '@/features/booking/types/booking-types';
+import { useMockBooking } from '@/features/booking/hooks/use-mock-booking';
 import { LocationPicker } from './location-picker';
 import { RecipientForm } from './recipient-form';
 import { DropoffPicker } from './dropoff-picker';
@@ -19,36 +20,49 @@ interface BookingFormProps {
   initialDraft?: Partial<BookingFormData>;
 }
 
+const DEFAULT_PICKUP: PickupLocation = {
+  name: 'Main Warehouse',
+  address: 'Phnom Penh, Cambodia',
+  coordinates: { lat: 11.5564, lng: 104.9282 },
+};
+
+const DEFAULT_DROPOFF = {
+  address: 'Central Phnom Penh',
+  coordinates: { lat: 11.565, lng: 104.92 },
+};
+
+const STEPS = [
+  { num: 1, label: 'Pickup', icon: MapPin },
+  { num: 2, label: 'Recipient', icon: User },
+  { num: 3, label: 'Drop-off', icon: Navigation },
+  { num: 4, label: 'Parcel', icon: Package },
+  { num: 5, label: 'COD', icon: Banknote },
+];
+
 export function BookingForm({ initialLocations, initialDraft }: BookingFormProps) {
+  const defaultPickup =
+    initialLocations.find((l) => l.isDefault) ?? initialLocations[0] ?? DEFAULT_PICKUP;
+
   const [currentStep, setCurrentStep] = useState(1);
   const [isReviewing, setIsReviewing] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedOrder, setSubmittedOrder] = useState<BookingOrder | null>(null);
 
-  const defaultPickup = initialLocations.find((l) => l.isDefault) || initialLocations[0] || {
-    name: 'Main Warehouse',
-    address: 'Phnom Penh, Cambodia',
-    coordinates: { lat: 11.5564, lng: 104.9282 },
-  };
-
   const [formData, setFormData] = useState<BookingFormData>({
-    pickup: initialDraft?.pickup || defaultPickup,
-    recipient: initialDraft?.recipient || { name: '', phoneNumber: '', notes: '' },
-    isBookingOnBehalf: initialDraft?.isBookingOnBehalf || false,
-    senderName: initialDraft?.senderName || '',
-    senderPhone: initialDraft?.senderPhone || '',
-    dropoff: initialDraft?.dropoff || {
-      address: 'Central Phnom Penh',
-      coordinates: { lat: 11.565, lng: 104.92 },
-    },
-    parcel: initialDraft?.parcel || { description: '', sellerOrderRef: '', quantity: 1 },
-    cod: initialDraft?.cod || { isCod: false, amount: 0 },
+    pickup: initialDraft?.pickup ?? defaultPickup,
+    recipient: initialDraft?.recipient ?? { name: '', phoneNumber: '', notes: '' },
+    isBookingOnBehalf: initialDraft?.isBookingOnBehalf ?? false,
+    senderName: initialDraft?.senderName ?? '',
+    senderPhone: initialDraft?.senderPhone ?? '',
+    dropoff: initialDraft?.dropoff ?? DEFAULT_DROPOFF,
+    parcel: initialDraft?.parcel ?? { description: '', sellerOrderRef: '', quantity: 1 },
+    cod: initialDraft?.cod ?? { isCod: false, amount: 0 },
   });
 
   const [feeQuote, setFeeQuote] = useState<BookingFeeQuote | null>(null);
   const [isLoadingFee, setIsLoadingFee] = useState(false);
+  const { submitMockBooking, isSubmitting } = useMockBooking();
 
-  // Recalculate fee quote whenever pickup or dropoff coordinates change
+  // Recalculate fee whenever pickup/dropoff changes
   useEffect(() => {
     let active = true;
     const fetchFee = async () => {
@@ -67,60 +81,35 @@ export function BookingForm({ initialLocations, initialDraft }: BookingFormProps
           setFeeQuote(quote);
         }
       } catch {
-        // Ignored fallback
+        // Silently ignore — fee is best-effort
       } finally {
         if (active) setIsLoadingFee(false);
       }
     };
-
     fetchFee();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [formData.pickup.coordinates, formData.dropoff.coordinates]);
 
   const handleCreateBooking = async () => {
-    setIsSubmitting(true);
-    try {
-      const res = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+    const order = await submitMockBooking(formData);
+    setSubmittedOrder(order);
+    setIsReviewing(false);
+  };
 
-      if (!res.ok) {
-        const err = await res.json();
-        alert(err.message || 'Failed to submit booking');
-        return;
-      }
-
-      const order: BookingOrder = await res.json();
-      setSubmittedOrder(order);
-      setIsReviewing(false);
-    } catch {
-      alert('Network error while booking. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleBookAnother = () => {
+    setSubmittedOrder(null);
+    setIsReviewing(false);
+    setCurrentStep(2); // Skip pickup — keep same warehouse
+    setFormData((prev) => ({
+      ...prev,
+      recipient: { name: '', phoneNumber: '', notes: '' },
+      parcel: { description: '', sellerOrderRef: '', quantity: 1 },
+      cod: { isCod: false, amount: 0 },
+    }));
   };
 
   if (submittedOrder) {
-    return (
-      <BookingSuccess
-        order={submittedOrder}
-        onBookAnother={() => {
-          setSubmittedOrder(null);
-          setIsReviewing(false);
-          setCurrentStep(2); // Jump straight to recipient for next parcel
-          setFormData((prev) => ({
-            ...prev,
-            recipient: { name: '', phoneNumber: '', notes: '' },
-            parcel: { description: '', sellerOrderRef: '', quantity: 1 },
-            cod: { isCod: false, amount: 0 },
-          }));
-        }}
-      />
-    );
+    return <BookingSuccess order={submittedOrder} onBookAnother={handleBookAnother} />;
   }
 
   if (isReviewing) {
@@ -128,10 +117,7 @@ export function BookingForm({ initialLocations, initialDraft }: BookingFormProps
       <BookingConfirmation
         formData={formData}
         feeQuote={feeQuote}
-        onEditStep={(step) => {
-          setCurrentStep(step);
-          setIsReviewing(false);
-        }}
+        onEditStep={(step) => { setCurrentStep(step); setIsReviewing(false); }}
         onConfirm={handleCreateBooking}
         onBack={() => setIsReviewing(false)}
         isSubmitting={isSubmitting}
@@ -139,19 +125,11 @@ export function BookingForm({ initialLocations, initialDraft }: BookingFormProps
     );
   }
 
-  const steps = [
-    { num: 1, label: 'Pickup', icon: MapPin },
-    { num: 2, label: 'Recipient', icon: User },
-    { num: 3, label: 'Drop-off', icon: Navigation },
-    { num: 4, label: 'Parcel', icon: Package },
-    { num: 5, label: 'COD', icon: Banknote },
-  ];
-
   return (
     <div className="space-y-6">
       {/* Step Navigator */}
       <div className="flex items-center justify-between overflow-x-auto rounded-xl border border-slate-200 bg-white p-2 shadow-xs">
-        {steps.map((s) => {
+        {STEPS.map((s) => {
           const Icon = s.icon;
           const isActive = currentStep === s.num;
           const isDone = currentStep > s.num;
@@ -185,7 +163,6 @@ export function BookingForm({ initialLocations, initialDraft }: BookingFormProps
               onSelectLocation={(loc) => setFormData({ ...formData, pickup: loc })}
             />
           )}
-
           {currentStep === 2 && (
             <RecipientForm
               recipient={formData.recipient}
@@ -204,7 +181,6 @@ export function BookingForm({ initialLocations, initialDraft }: BookingFormProps
               }
             />
           )}
-
           {currentStep === 3 && (
             <DropoffPicker
               pickupLocation={formData.pickup}
@@ -212,14 +188,12 @@ export function BookingForm({ initialLocations, initialDraft }: BookingFormProps
               onChangeDropoff={(dropoff) => setFormData({ ...formData, dropoff })}
             />
           )}
-
           {currentStep === 4 && (
             <ParcelInformation
               parcel={formData.parcel}
               onChangeParcel={(parcel) => setFormData({ ...formData, parcel })}
             />
           )}
-
           {currentStep === 5 && (
             <CodSection
               cod={formData.cod}
@@ -255,4 +229,3 @@ export function BookingForm({ initialLocations, initialDraft }: BookingFormProps
     </div>
   );
 }
-

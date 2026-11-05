@@ -16,7 +16,7 @@ export class ExpressApiError extends Error {
   constructor(
     message: string,
     public statusCode: number = 400,
-    public code?: string
+    public code?: string,
   ) {
     super(message);
     this.name = 'ExpressApiError';
@@ -30,7 +30,7 @@ export const expressApiClient = {
   async calculateFee(
     pickup: GeoCoordinates,
     dropoff: GeoCoordinates,
-    accessToken?: string
+    accessToken?: string,
   ): Promise<BookingFeeQuote> {
     const env = getServerEnv();
 
@@ -54,7 +54,7 @@ export const expressApiClient = {
         const errorData = await response.json().catch(() => ({}));
         throw new ExpressApiError(
           errorData.message || 'Failed to calculate delivery fee',
-          response.status
+          response.status,
         );
       }
 
@@ -77,16 +77,22 @@ export const expressApiClient = {
     }
 
     try {
-      const response = await fetch(`${env.expressApiBaseUrl}/express/saved-locations`, {
-        headers: {
-          Accept: 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      const response = await fetch(
+        `${env.expressApiBaseUrl}/express/saved-locations`,
+        {
+          headers: {
+            Accept: 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
+          cache: 'no-store',
         },
-        cache: 'no-store',
-      });
+      );
 
       if (!response.ok) {
-        throw new ExpressApiError('Failed to retrieve saved locations', response.status);
+        throw new ExpressApiError(
+          'Failed to retrieve saved locations',
+          response.status,
+        );
       }
 
       return await response.json();
@@ -101,7 +107,7 @@ export const expressApiClient = {
    */
   async savePickupLocation(
     location: PickupLocation,
-    accessToken?: string
+    accessToken?: string,
   ): Promise<PickupLocation> {
     const env = getServerEnv();
 
@@ -110,19 +116,25 @@ export const expressApiClient = {
     }
 
     try {
-      const response = await fetch(`${env.expressApiBaseUrl}/express/saved-locations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      const response = await fetch(
+        `${env.expressApiBaseUrl}/express/saved-locations`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
+          body: JSON.stringify(location),
+          cache: 'no-store',
         },
-        body: JSON.stringify(location),
-        cache: 'no-store',
-      });
+      );
 
       if (!response.ok) {
-        throw new ExpressApiError('Failed to save pickup location', response.status);
+        throw new ExpressApiError(
+          'Failed to save pickup location',
+          response.status,
+        );
       }
 
       return await response.json();
@@ -135,7 +147,10 @@ export const expressApiClient = {
   /**
    * Search recipients history
    */
-  async searchRecipients(query: string, accessToken?: string): Promise<RecipientRecord[]> {
+  async searchRecipients(
+    query: string,
+    accessToken?: string,
+  ): Promise<RecipientRecord[]> {
     const env = getServerEnv();
 
     if (env.mockUpstreamApi) {
@@ -155,7 +170,10 @@ export const expressApiClient = {
       });
 
       if (!response.ok) {
-        throw new ExpressApiError('Failed to query recipients', response.status);
+        throw new ExpressApiError(
+          'Failed to query recipients',
+          response.status,
+        );
       }
 
       return await response.json();
@@ -170,7 +188,7 @@ export const expressApiClient = {
    */
   async createBooking(
     payload: CreateBookingPayload,
-    accessToken?: string
+    accessToken?: string,
   ): Promise<BookingOrder> {
     const env = getServerEnv();
 
@@ -179,23 +197,27 @@ export const expressApiClient = {
     }
 
     try {
-      const response = await fetch(`${env.expressApiBaseUrl}/express/bookings`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          'x-idempotency-key': payload.idempotencyKey,
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      const response = await fetch(
+        `${env.expressApiBaseUrl}/express/bookings`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'x-idempotency-key': payload.idempotencyKey,
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
+          body: JSON.stringify(payload),
+          cache: 'no-store',
         },
-        body: JSON.stringify(payload),
-        cache: 'no-store',
-      });
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new ExpressApiError(
-          errorData.message || 'Failed to submit delivery booking to Express API',
-          response.status
+          errorData.message ||
+            'Failed to submit delivery booking to Express API',
+          response.status,
         );
       }
 
@@ -216,7 +238,7 @@ export const expressApiClient = {
       page?: number;
       limit?: number;
     },
-    accessToken?: string
+    accessToken?: string,
   ): Promise<PaginatedResponse<BookingOrder>> {
     const env = getServerEnv();
 
@@ -271,7 +293,10 @@ export const expressApiClient = {
   /**
    * Retrieve single booking details by ID or tracking number
    */
-  async getBookingById(id: string, accessToken?: string): Promise<BookingOrder | null> {
+  async getBookingById(
+    id: string,
+    accessToken?: string,
+  ): Promise<BookingOrder | null> {
     const env = getServerEnv();
 
     if (env.mockUpstreamApi) {
@@ -279,17 +304,23 @@ export const expressApiClient = {
     }
 
     try {
-      const response = await fetch(`${env.expressApiBaseUrl}/express/bookings/${id}`, {
-        headers: {
-          Accept: 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      const response = await fetch(
+        `${env.expressApiBaseUrl}/express/bookings/${id}`,
+        {
+          headers: {
+            Accept: 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
+          cache: 'no-store',
         },
-        cache: 'no-store',
-      });
+      );
 
       if (!response.ok) {
         if (response.status === 404) return null;
-        throw new ExpressApiError('Failed to load booking details', response.status);
+        throw new ExpressApiError(
+          'Failed to load booking details',
+          response.status,
+        );
       }
 
       return await response.json();
@@ -306,4 +337,3 @@ export const expressApiClient = {
     return inMemoryStore.getStatistics();
   },
 };
-
