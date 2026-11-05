@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   BookingFormData,
@@ -17,6 +17,10 @@ import {
   generateMockReference,
   generateMockTracking,
 } from '../data/mock-booking-data';
+import {
+  saveBookingDraft,
+  loadBookingDraft,
+} from '../services/booking-draft-service';
 import { BookingForm } from '@/components/organisms/booking-form';
 import { BookingSummary } from '@/components/organisms/booking-summary';
 import { AuthenticationModal } from '@/components/organisms/authentication-modal';
@@ -74,6 +78,14 @@ export function BookingPageClient({ initialLocations = [] }: BookingPageClientPr
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Restore draft if returning from Review page
+  useEffect(() => {
+    const draft = loadBookingDraft();
+    if (draft && draft.pickup?.address) {
+      setFormData(draft);
+    }
+  }, []);
 
   // Live estimated delivery fee (accounting for extra stops)
   const feeQuote = useMemo(() => {
@@ -157,11 +169,9 @@ export function BookingPageClient({ initialLocations = [] }: BookingPageClientPr
   const handleConfirmClick = () => {
     if (!validate()) return;
 
-    if (!isAuthenticated) {
-      setIsAuthModalOpen(true);
-    } else {
-      handleBookingSubmission();
-    }
+    // Save draft and navigate to review & payment page
+    saveBookingDraft(formData);
+    router.push('/booking/review');
   };
 
   const handleAuthSuccess = (user: UserProfile) => {
@@ -210,6 +220,7 @@ export function BookingPageClient({ initialLocations = [] }: BookingPageClientPr
             onSubmit={handleConfirmClick}
             isSubmitting={isSubmitting}
             errors={errors}
+            fee={feeQuote.totalDeliveryFee}
           />
         </div>
 

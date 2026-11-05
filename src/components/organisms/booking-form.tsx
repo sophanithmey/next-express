@@ -14,8 +14,7 @@ import { PickupSection } from './booking-sections/pickup-section';
 import { DropoffSection } from './booking-sections/dropoff-section';
 import { ParcelCodSection } from './booking-sections/parcel-cod-section';
 import { LocationPickerModal } from '../molecules/location-picker-modal';
-import { Button } from '../atoms/button';
-import { ArrowRight } from 'lucide-react';
+import { StickyBookingActionBar } from '../molecules/sticky-booking-action-bar';
 
 interface BookingFormProps {
   formData: BookingFormData;
@@ -28,6 +27,7 @@ interface BookingFormProps {
   onSubmit: () => void;
   isSubmitting?: boolean;
   errors: Record<string, string>;
+  fee?: number;
 }
 
 export function BookingForm({
@@ -41,6 +41,7 @@ export function BookingForm({
   onSubmit,
   isSubmitting = false,
   errors,
+  fee = 1.75,
 }: BookingFormProps) {
   const [modalMode, setModalMode] = useState<'pickup' | 'dropoff' | null>(null);
   const [activeStopIndex, setActiveStopIndex] = useState(0);
@@ -86,22 +87,15 @@ export function BookingForm({
           error={errors['cod.amount']}
         />
 
-        {/* Primary Action: Confirm Booking */}
-        <div className='pt-2'>
-          <Button
-            type='submit'
-            variant='primary'
-            size='lg'
-            className='w-full py-4 text-base font-bold shadow-md hover:shadow-lg transition-all'
-            isLoading={isSubmitting}
-            rightIcon={<ArrowRight className='h-5 w-5' />}
-          >
-            Confirm Booking
-          </Button>
-          <p className='text-center text-xs text-slate-400 mt-2.5'>
-            Instant courier dispatch upon confirmation • No upfront fees
-          </p>
-        </div>
+        {/* Sticky Primary Action: Review & Payment */}
+        <StickyBookingActionBar
+          fee={fee}
+          stopsCount={formData.dropoffs?.length || 1}
+          codAmount={formData.cod.amount}
+          isCod={formData.cod.isCod}
+          isSubmitting={isSubmitting}
+          onClick={onSubmit}
+        />
       </form>
 
       {/* Map selection dialog */}

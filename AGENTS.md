@@ -237,17 +237,18 @@ Any pickup or drop-off location can include courier instructions and photo attac
 The application uses an **Unauthenticated First, Gated at Confirmation** pattern:
 
 1. **Public Exploration**: Anyone can visit `/`, choose pickup/drop-off stops, toggle COD, and view estimated fees.
-2. **Pending Booking Preservation**:
-   - When the user clicks "Confirm Booking", validate all required form fields.
-   - If validation fails, highlight invalid inputs with clear error messages.
-   - If validation passes and user is not authenticated, open `AuthenticationModal`.
+2. **Pending Booking Preservation & Review**:
+   - When the user clicks "Review & Payment" on the sticky action bar, validate required form fields.
+   - If valid, save the booking draft and navigate to the Review & Payment screen (`/booking/review`).
+   - On `/booking/review`, sellers inspect the itemized dispatch summary, pick their payment method (KHQR, Cash on Pickup, Wallet, Card), and proceed to confirm.
+   - If user is not authenticated, open `AuthenticationModal` during final payment authorization.
    - **Never clear or reset form fields during the authentication flow**.
 3. **Simulated Authentication**:
    - Phone number input → Continue → 4-digit PIN verification.
    - Test credentials for mock mode: Phone `012888999`, PIN `1234`.
 4. **Automatic Continuation**:
-   - Upon successful verification, authenticate the session and immediately submit the pending booking without forcing the user to click confirm again.
-   - Navigate to `/booking/success` with the completed booking details and generated tracking reference.
+   - Upon successful verification, authenticate the session and immediately submit the booking.
+   - Navigate to `/booking/success` with the completed booking details, payment reference, and generated tracking reference.
 
 ### Production Security Boundaries
 - Browser code must never call external Express or carrier APIs directly.
@@ -292,7 +293,6 @@ Before declaring any feature complete:
 
 ## 14. Common Anti-Patterns to Avoid
 
-- **DO NOT** create separate review or multi-step wizard pages. The sticky summary beside the form already provides real-time review.
 - **DO NOT** add Cash on Delivery (COD) amount to the delivery fee total.
 - **DO NOT** make recipient name mandatory. (Sellers often deliver to phone numbers + addresses only).
 - **DO NOT** duplicate map pin buttons in both the section header and next to the input.

@@ -28,6 +28,7 @@ function BookingSuccessContent() {
   const recipient = searchParams.get('recipient') || 'Sokha Chan';
   const cod = searchParams.get('cod') || '0';
   const stops = searchParams.get('stops') || '1';
+  const payment = searchParams.get('payment');
 
   const [copied, setCopied] = useState(false);
   const [copiedMsg, setCopiedMsg] = useState(false);
@@ -139,6 +140,15 @@ function BookingSuccessContent() {
               <p className='font-semibold text-slate-900'>{recipient}</p>
             </div>
           </div>
+
+          {payment && (
+            <div className='flex items-center justify-between text-xs pt-2 border-t border-slate-100'>
+              <span className='text-slate-500'>Payment Method:</span>
+              <span className='font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded font-mono text-[11px]'>
+                {payment === 'KHQR' ? 'Wing Bank KHQR / Bakong' : payment === 'COP' ? 'Cash on Pickup' : payment === 'WALLET' ? 'Seller Balance' : 'Bank Card'}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* COD Info */}
