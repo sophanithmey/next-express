@@ -21,3 +21,4 @@ export function Divider({ label, className }: DividerProps) {
     </div>
   );
 }
+

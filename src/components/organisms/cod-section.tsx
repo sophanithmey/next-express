@@ -90,3 +90,4 @@ export function CodSection({ cod, onChangeCod }: CodSectionProps) {
     </div>
   );
 }
+

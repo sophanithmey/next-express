@@ -104,3 +104,4 @@ export function RecipientsManager({ initialRecipients }: RecipientsManagerProps)
     </div>
   );
 }
+

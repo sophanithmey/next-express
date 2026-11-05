@@ -24,3 +24,4 @@ export default async function BookingDetailPage({ params }: BookingDetailPagePro
 
   return <BookingDetailView order={order} />;
 }
+

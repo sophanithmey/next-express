@@ -1,5 +1,5 @@
 export const APP_CONFIG = {
-  appName: 'Express Seller',
+  appName: 'WingExpress',
   currency: 'USD',
   currencySymbol: '$',
   defaultCoordinates: {
@@ -39,3 +39,4 @@ export const STATUS_COLORS: Record<string, { bg: string; text: string; border: s
   delivered: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
   cancelled: { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
 };
+

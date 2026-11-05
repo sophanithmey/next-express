@@ -33,3 +33,4 @@ export function getServerEnv(): ServerEnvConfig {
     mapServerApiKey: process.env.MAP_SERVER_API_KEY,
   };
 }
+

@@ -1,16 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthLayout } from '@/components/templates/auth-layout';
 import { PhoneInput } from '@/components/molecules/phone-input';
 import { Button } from '@/components/atoms/button';
 import { FormField } from '@/components/molecules/form-field';
 import { ErrorMessage } from '@/components/molecules/error-message';
-import { ArrowRight, ShieldCheck } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Truck } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect') || '';
+
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +42,12 @@ export default function LoginPage() {
         return;
       }
 
-      router.push(`/verify-pin?phone=${encodeURIComponent(clean)}`);
+      const queryParams = new URLSearchParams({ phone: clean });
+      if (redirectUrl) {
+        queryParams.set('redirect', redirectUrl);
+      }
+
+      router.push(`/verify-pin?${queryParams.toString()}`);
     } catch {
       setError('Network error connecting to authentication server.');
     } finally {
@@ -50,9 +58,20 @@ export default function LoginPage() {
   return (
     <AuthLayout
       title="Merchant Sign In"
-      subtitle="Enter your mobile phone number to receive a secure login PIN"
+      subtitle={
+        redirectUrl
+          ? 'Sign in with your phone number to proceed with booking express delivery'
+          : 'Enter your mobile phone number to receive a secure login PIN'
+      }
     >
       <form onSubmit={handleSubmit} className="space-y-5">
+        {redirectUrl && (
+          <div className="flex items-center gap-2 rounded-lg border border-brand-200 bg-brand-50 p-2.5 text-xs text-brand-800 font-medium">
+            <Truck className="h-4 w-4 text-brand-600 flex-shrink-0" />
+            <span>Login required to dispatch express delivery</span>
+          </div>
+        )}
+
         {error && <ErrorMessage message={error} />}
 
         <FormField
@@ -86,5 +105,13 @@ export default function LoginPage() {
         </div>
       </form>
     </AuthLayout>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-400">Loading sign in...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

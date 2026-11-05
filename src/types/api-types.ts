@@ -23,3 +23,4 @@ export interface ApiErrorPayload {
   code?: string;
   details?: Record<string, string[]>;
 }
+

@@ -18,3 +18,4 @@ export const pinSchema = z.object({
 });
 
 export type PinFormValues = z.infer<typeof pinSchema>;
+

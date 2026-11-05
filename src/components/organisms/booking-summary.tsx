@@ -105,3 +105,4 @@ export function BookingSummary({
     </div>
   );
 }
+

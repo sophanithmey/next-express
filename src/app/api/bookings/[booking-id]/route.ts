@@ -26,3 +26,4 @@ export async function GET(
     return NextResponse.json({ message: 'Failed to retrieve booking' }, { status: 500 });
   }
 }
+

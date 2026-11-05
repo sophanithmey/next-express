@@ -48,3 +48,4 @@ export function RecipientCard({ recipient, onSelect, className }: RecipientCardP
     </button>
   );
 }
+

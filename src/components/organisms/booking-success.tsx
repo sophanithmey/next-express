@@ -143,3 +143,4 @@ export function BookingSuccess({ order, onBookAnother }: BookingSuccessProps) {
     </div>
   );
 }
+

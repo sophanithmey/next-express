@@ -73,7 +73,8 @@ function VerifyPinContent() {
         return;
       }
 
-      router.push('/dashboard');
+      const destination = searchParams.get('redirect') || '/dashboard';
+      router.push(destination);
       router.refresh();
     } catch {
       setError('Network error validating PIN.');
@@ -168,3 +169,4 @@ export default function VerifyPinPage() {
     </Suspense>
   );
 }
+

@@ -105,3 +105,4 @@ export interface DashboardStatistics {
   delivered: number;
   codCollection: number;
 }
+

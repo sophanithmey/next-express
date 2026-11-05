@@ -39,3 +39,4 @@ export interface SessionData {
   refreshToken?: string;
   expiresAt: number;
 }
+

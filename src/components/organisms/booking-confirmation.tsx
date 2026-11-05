@@ -211,3 +211,4 @@ export function BookingConfirmation({
     </div>
   );
 }
+

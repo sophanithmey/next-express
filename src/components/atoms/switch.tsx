@@ -36,3 +36,4 @@ export function Switch({ checked, onChange, disabled, id, className }: SwitchPro
     </button>
   );
 }
+

@@ -32,3 +32,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'Failed to save location' }, { status: 500 });
   }
 }
+

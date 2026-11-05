@@ -33,7 +33,7 @@ export function AppHeader({ user }: AppHeaderProps) {
           </div>
           <div>
             <span className="text-base font-bold text-slate-900 tracking-tight block leading-tight">
-              Express Seller
+              WingExpress
             </span>
             <span className="text-[10px] text-brand-600 font-semibold tracking-wide uppercase">
               Wing Delivery Network
@@ -79,3 +79,4 @@ export function AppHeader({ user }: AppHeaderProps) {
     </header>
   );
 }
+

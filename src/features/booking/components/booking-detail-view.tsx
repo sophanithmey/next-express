@@ -256,3 +256,4 @@ export function BookingDetailView({ order }: BookingDetailViewProps) {
     </div>
   );
 }
+

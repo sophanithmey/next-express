@@ -34,3 +34,4 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
 );
 
 SearchInput.displayName = 'SearchInput';
+

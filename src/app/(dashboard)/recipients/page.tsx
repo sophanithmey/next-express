@@ -9,3 +9,4 @@ export default async function RecipientsPage() {
 
   return <RecipientsManager initialRecipients={recipients} />;
 }
+

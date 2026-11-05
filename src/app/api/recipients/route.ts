@@ -14,3 +14,4 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: 'Failed to search recipients' }, { status: 500 });
   }
 }
+

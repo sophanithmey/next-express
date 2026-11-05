@@ -31,3 +31,4 @@ export function BookingLayout({ title, subtitle, children }: BookingLayoutProps)
     </div>
   );
 }
+
