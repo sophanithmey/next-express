@@ -114,19 +114,9 @@ export function DropoffStopItem({
 
       {/* Drop-off Address + Google Map Pin Action */}
       <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <Label htmlFor={`dropoff-address-${index}`} className="text-xs">
-            Drop-off Address / Street *
-          </Label>
-          <button
-            type="button"
-            onClick={() => onOpenMap(index)}
-            className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 cursor-pointer bg-emerald-50 hover:bg-emerald-100/80 px-2 py-0.5 rounded-md transition border border-emerald-200"
-          >
-            <MapPin className="h-3 w-3 text-emerald-600" />
-            <span>Pin on Google Map</span>
-          </button>
-        </div>
+        <Label htmlFor={`dropoff-address-${index}`} className="text-xs">
+          Drop-off Address / Street *
+        </Label>
         <div className="flex items-center gap-2">
           <div className="flex-1">
             <Input
@@ -144,11 +134,11 @@ export function DropoffStopItem({
           <button
             type="button"
             onClick={() => onOpenMap(index)}
-            className="h-10 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100/90 border border-emerald-300 text-xs font-bold text-emerald-800 flex items-center gap-1.5 flex-shrink-0 transition cursor-pointer"
-            title="Pin on Google Map"
+            className="h-10 px-3.5 rounded-xl bg-emerald-50 hover:bg-emerald-100/90 border border-emerald-300 text-xs font-bold text-emerald-800 flex items-center gap-1.5 flex-shrink-0 transition cursor-pointer shadow-2xs"
+            title="Pin location on Google Map"
           >
             <MapPin className="h-4 w-4 text-emerald-600" />
-            <span className="hidden sm:inline">Pin on Map</span>
+            <span>Pin on Map</span>
           </button>
         </div>
         {addressError && <p className="text-xs font-medium text-rose-600">{addressError}</p>}
@@ -176,3 +166,4 @@ export function DropoffStopItem({
     </div>
   );
 }
+
