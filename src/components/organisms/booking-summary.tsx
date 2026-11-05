@@ -1,108 +1,201 @@
-import React from 'react';
-import { BookingFeeQuote, CodInfo, DropoffLocation, PickupLocation } from '@/features/booking/types/booking-types';
-import { PriceRow } from '../molecules/price-row';
+'use client';
+
+import React, { useState } from 'react';
+import {
+  PickupLocation,
+  DropoffLocation,
+  RecipientInfo,
+  ParcelInfo,
+  CodInfo,
+  BookingFeeQuote,
+} from '@/features/booking/types/booking-types';
 import { APP_CONFIG } from '@/lib/constants';
-import { MapPin, Navigation, Banknote, ShieldCheck } from 'lucide-react';
+import {
+  MapPin,
+  Navigation,
+  User,
+  Package,
+  DollarSign,
+  ChevronUp,
+  ChevronDown,
+  ShieldCheck,
+  Clock,
+} from 'lucide-react';
 
 interface BookingSummaryProps {
   pickup: PickupLocation;
   dropoff: DropoffLocation;
-  feeQuote: BookingFeeQuote | null;
+  recipient: RecipientInfo;
+  parcel: ParcelInfo;
   cod: CodInfo;
+  feeQuote: BookingFeeQuote | null;
   isLoadingFee?: boolean;
 }
 
 export function BookingSummary({
   pickup,
   dropoff,
-  feeQuote,
+  recipient,
+  parcel,
   cod,
-  isLoadingFee = false,
+  feeQuote,
+  isLoadingFee,
 }: BookingSummaryProps) {
-  const deliveryFee = feeQuote?.totalDeliveryFee || 1.6;
-  const distance = feeQuote?.distanceKm || 3.2;
+  const [isMobileExpanded, setIsMobileExpanded] = useState(false);
+  const deliveryFee = feeQuote?.totalDeliveryFee ?? 1.75;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-5">
-      <div>
-        <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-          Delivery Summary
-        </h4>
-        <p className="text-xs text-slate-500">Live breakdown calculated from route distance</p>
-      </div>
-
-      <div className="space-y-3 text-xs">
-        <div className="flex items-start gap-2">
-          <div className="h-5 w-5 rounded-full bg-brand-50 text-brand-700 flex items-center justify-center font-bold text-[10px] mt-0.5">
-            P
-          </div>
-          <div className="flex-1">
-            <span className="font-semibold text-slate-900 block">{pickup.name}</span>
-            <span className="text-slate-500 line-clamp-1">{pickup.address}</span>
-          </div>
-        </div>
-
-        <div className="flex items-start gap-2">
-          <div className="h-5 w-5 rounded-full bg-rose-50 text-rose-700 flex items-center justify-center font-bold text-[10px] mt-0.5">
-            D
-          </div>
-          <div className="flex-1">
-            <span className="font-semibold text-slate-900 block">Drop-off Point</span>
-            <span className="text-slate-500 line-clamp-1">{dropoff.address}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="border-t border-slate-100 pt-4 space-y-1">
-        <div className="flex items-center justify-between text-xs text-slate-500 pb-1">
-          <span>Route Distance:</span>
-          <span className="font-semibold text-slate-700 font-mono">
-            {isLoadingFee ? 'Calculating...' : `${distance} km`}
+    <div className="w-full">
+      {/* Desktop Sticky Card */}
+      <div className="hidden lg:block sticky top-20 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm space-y-5">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 className="text-sm font-bold text-slate-900 tracking-tight">Delivery Summary</h3>
+          <span className="text-[11px] font-semibold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-200">
+            Live Estimate
           </span>
         </div>
 
-        <PriceRow
-          label="Base Delivery Charge"
-          amount={feeQuote?.baseFee || 1.25}
-          subtitle="Covers first 2.0 km"
-        />
-
-        <PriceRow
-          label="Distance Surcharge"
-          amount={Math.max(0, deliveryFee - (feeQuote?.baseFee || 1.25))}
-          subtitle="Per extra km"
-        />
-
-        <PriceRow
-          label="Total Delivery Fee"
-          amount={deliveryFee}
-          isTotal
-        />
-      </div>
-
-      {cod.isCod && (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 space-y-1">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-900">
-              <Banknote className="h-3.5 w-3.5 text-emerald-700" />
-              <span>COD Collection</span>
+        {/* Route Details */}
+        <div className="space-y-3 text-xs">
+          <div className="flex items-start gap-2.5">
+            <MapPin className="h-4 w-4 text-brand-600 mt-0.5 flex-shrink-0" />
+            <div className="min-w-0">
+              <span className="text-[11px] font-medium text-slate-400 block uppercase tracking-wider">
+                Pickup Point
+              </span>
+              <p className="font-semibold text-slate-900 truncate">{pickup.name}</p>
+              <p className="text-slate-500 text-[11px] truncate">{pickup.address}</p>
             </div>
-            <span className="text-sm font-bold text-emerald-800">
-              {APP_CONFIG.currencySymbol}
-              {cod.amount.toFixed(2)}
+          </div>
+
+          <div className="flex items-start gap-2.5">
+            <Navigation className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+            <div className="min-w-0">
+              <span className="text-[11px] font-medium text-slate-400 block uppercase tracking-wider">
+                Drop-off Destination
+              </span>
+              <p className="font-semibold text-slate-900 truncate">
+                {dropoff.address || 'Enter destination address'}
+              </p>
+              <p className="text-slate-500 text-[11px]">
+                Est. Distance: ~{feeQuote?.distanceKm || 3.5} km
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Recipient & Parcel Info */}
+        <div className="rounded-xl bg-slate-50 p-3 border border-slate-100 space-y-2 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 flex items-center gap-1.5">
+              <User className="h-3.5 w-3.5 text-slate-400" /> Recipient:
+            </span>
+            <span className="font-semibold text-slate-800 truncate max-w-[150px]">
+              {recipient.name || 'Not provided'}
             </span>
           </div>
-          <p className="text-[11px] text-emerald-700 leading-snug">
-            Collected from buyer upon arrival. Not a delivery expense.
-          </p>
-        </div>
-      )}
 
-      <div className="flex items-center gap-2 pt-2 text-[11px] text-slate-400">
-        <ShieldCheck className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-        <span>Guaranteed express dispatch upon confirmation</span>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 flex items-center gap-1.5">
+              <Package className="h-3.5 w-3.5 text-slate-400" /> Order Ref:
+            </span>
+            <span className="font-mono text-slate-800">
+              {parcel.sellerOrderRef || 'None'}
+            </span>
+          </div>
+        </div>
+
+        {/* Price Breakdown */}
+        <div className="space-y-2 border-t border-slate-100 pt-3 text-xs">
+          <div className="flex justify-between items-center text-slate-600">
+            <span>Estimated Delivery Fee:</span>
+            <span className="font-bold text-slate-900 font-mono">
+              {isLoadingFee ? '…' : `${APP_CONFIG.currencySymbol}${deliveryFee.toFixed(2)}`}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center text-sm font-bold text-slate-900 pt-1 border-t border-slate-100">
+            <span>Total Delivery Charge:</span>
+            <span className="text-base text-brand-700 font-mono">
+              {isLoadingFee ? '…' : `${APP_CONFIG.currencySymbol}${deliveryFee.toFixed(2)}`}
+            </span>
+          </div>
+
+          {/* COD Notice */}
+          {cod.isCod && (
+            <div className="mt-3 rounded-xl bg-emerald-50 p-3 border border-emerald-200 text-xs text-emerald-900 space-y-1">
+              <div className="flex items-center justify-between font-bold">
+                <span className="flex items-center gap-1">
+                  <DollarSign className="h-3.5 w-3.5" /> Buyer COD to Collect:
+                </span>
+                <span className="text-sm font-mono">${cod.amount.toFixed(2)}</span>
+              </div>
+              <p className="text-[10px] text-emerald-700">
+                * COD is collected from recipient and is NOT added to the delivery fee.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Delivery Guarantee Notes */}
+        <div className="border-t border-slate-100 pt-3 space-y-2 text-[11px] text-slate-500">
+          <div className="flex items-center gap-2">
+            <Clock className="h-3.5 w-3.5 text-brand-600 flex-shrink-0" />
+            <span>Average courier dispatch within 15–30 minutes</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />
+            <span>Real-time tracking provided upon confirmation</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Expandable Compact Bar */}
+      <div className="lg:hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <button
+          type="button"
+          onClick={() => setIsMobileExpanded(!isMobileExpanded)}
+          className="w-full flex items-center justify-between text-left"
+        >
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+              Estimated Total Charge
+            </span>
+            <span className="text-lg font-bold text-brand-700 font-mono">
+              ${deliveryFee.toFixed(2)}
+            </span>
+          </div>
+          <div className="flex items-center gap-1 text-xs font-semibold text-brand-600">
+            <span>{isMobileExpanded ? 'Hide Details' : 'View Summary'}</span>
+            {isMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </div>
+        </button>
+
+        {isMobileExpanded && (
+          <div className="mt-4 pt-3 border-t border-slate-100 space-y-2 text-xs text-slate-600 animate-in fade-in">
+            <div className="flex justify-between">
+              <span className="text-slate-400">Pickup:</span>
+              <span className="font-semibold text-slate-800 truncate max-w-[200px]">{pickup.name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">Drop-off:</span>
+              <span className="font-semibold text-slate-800 truncate max-w-[200px]">
+                {dropoff.address || 'Pending'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">Recipient:</span>
+              <span className="font-semibold text-slate-800">{recipient.name || 'Pending'}</span>
+            </div>
+            {cod.isCod && (
+              <div className="flex justify-between text-emerald-700 font-bold">
+                <span>COD to Collect:</span>
+                <span>${cod.amount.toFixed(2)}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 }
-
