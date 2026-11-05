@@ -1,11 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { PickupLocation } from '@/features/booking/types/booking-types';
 import { FormSection } from '../../molecules/form-section';
 import { Input } from '../../atoms/input';
 import { Label } from '../../atoms/label';
-import { MapPin, User, Phone, Map } from 'lucide-react';
+import { MapPin, User, Phone, Map, LocateFixed, Loader2 } from 'lucide-react';
 
 interface PickupSectionProps {
   pickup: PickupLocation;
@@ -20,6 +20,46 @@ export function PickupSection({
   onOpenMap,
   error,
 }: PickupSectionProps) {
+  const [isLocating, setIsLocating] = useState(false);
+
+  const handleGetCurrentLocation = () => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      onChangePickup({
+        ...pickup,
+        name: 'Current Location',
+        address: 'Current Location, Khan Daun Penh, Phnom Penh',
+        coordinates: { lat: 11.5564, lng: 104.9282 },
+      });
+      return;
+    }
+
+    setIsLocating(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setIsLocating(false);
+        const { latitude, longitude } = position.coords;
+        onChangePickup({
+          ...pickup,
+          name: 'Current Location',
+          address: `Current Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)}), Phnom Penh`,
+          coordinates: { lat: latitude, lng: longitude },
+        });
+      },
+      () => {
+        setIsLocating(false);
+        // Fallback for denied permission or unsupported environment
+        onChangePickup({
+          ...pickup,
+          name: 'Current Location',
+          address: 'Current Location (Central Phnom Penh)',
+          coordinates: { lat: 11.5564, lng: 104.9282 },
+        });
+      },
+      { timeout: 7000, enableHighAccuracy: true }
+    );
+  };
+
   return (
     <FormSection
       number="A"
@@ -29,7 +69,7 @@ export function PickupSection({
         <button
           type="button"
           onClick={onOpenMap}
-          className="flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 bg-brand-50 px-2.5 py-1.5 rounded-lg border border-brand-200 transition"
+          className="flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 bg-brand-50 px-2.5 py-1.5 rounded-lg border border-brand-200 transition cursor-pointer"
         >
           <Map className="h-3.5 w-3.5" />
           <span>Select on Map / Hub</span>
@@ -38,7 +78,23 @@ export function PickupSection({
     >
       <div className="space-y-3">
         <div className="space-y-1.5">
-          <Label htmlFor="pickup-address">Pickup Address / Warehouse</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="pickup-address">Pickup Address / Warehouse</Label>
+            <button
+              type="button"
+              onClick={handleGetCurrentLocation}
+              disabled={isLocating}
+              className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1 cursor-pointer transition select-none disabled:opacity-60"
+            >
+              {isLocating ? (
+                <Loader2 className="h-3 w-3 animate-spin text-brand-600" />
+              ) : (
+                <LocateFixed className="h-3 w-3 text-brand-600" />
+              )}
+              <span>{isLocating ? 'Locating…' : 'Use current location'}</span>
+            </button>
+          </div>
+
           <Input
             id="pickup-address"
             placeholder="e.g. St 271, Mean Chey, Phnom Penh"
@@ -84,4 +140,3 @@ export function PickupSection({
     </FormSection>
   );
 }
-

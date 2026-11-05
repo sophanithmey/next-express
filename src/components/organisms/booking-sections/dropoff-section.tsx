@@ -144,7 +144,7 @@ export function DropoffSection({
             <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white group-hover:scale-105 transition-transform">
               <Plus className="h-3.5 w-3.5 stroke-[3]" />
             </div>
-            <span>+ Add Another Drop-off Destination (Multi-Drop)</span>
+            <span>Add Another Drop-off Destination (Multi-Drop)</span>
           </button>
           <p className="text-center text-[11px] text-slate-400 mt-2">
             Couriers will deliver packages sequentially to each destination in a single dispatch.
