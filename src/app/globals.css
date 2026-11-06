@@ -1,6 +1,91 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@theme {
+  /* Wingmall Primary Color (Wing Gold/Yellow #ffcc00) */
+  --color-primary-50: #fefce8;
+  --color-primary-100: #fffbeb;
+  --color-primary-200: #fff4c2;
+  --color-primary-300: #ffe885;
+  --color-primary-400: #fac800;
+  --color-primary-500: #ffcc00;
+  --color-primary-600: #e6b800;
+  --color-primary-700: #cd8900;
+  --color-primary-800: #b96409;
+  --color-primary-900: #8f4b00;
+  --color-primary: #ffcc00;
+  --color-primary-foreground: #04172a;
+
+  /* Wingmall Secondary Color (Wing Deep Royal Blue #003494) */
+  --color-secondary-50: #eff6ff;
+  --color-secondary-100: #dbeafe;
+  --color-secondary-200: #bfdbfe;
+  --color-secondary-300: #93c5fd;
+  --color-secondary-400: #3080ff;
+  --color-secondary-500: #155dfc;
+  --color-secondary-600: #003494;
+  --color-secondary-700: #002a7a;
+  --color-secondary-800: #002060;
+  --color-secondary-900: #001642;
+  --color-secondary-950: #000d2b;
+  --color-secondary: #003494;
+  --color-secondary-foreground: #ffffff;
+
+  /* Wing Corporate Brand (Deep Blue base) */
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #3080ff;
+  --color-brand-500: #155dfc;
+  --color-brand-600: #003494;
+  --color-brand-700: #002a7a;
+  --color-brand-800: #002060;
+  --color-brand-900: #001642;
+  --color-brand: #003494;
+
+  /* Wing Lime Accent (#a9cc38) */
+  --color-brand-lime-50: #f7fbe8;
+  --color-brand-lime-100: #eef8c6;
+  --color-brand-lime-200: #dff293;
+  --color-brand-lime-300: #cce956;
+  --color-brand-lime-400: #b7dc2b;
+  --color-brand-lime-500: #a9cc38;
+  --color-brand-lime-600: #8aa828;
+  --color-brand-lime-700: #6a8321;
+  --color-brand-lime-800: #4f611d;
+  --color-brand-lime-900: #374317;
+  --color-brand-lime: #a9cc38;
+
+  /* Direct Wing Tokens from shop.wingmall.com */
+  --color-wing-yellow: #ffcc00;
+  --color-wing-blue: #003494;
+  --color-wing-lime: #a9cc38;
+  --color-wing-dark: #04172a;
+  --color-wing-light-blue: #5957d6;
+  --color-wing-golden: #fab62e;
+  --color-wing-robin: #00c7bd;
+  --color-wing-orange: #ff9500;
+
+  /* Wingmall Semantic Surface Tokens */
+  --color-wingmall-foreground: #04172a;
+  --color-wingmall-muted-foreground: #606d85;
+  --color-wingmall-muted-foreground-reverse: #d7dae4;
+  --color-wingmall-border: #ebedef;
+  --color-wingmall-accent: #f2f3f7;
+  --color-wingmall-accent-foreground: #04172a;
+  --color-wingmall-accent-saturated: #a6b2c4;
+  --color-wingmall-success: #10b77f;
+  --color-wingmall-warning: #fbbd23;
+  --color-wingmall-destructive: #f21818;
+  --color-wingmall-info: #3c83f6;
+
+  /* Typography */
+  --font-sans:
+    'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+  --font-poppins: 'Poppins', 'Inter', sans-serif;
+  --font-khmer: 'Kantumruy Pro', 'Noto Sans Khmer', sans-serif;
+}
 
 :root {
   --primary: #ffcc00;
@@ -15,8 +100,10 @@
   --success: #10b77f;
 }
 
-@layer base {
-  body {
-    @apply bg-slate-50 text-slate-900 antialiased font-sans;
-  }
+body {
+  background-color: var(--color-slate-50, #f8fafc);
+  color: var(--color-slate-900, #0f172a);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
