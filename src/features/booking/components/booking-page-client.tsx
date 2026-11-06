@@ -2,15 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  BookingFormData,
-  PickupLocation,
-  DropoffLocation,
-  DropoffStop,
-  RecipientInfo,
-  ParcelInfo,
-  CodInfo,
-} from '../types/booking-types';
+import { BookingFormData, PickupLocation } from '../types/booking-types';
 import {
   SAMPLE_PHNOM_PENH_LOCATIONS,
   calculateMockFee,
@@ -31,12 +23,13 @@ interface BookingPageClientProps {
   initialLocations?: PickupLocation[];
 }
 
-export function BookingPageClient({ initialLocations = [] }: BookingPageClientProps) {
+export function BookingPageClient({
+  initialLocations = [],
+}: BookingPageClientProps) {
   const router = useRouter();
   const { isAuthenticated, login } = useAuthState();
 
-  const defaultPickup =
-    initialLocations[0] || SAMPLE_PHNOM_PENH_LOCATIONS[0];
+  const defaultPickup = initialLocations[0] || SAMPLE_PHNOM_PENH_LOCATIONS[0];
 
   const [formData, setFormData] = useState<BookingFormData>({
     pickup: defaultPickup,
@@ -93,9 +86,13 @@ export function BookingPageClient({ initialLocations = [] }: BookingPageClientPr
     return calculateMockFee(
       formData.pickup.coordinates,
       formData.dropoff.coordinates,
-      additionalStops
+      additionalStops,
     );
-  }, [formData.pickup.coordinates, formData.dropoff.coordinates, formData.dropoffs]);
+  }, [
+    formData.pickup.coordinates,
+    formData.dropoff.coordinates,
+    formData.dropoffs,
+  ]);
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -107,23 +104,35 @@ export function BookingPageClient({ initialLocations = [] }: BookingPageClientPr
     if (formData.dropoffs && formData.dropoffs.length > 0) {
       formData.dropoffs.forEach((stop, idx) => {
         // Recipient name is optional
-        if (!stop.recipient.phoneNumber?.trim() || stop.recipient.phoneNumber.length < 8) {
-          newErrors[`dropoffs.${idx}.phoneNumber`] = `Valid phone for Destination ${idx + 1} is required (at least 8 digits).`;
+        if (
+          !stop.recipient.phoneNumber?.trim() ||
+          stop.recipient.phoneNumber.length < 8
+        ) {
+          newErrors[`dropoffs.${idx}.phoneNumber`] =
+            `Valid phone for Destination ${idx + 1} is required (at least 8 digits).`;
         }
         if (!stop.dropoff.address?.trim()) {
-          newErrors[`dropoffs.${idx}.address`] = `Drop-off address for Destination ${idx + 1} is required.`;
+          newErrors[`dropoffs.${idx}.address`] =
+            `Drop-off address for Destination ${idx + 1} is required.`;
         }
       });
     } else {
       if (!formData.dropoff.address?.trim()) {
         newErrors['dropoff.address'] = 'Drop-off address is required.';
       }
-      if (!formData.recipient.phoneNumber?.trim() || formData.recipient.phoneNumber.length < 8) {
-        newErrors['recipient.phoneNumber'] = 'Valid phone number is required (at least 8 digits).';
+      if (
+        !formData.recipient.phoneNumber?.trim() ||
+        formData.recipient.phoneNumber.length < 8
+      ) {
+        newErrors['recipient.phoneNumber'] =
+          'Valid phone number is required (at least 8 digits).';
       }
     }
 
-    if (formData.cod.isCod && (!formData.cod.amount || formData.cod.amount <= 0)) {
+    if (
+      formData.cod.isCod &&
+      (!formData.cod.amount || formData.cod.amount <= 0)
+    ) {
       newErrors['cod.amount'] = 'Please enter a COD amount greater than 0.';
     }
 
@@ -183,9 +192,9 @@ export function BookingPageClient({ initialLocations = [] }: BookingPageClientPr
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
+      <div className='grid grid-cols-1 gap-8 lg:grid-cols-12 items-start'>
         {/* Left: Booking Form (approximately 65%) */}
-        <div className="lg:col-span-7 xl:col-span-8">
+        <div className='lg:col-span-7 xl:col-span-8'>
           <BookingForm
             formData={formData}
             onChangePickup={(pickup) => {
@@ -212,7 +221,9 @@ export function BookingPageClient({ initialLocations = [] }: BookingPageClientPr
                 dropoff: dropoffs[0]?.dropoff || prev.dropoff,
               }));
             }}
-            onChangeParcel={(parcel) => setFormData((prev) => ({ ...prev, parcel }))}
+            onChangeParcel={(parcel) =>
+              setFormData((prev) => ({ ...prev, parcel }))
+            }
             onChangeCod={(cod) => {
               setFormData((prev) => ({ ...prev, cod }));
               setErrors((prev) => ({ ...prev, 'cod.amount': '' }));
@@ -225,7 +236,7 @@ export function BookingPageClient({ initialLocations = [] }: BookingPageClientPr
         </div>
 
         {/* Right: Delivery Summary (approximately 35%) */}
-        <div className="lg:col-span-5 xl:col-span-4">
+        <div className='lg:col-span-5 xl:col-span-4'>
           <BookingSummary
             pickup={formData.pickup}
             dropoff={formData.dropoff}
