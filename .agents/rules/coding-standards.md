@@ -23,7 +23,7 @@
 ### 3. Space-Efficient UI
 - Keep optional sections compact. Combine related simple fields (e.g., parcel info + COD toggle).
 - Do not use `bg-gradient`. Use Tailwind `bg-linear` only if genuinely needed.
-- Primary brand color: Emerald green (`emerald-600` / `emerald-700`).
+- Brand colors (cloned from shop.wingmall.com): Primary Wing Gold (`#ffcc00`), Wing Royal Blue (`#003494` / `brand-600`), Wing Lime (`#a9cc38`), and Success Green (`#10b77f`).
 
 ### 4. Verification Commands
 Always verify before completing:

@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --primary: #ffcc00;
+  --primary-foreground: #04172a;
+  --secondary: #003494;
+  --secondary-foreground: #ffffff;
+  --brand: #a9cc38;
+  --brand-blue: #003494;
+  --foreground: #04172a;
+  --border: #ebedef;
+  --accent: #f2f3f7;
+  --success: #10b77f;
+}
+
 @layer base {
   body {
     @apply bg-slate-50 text-slate-900 antialiased font-sans;

@@ -114,9 +114,13 @@ The interface must be modern, minimal, premium, and easy to understand.
 
 ### Visual Style
 
-- **Palette**: Clean white and neutral slate backgrounds (`bg-slate-50`, `bg-white`).
-- **Brand Color**: Emerald green (`emerald-600`, `emerald-700`, `hover:bg-emerald-700`, `bg-emerald-50` for subtle active states).
-- **Typography**: Dark charcoal (`text-slate-900`), muted secondary labels (`text-slate-500`), subtle micro-copy (`text-xs`).
+- **Palette**: Clean white, accent surfaces (`bg-slate-50`, `bg-white`, `bg-[#f2f3f7]`).
+- **Brand Colors (Wing & Wingmall)**:
+  - **Primary**: Wing Gold / Yellow (`#ffcc00` / `primary-500`, `primary-400`).
+  - **Secondary / Royal Blue**: Wing Corporate Blue (`#003494` / `secondary-600`, `brand-600`).
+  - **Brand Lime**: Wing Lime Accent (`#a9cc38` / `brand.lime-500`).
+  - **Success Green**: Wing Success Green (`#10b77f` / `emerald-600`).
+- **Typography**: Dark charcoal navy (`text-[#04172a]`, `text-slate-900`), muted secondary labels (`text-[#606d85]`, `text-slate-500`), subtle micro-copy (`text-xs`).
 - **Borders & Radii**: Subtle borders (`border-slate-200`, `border-slate-100`) and rounded corners (12–16px, `rounded-xl` or `rounded-2xl`).
 - **Spacing Efficiency**:
   - Save vertical space for secondary or optional sections.
