@@ -5,18 +5,25 @@ import {
   DropoffLocation,
   RecipientInfo,
   DropoffStop,
+  CodInfo,
 } from '@/features/booking/types/booking-types';
 import { FormSection } from '../../molecules/form-section';
-import { Map, Plus } from 'lucide-react';
+import { Navigation, Layers, Route } from 'lucide-react';
 import { DropoffStopItem } from './dropoff-stop-item';
+import { DropoffAddStopButton } from './dropoff-add-stop-button';
+import { BulkDropoffModal } from '../bulk-dropoff-modal';
+import { useDropoffSection } from '@/features/booking/hooks/use-dropoff-section';
+import { useTranslations } from 'next-intl';
 
 interface DropoffSectionProps {
   dropoff: DropoffLocation;
   recipient: RecipientInfo;
   dropoffs?: DropoffStop[];
+  cod?: CodInfo;
   onChangeDropoff: (dropoff: DropoffLocation) => void;
   onChangeRecipient: (recipient: RecipientInfo) => void;
   onChangeDropoffs?: (stops: DropoffStop[]) => void;
+  onOptimizeRoute?: () => void;
   onOpenMap: (stopIndex?: number) => void;
   errors: Record<string, string>;
 }
@@ -25,98 +32,93 @@ export function DropoffSection({
   dropoff,
   recipient,
   dropoffs,
+  cod,
   onChangeDropoff,
   onChangeRecipient,
   onChangeDropoffs,
+  onOptimizeRoute,
   onOpenMap,
   errors,
 }: DropoffSectionProps) {
-  // Ensure we always have at least 1 stop
-  const currentStops: DropoffStop[] =
-    dropoffs && dropoffs.length > 0
-      ? dropoffs
-      : [{ id: 'stop-1', recipient, dropoff }];
+  const tRecipient = useTranslations('Recipient');
+  const tBooking = useTranslations('Booking');
+  const tCommon = useTranslations('Common');
 
-  const handleUpdateStop = (
-    index: number,
-    updatedRecipient: RecipientInfo,
-    updatedDropoff: DropoffLocation
-  ) => {
-    const nextStops = currentStops.map((stop, i) =>
-      i === index ? { ...stop, recipient: updatedRecipient, dropoff: updatedDropoff } : stop
-    );
-
-    if (index === 0) {
-      onChangeRecipient(updatedRecipient);
-      onChangeDropoff(updatedDropoff);
-    }
-
-    onChangeDropoffs?.(nextStops);
-  };
-
-  const handleAddStop = () => {
-    const nextIndex = currentStops.length + 1;
-    const newStop: DropoffStop = {
-      id: `stop-${Date.now()}`,
-      recipient: { name: '', phoneNumber: '', notes: '' },
-      dropoff: {
-        address: '',
-        coordinates: { lat: 11.5512 + nextIndex * 0.005, lng: 104.9256 + nextIndex * 0.005 },
-      },
-    };
-
-    const nextStops = [...currentStops, newStop];
-    onChangeDropoffs?.(nextStops);
-  };
-
-  const handleRemoveStop = (index: number) => {
-    if (currentStops.length <= 1) return;
-    const nextStops = currentStops.filter((_, i) => i !== index);
-
-    if (index === 0 && nextStops.length > 0) {
-      onChangeRecipient(nextStops[0].recipient);
-      onChangeDropoff(nextStops[0].dropoff);
-    }
-
-    onChangeDropoffs?.(nextStops);
-  };
-
-  const isMultiDrop = currentStops.length > 1;
+  const {
+    currentStops,
+    isMultiDrop,
+    isBulkModalOpen,
+    setIsBulkModalOpen,
+    collapsedStops,
+    sortableContainerRef,
+    handleToggleCollapse,
+    handleUpdateStop,
+    handleAddStop,
+    handleRemoveStop,
+    handleBulkApply,
+    handleMoveUp,
+    handleMoveDown,
+  } = useDropoffSection({
+    dropoff,
+    recipient,
+    dropoffs,
+    cod,
+    onChangeDropoff,
+    onChangeRecipient,
+    onChangeDropoffs,
+  });
 
   return (
     <FormSection
-      number="B"
-      title="Drop-off Destinations &amp; Recipients"
+      icon={<Navigation className="h-4 w-4" />}
+      iconClassName="bg-brand-50 text-brand-700 border border-brand-200"
+      title={tRecipient('title')}
+      titleClassName="text-brand-950 font-bold"
       subtitle={
         isMultiDrop
-          ? `Multi-drop delivery: ${currentStops.length} customer destinations`
-          : 'Customer contact, drop-off address and rider note'
+          ? tRecipient('multiSubtitle', { count: currentStops.length })
+          : tRecipient('singleSubtitle')
       }
       action={
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {isMultiDrop && (
-            <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100/90 px-2.5 py-1 rounded-md border border-emerald-300">
-              {currentStops.length} Stops
+            <span className="text-[11px] font-bold text-brand-800 bg-brand-50 px-2 py-1 rounded-md border border-brand-200">
+              {currentStops.length} {tCommon('stops')}
             </span>
+          )}
+          {isMultiDrop && onOptimizeRoute && (
+            <button
+              type="button"
+              onClick={onOptimizeRoute}
+              className="flex items-center gap-1.5 text-xs font-semibold text-secondary-700 hover:text-secondary-900 bg-secondary-50 hover:bg-secondary-100 px-2.5 py-1.5 rounded-lg border border-secondary-200 shadow-2xs transition cursor-pointer"
+              title={tBooking('optimizeRouteTitle')}
+            >
+              <Route className="h-3.5 w-3.5 text-secondary-600" />
+              <span>{tBooking('optimizeRoute')}</span>
+            </button>
           )}
           <button
             type="button"
-            onClick={() => onOpenMap(0)}
-            className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-200 transition cursor-pointer"
+            onClick={() => setIsBulkModalOpen(true)}
+            className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200 shadow-2xs transition cursor-pointer"
+            title={tBooking('bulkImportSpreadsheet')}
           >
-            <Map className="h-3.5 w-3.5" />
-            <span>Select on Map / Zone</span>
+            <Layers className="h-3.5 w-3.5 text-brand-600" />
+            <span>{tBooking('bulkImport')}</span>
           </button>
         </div>
       }
     >
-      <div className="space-y-4">
+      <div ref={sortableContainerRef} className="space-y-4">
         {currentStops.map((stop, index) => {
           const nameError = errors[`dropoffs.${index}.name`];
           const phoneError =
-            errors[`dropoffs.${index}.phoneNumber`] || (index === 0 ? errors['recipient.phoneNumber'] : '');
+            errors[`dropoffs.${index}.phoneNumber`] ||
+            (index === 0 ? errors['recipient.phoneNumber'] : '');
           const addressError =
-            errors[`dropoffs.${index}.address`] || (index === 0 ? errors['dropoff.address'] : '');
+            errors[`dropoffs.${index}.address`] ||
+            (index === 0 ? errors['dropoff.address'] : '');
+          const codError = errors[`dropoffs.${index}.codAmount`];
 
           return (
             <DropoffStopItem
@@ -124,33 +126,30 @@ export function DropoffSection({
               stop={stop}
               index={index}
               isMultiDrop={isMultiDrop}
+              isCollapsed={Boolean(collapsedStops[stop.id])}
+              onToggleCollapse={() => handleToggleCollapse(stop.id)}
               onUpdateStop={handleUpdateStop}
               onRemoveStop={handleRemoveStop}
               onOpenMap={onOpenMap}
+              onMoveUp={handleMoveUp}
+              onMoveDown={handleMoveDown}
+              isLast={index === currentStops.length - 1}
               nameError={nameError}
               phoneError={phoneError}
               addressError={addressError}
+              codError={codError}
             />
           );
         })}
 
-        {/* Add Another Drop-off Destination Button */}
-        <div className="pt-1">
-          <button
-            type="button"
-            onClick={handleAddStop}
-            className="w-full py-2.5 px-4 rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50/40 hover:bg-emerald-50 text-xs font-bold text-emerald-800 flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs group"
-          >
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white group-hover:scale-105 transition-transform">
-              <Plus className="h-3.5 w-3.5 stroke-[3]" />
-            </div>
-            <span>Add Another Drop-off Destination (Multi-Drop)</span>
-          </button>
-          <p className="text-center text-[11px] text-slate-400 mt-2">
-            Couriers will deliver packages sequentially to each destination in a single dispatch.
-          </p>
-        </div>
+        <DropoffAddStopButton onAddStop={handleAddStop} />
       </div>
+
+      <BulkDropoffModal
+        isOpen={isBulkModalOpen}
+        onClose={() => setIsBulkModalOpen(false)}
+        onApplyStops={handleBulkApply}
+      />
     </FormSection>
   );
 }

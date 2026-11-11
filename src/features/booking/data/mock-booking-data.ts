@@ -1,4 +1,5 @@
-import { PickupLocation, RecipientRecord, BookingFeeQuote, GeoCoordinates } from '../types/booking-types';
+import { PickupLocation, RecipientRecord, BookingFeeQuote, GeoCoordinates, DeliverySpeedOption } from '../types/booking-types';
+import { calculateBookingFeeQuote } from '../services/pricing-service';
 
 export const SAMPLE_PHNOM_PENH_LOCATIONS: (PickupLocation & { tag: string })[] = [
   {
@@ -70,21 +71,15 @@ export const SAMPLE_RECIPIENTS: RecipientRecord[] = [
 export function calculateMockFee(
   pickupCoords?: GeoCoordinates,
   dropoffCoords?: GeoCoordinates,
-  additionalStopsCount: number = 0
+  additionalStopsCount: number = 0,
+  deliverySpeed: DeliverySpeedOption = 'instant'
 ): BookingFeeQuote {
-  if (!pickupCoords || !dropoffCoords) {
-    const extra = Math.max(0, additionalStopsCount) * 0.75;
-    return { baseFee: 1.25, distanceKm: 3.5, totalDeliveryFee: Math.round((1.75 + extra) * 100) / 100 };
-  }
-  // Rough distance calculation in km
-  const dx = (pickupCoords.lng - dropoffCoords.lng) * 111.32 * Math.cos((pickupCoords.lat * Math.PI) / 180);
-  const dy = (pickupCoords.lat - dropoffCoords.lat) * 110.574;
-  const distanceKm = Math.max(1, Math.round(Math.sqrt(dx * dx + dy * dy) * 10) / 10);
-  const baseFee = 1.25;
-  const distanceCharge = Math.max(0, distanceKm - 2) * 0.25;
-  const additionalStopCharge = Math.max(0, additionalStopsCount) * 0.75;
-  const total = Math.round((baseFee + distanceCharge + additionalStopCharge) * 100) / 100;
-  return { baseFee, distanceKm, totalDeliveryFee: total };
+  return calculateBookingFeeQuote({
+    pickupCoords,
+    dropoffCoords,
+    additionalStopsCount,
+    deliverySpeed,
+  });
 }
 
 export function generateMockReference(): string {

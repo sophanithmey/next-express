@@ -1,260 +1,210 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { BookingFormData, PickupLocation } from '../types/booking-types';
-import {
-  SAMPLE_PHNOM_PENH_LOCATIONS,
-  calculateMockFee,
-  generateMockReference,
-  generateMockTracking,
-} from '../data/mock-booking-data';
-import {
-  saveBookingDraft,
-  loadBookingDraft,
-} from '../services/booking-draft-service';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
+import { PickupLocation } from '../types/booking-types';
+import { SAMPLE_PHNOM_PENH_LOCATIONS } from '../data/mock-booking-data';
+import { useBookingPageForm } from '../hooks/use-booking-page-form';
+import { useSavedLocations, SavedLocationItem } from '../hooks/use-saved-locations';
+import { CreateSavedLocationInput } from '../schemas/location-schema';
 import { BookingForm } from '@/components/organisms/booking-form';
 import { BookingSummary } from '@/components/organisms/booking-summary';
-import { AuthenticationModal } from '@/components/organisms/authentication-modal';
+import { BookingLayoutMode } from '@/components/molecules/booking-layout-switcher';
+import { BookingPageHeader } from './booking-page-header';
+import { SavedDraftsModal } from '@/components/molecules/saved-drafts-modal';
+import {
+  fetchApiSavedDrafts,
+  getUserSavedDrafts,
+  saveApiBookingDraft,
+  SavedBookingDraft,
+} from '../services/booking-draft-service';
+import { RecentBookingsList } from './recent-bookings-list';
+import { GuestHelpCard } from './guest-help-card';
 import { useAuthState } from '@/features/auth/hooks/use-auth-state';
-import { UserProfile } from '@/features/auth/types/auth-types';
+import { toast } from 'sonner';
 
 interface BookingPageClientProps {
-  initialLocations?: PickupLocation[];
+  initialLocations?: (PickupLocation & { tag?: string })[];
 }
 
 export function BookingPageClient({
-  initialLocations = [],
+  initialLocations = SAMPLE_PHNOM_PENH_LOCATIONS,
 }: BookingPageClientProps) {
-  const router = useRouter();
-  const { isAuthenticated, login } = useAuthState();
+  const tBooking = useTranslations('Booking');
+  const locale = useLocale();
+  const { isAuthenticated, user, openAuthModal } = useAuthState();
+  const [layoutMode, setLayoutMode] = useState<BookingLayoutMode>('vertical');
+  const [savedDrafts, setSavedDrafts] = useState<SavedBookingDraft[]>([]);
+  const [isDraftsModalOpen, setIsDraftsModalOpen] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
 
-  const defaultPickup = initialLocations[0] || SAMPLE_PHNOM_PENH_LOCATIONS[0];
+  const { savedLocations, createLocation } = useSavedLocations(
+    initialLocations,
+    isAuthenticated,
+    locale,
+  );
 
-  const [formData, setFormData] = useState<BookingFormData>({
-    pickup: defaultPickup,
-    dropoff: {
-      address: 'BKK1, Khan Boeng Keng Kang, Phnom Penh',
-      coordinates: { lat: 11.5512, lng: 104.9256 },
-    },
-    recipient: {
-      name: 'Sokha Chan',
-      phoneNumber: '012 998 877',
-      notes: '',
-    },
-    dropoffs: [
-      {
-        id: 'stop-1',
-        recipient: {
-          name: 'Sokha Chan',
-          phoneNumber: '012 998 877',
-          notes: '',
-        },
-        dropoff: {
-          address: 'BKK1, Khan Boeng Keng Kang, Phnom Penh',
-          coordinates: { lat: 11.5512, lng: 104.9256 },
-        },
-      },
-    ],
-    parcel: {
-      description: 'Apparel / Retail Parcel',
-      sellerOrderRef: 'LIVE-0914',
-      quantity: 1,
-    },
-    cod: {
-      isCod: true,
-      amount: 25,
-    },
-    isBookingOnBehalf: false,
-  });
+  const {
+    formData,
+    setFormData,
+    feeQuote,
+    recentBookings,
+    handleBookAgain,
+    handleResetForm,
+    formSharedProps,
+  } = useBookingPageForm(savedLocations);
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Restore draft if returning from Review page
   useEffect(() => {
-    const draft = loadBookingDraft();
-    if (draft && draft.pickup?.address) {
-      setFormData(draft);
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('express_seller_booking_layout');
+      if (saved === 'vertical' || saved === 'horizontal') setLayoutMode(saved);
     }
   }, []);
 
-  // Live estimated delivery fee (accounting for extra stops)
-  const feeQuote = useMemo(() => {
-    const additionalStops = Math.max(0, (formData.dropoffs?.length || 1) - 1);
-    return calculateMockFee(
-      formData.pickup.coordinates,
-      formData.dropoff.coordinates,
-      additionalStops,
-    );
-  }, [
-    formData.pickup.coordinates,
-    formData.dropoff.coordinates,
-    formData.dropoffs,
-  ]);
-
-  const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.pickup.address?.trim()) {
-      newErrors['pickup.address'] = 'Pickup address is required.';
+  const refreshDrafts = useCallback(async () => {
+    if (!isAuthenticated) {
+      setSavedDrafts([]);
+      return;
     }
+    const localDrafts = getUserSavedDrafts(user?.id);
+    try {
+      const apiDrafts = await fetchApiSavedDrafts(locale);
+      setSavedDrafts(apiDrafts.length > 0 ? apiDrafts : localDrafts);
+    } catch {
+      setSavedDrafts(localDrafts);
+    }
+  }, [isAuthenticated, locale, user?.id]);
 
-    if (formData.dropoffs && formData.dropoffs.length > 0) {
-      formData.dropoffs.forEach((stop, idx) => {
-        // Recipient name is optional
-        if (
-          !stop.recipient.phoneNumber?.trim() ||
-          stop.recipient.phoneNumber.length < 8
-        ) {
-          newErrors[`dropoffs.${idx}.phoneNumber`] =
-            `Valid phone for Destination ${idx + 1} is required (at least 8 digits).`;
-        }
-        if (!stop.dropoff.address?.trim()) {
-          newErrors[`dropoffs.${idx}.address`] =
-            `Drop-off address for Destination ${idx + 1} is required.`;
-        }
+  useEffect(() => {
+    void refreshDrafts();
+  }, [refreshDrafts]);
+
+  const handleLayoutChange = (mode: BookingLayoutMode) => {
+    setLayoutMode(mode);
+    if (typeof window !== 'undefined') localStorage.setItem('express_seller_booking_layout', mode);
+  };
+
+  const handleSaveDraft = () => {
+    const doSave = async () => {
+      setIsSavingDraft(true);
+      try {
+        const saved = await saveApiBookingDraft(formData, locale);
+        setFormData((prev) => ({
+          ...prev,
+          draftOrderId: saved.orderId || prev.draftOrderId,
+        }));
+        setSavedDrafts((prev) => [
+          saved,
+          ...prev.filter((d) => d.id !== saved.id),
+        ]);
+        toast.success(tBooking('draftSavedBanner', { title: saved.title }));
+      } catch (err: unknown) {
+        toast.error(
+          err instanceof Error ? err.message : 'Unable to save draft right now.',
+        );
+      } finally {
+        setIsSavingDraft(false);
+      }
+    };
+
+    if (!isAuthenticated) {
+      openAuthModal(() => {
+        void doSave();
       });
-    } else {
-      if (!formData.dropoff.address?.trim()) {
-        newErrors['dropoff.address'] = 'Drop-off address is required.';
-      }
-      if (
-        !formData.recipient.phoneNumber?.trim() ||
-        formData.recipient.phoneNumber.length < 8
-      ) {
-        newErrors['recipient.phoneNumber'] =
-          'Valid phone number is required (at least 8 digits).';
-      }
+      return;
     }
-
-    if (
-      formData.cod.isCod &&
-      (!formData.cod.amount || formData.cod.amount <= 0)
-    ) {
-      newErrors['cod.amount'] = 'Please enter a COD amount greater than 0.';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    void doSave();
   };
 
-  const handleBookingSubmission = async () => {
-    setIsSubmitting(true);
-
-    // Simulate mock booking submission
-    await new Promise((r) => setTimeout(r, 900));
-
-    const ref = generateMockReference();
-    const tracking = generateMockTracking();
-    const stopsCount = formData.dropoffs?.length || 1;
-    const dropoffSummary =
-      stopsCount > 1
-        ? `${formData.dropoff.address} (+${stopsCount - 1} more stop${stopsCount > 2 ? 's' : ''})`
-        : formData.dropoff.address;
-
-    const query = new URLSearchParams({
-      ref,
-      tracking,
-      pickup: formData.pickup.name || formData.pickup.address,
-      dropoff: dropoffSummary,
-      recipient: formData.recipient.name,
-      stops: String(stopsCount),
-      cod: formData.cod.isCod ? String(formData.cod.amount) : '0',
-    });
-
-    // Also attempt background sync with API for history
-    fetch('/api/bookings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    }).catch(() => {});
-
-    setIsSubmitting(false);
-    router.push(`/booking/success?${query.toString()}`);
+  const handleResumeDraft = (draft: SavedBookingDraft) => {
+    setFormData(draft.formData);
+    toast.success(tBooking('draftLoadedBanner', { title: draft.title }));
+    setIsDraftsModalOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleConfirmClick = () => {
-    if (!validate()) return;
+  const handleCreateSavedLocation = useCallback(
+    async (
+      input: CreateSavedLocationInput,
+    ): Promise<SavedLocationItem | 'auth_required'> => {
+      if (!isAuthenticated) {
+        openAuthModal(async (authedUser) => {
+          try {
+            const created = await createLocation({
+              ...input,
+              contact: input.contact || authedUser.phoneNumber,
+            });
+            toast.success(`Saved "${created.name}" to your locations`);
+          } catch (err: unknown) {
+            toast.error(
+              err instanceof Error ? err.message : 'Failed to save location',
+            );
+          }
+        });
+        return 'auth_required';
+      }
 
-    // Save draft and navigate to review & payment page
-    saveBookingDraft(formData);
-    router.push('/booking/review');
-  };
+      const created = await createLocation(input);
+      toast.success(`Saved "${created.name}" to your locations`);
+      return created;
+    },
+    [createLocation, isAuthenticated, openAuthModal],
+  );
 
-  const handleAuthSuccess = (user: UserProfile) => {
-    login(user);
-    setIsAuthModalOpen(false);
-    // Automatically continue pending booking
-    handleBookingSubmission();
-  };
+  const sellerName = user?.shopName || user?.name || tBooking('defaultSeller');
 
   return (
-    <>
-      <div className='grid grid-cols-1 gap-8 lg:grid-cols-12 items-start'>
-        {/* Left: Booking Form (approximately 65%) */}
-        <div className='lg:col-span-7 xl:col-span-8'>
+    <div className="space-y-6">
+      <BookingPageHeader
+        layoutMode={layoutMode}
+        onLayoutChange={handleLayoutChange}
+        isAuthenticated={isAuthenticated}
+        sellerName={sellerName}
+        savedDraftsCount={savedDrafts.length}
+        onOpenDrafts={() => setIsDraftsModalOpen(true)}
+        onResetForm={handleResetForm}
+      />
+
+      {/* 2-Column Responsive Workspace */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
+        <div className="lg:col-span-7 xl:col-span-8">
           <BookingForm
-            formData={formData}
-            onChangePickup={(pickup) => {
-              setFormData((prev) => ({ ...prev, pickup }));
-              setErrors((prev) => ({ ...prev, 'pickup.address': '' }));
-            }}
-            onChangeDropoff={(dropoff) => {
-              setFormData((prev) => ({ ...prev, dropoff }));
-              setErrors((prev) => ({ ...prev, 'dropoff.address': '' }));
-            }}
-            onChangeRecipient={(recipient) => {
-              setFormData((prev) => ({ ...prev, recipient }));
-              setErrors((prev) => ({
-                ...prev,
-                'recipient.name': '',
-                'recipient.phoneNumber': '',
-              }));
-            }}
-            onChangeDropoffs={(dropoffs) => {
-              setFormData((prev) => ({
-                ...prev,
-                dropoffs,
-                recipient: dropoffs[0]?.recipient || prev.recipient,
-                dropoff: dropoffs[0]?.dropoff || prev.dropoff,
-              }));
-            }}
-            onChangeParcel={(parcel) =>
-              setFormData((prev) => ({ ...prev, parcel }))
-            }
-            onChangeCod={(cod) => {
-              setFormData((prev) => ({ ...prev, cod }));
-              setErrors((prev) => ({ ...prev, 'cod.amount': '' }));
-            }}
-            onSubmit={handleConfirmClick}
-            isSubmitting={isSubmitting}
-            errors={errors}
-            fee={feeQuote.totalDeliveryFee}
+            {...formSharedProps}
+            onCreateLocation={handleCreateSavedLocation}
+            layoutMode={layoutMode}
+            onSaveDraft={handleSaveDraft}
+            isSavingDraft={isSavingDraft}
           />
         </div>
 
-        {/* Right: Delivery Summary (approximately 35%) */}
-        <div className='lg:col-span-5 xl:col-span-4'>
+        <div className="lg:col-span-5 xl:col-span-4 space-y-5">
           <BookingSummary
             pickup={formData.pickup}
             dropoff={formData.dropoff}
             dropoffs={formData.dropoffs}
             recipient={formData.recipient}
+            deliveryOption={formData.deliveryOption || 'instant'}
             parcel={formData.parcel}
             cod={formData.cod}
             feeQuote={feeQuote}
           />
+
+          {isAuthenticated ? (
+            <RecentBookingsList bookings={recentBookings} onBookAgain={handleBookAgain} />
+          ) : (
+            <GuestHelpCard />
+          )}
         </div>
       </div>
 
-      {/* Authentication Modal */}
-      <AuthenticationModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onSuccess={handleAuthSuccess}
+      {/* Saved Drafts Dialog */}
+      <SavedDraftsModal
+        isOpen={isDraftsModalOpen}
+        onClose={() => setIsDraftsModalOpen(false)}
+        drafts={savedDrafts}
+        onResumeDraft={handleResumeDraft}
+        onDraftDeleted={refreshDrafts}
       />
-    </>
+    </div>
   );
 }

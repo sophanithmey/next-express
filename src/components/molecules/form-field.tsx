@@ -2,9 +2,10 @@ import React from 'react';
 import { Label } from '../atoms/label';
 import { cn } from '@/lib/cn';
 
-interface FormFieldProps {
+export interface FormFieldProps {
   label?: string;
   required?: boolean;
+  optional?: boolean;
   error?: string;
   hint?: string;
   children: React.ReactNode;
@@ -14,6 +15,7 @@ interface FormFieldProps {
 export function FormField({
   label,
   required,
+  optional,
   error,
   hint,
   children,
@@ -21,11 +23,14 @@ export function FormField({
 }: FormFieldProps) {
   return (
     <div className={cn('space-y-1.5', className)}>
-      {label && <Label required={required}>{label}</Label>}
+      {label && (
+        <Label required={required} optional={optional}>
+          {label}
+        </Label>
+      )}
       {children}
-      {error && <p className="text-xs text-rose-500 font-medium">{error}</p>}
-      {!error && hint && <p className="text-xs text-slate-500">{hint}</p>}
+      {error && <p className="text-xs font-medium text-danger-600">{error}</p>}
+      {!error && hint && <p className="text-[11px] text-slate-500">{hint}</p>}
     </div>
   );
 }
-

@@ -1,11 +1,14 @@
 import { z } from 'zod';
+import { isValidCambodiaPhoneNumber } from '@/lib/phone-number';
 
 export const phoneSchema = z.object({
   phoneNumber: z
-    .string()
-    .min(8, 'Phone number must be at least 8 digits')
-    .max(15, 'Phone number cannot exceed 15 digits')
-    .regex(/^[0-9\s+-]+$/, 'Phone number can only contain digits, spaces, and hyphens'),
+    .string({ required_error: 'Phone number is required' })
+    .min(1, 'Phone number is required')
+    .refine(
+      (val) => isValidCambodiaPhoneNumber(val),
+      { message: 'Please enter a valid Cambodian phone number (e.g. 012 345 678)' }
+    ),
 });
 
 export type PhoneFormValues = z.infer<typeof phoneSchema>;

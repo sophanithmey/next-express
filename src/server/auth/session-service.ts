@@ -50,7 +50,7 @@ export const sessionService = {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 7 * 86400, // 7 days
+      maxAge: data.expiresIn || 7 * 86400,
     });
 
     return token;

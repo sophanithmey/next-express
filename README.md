@@ -1,6 +1,6 @@
-# Express Seller — Seller Delivery Management Platform
+# WingExpress — Seller Delivery Management Platform
 
-A high-performance, production-ready Express Seller Web Application engineered to make booking, managing, and tracking multiple daily deliveries fast, seamless, and effortless for online merchants (Facebook Live sellers, boutique shops, e-commerce stores).
+A high-performance, production-ready WingExpress Web Application engineered to make booking, managing, and tracking multiple daily deliveries fast, seamless, and effortless for online merchants (Facebook Live sellers, boutique shops, e-commerce stores).
 
 ---
 

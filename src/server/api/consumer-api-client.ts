@@ -1,5 +1,6 @@
 import 'server-only';
 import { getServerEnv } from '../config/server-env';
+import { toUnifiedUsernamePhone } from '@/lib/phone-number';
 import {
   AuthTokenResponse,
   RequestPinPayload,
@@ -7,77 +8,51 @@ import {
   UserProfile,
   VerifyPinPayload,
 } from '@/features/auth/types/auth-types';
+import { decodeJwtPayload, mapUnifiedClaimsToProfile } from '../auth/unified-jwt';
+import { encryptUnifiedPassword } from '../auth/unified-crypto';
+import {
+  ConsumerApiError,
+  checkUnifiedPinAuthType,
+  requestUnifiedToken,
+  revokeUnifiedSession,
+} from '../auth/unified-identity-http';
 
-export class ConsumerApiError extends Error {
-  constructor(
-    message: string,
-    public statusCode: number = 400,
-    public code?: string
-  ) {
-    super(message);
-    this.name = 'ConsumerApiError';
-  }
-}
+export { ConsumerApiError };
 
 export const consumerApiClient = {
   /**
-   * Request PIN from the upstream Consumer App Identity API
+   * Checks the consumer's authentication type via `POST /identity/v1/auth/check-type`
+   * before prompting for the 4-digit account PIN.
    */
   async requestPin(payload: RequestPinPayload): Promise<RequestPinResponse> {
     const env = getServerEnv();
 
-    if (env.mockUpstreamApi) {
-      // Simulate fast network response
-      await new Promise((res) => setTimeout(res, 350));
+    if (env.mockAuthApi) {
       return {
         success: true,
-        message: 'PIN sent to your phone number',
-        expireInSeconds: 120,
-        otpRef: `REF-${Math.floor(1000 + Math.random() * 9000)}`,
+        authType: 'PIN',
+        message: 'Ready for 4-digit account PIN verification',
       };
     }
 
-    try {
-      const response = await fetch(`${env.consumerApiBaseUrl}/pin/request`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          phoneNumber: payload.phoneNumber,
-          clientId: env.consumerClientId,
-        }),
-        cache: 'no-store',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new ConsumerApiError(
-          errorData.message || 'Failed to request PIN from Consumer Identity Service',
-          response.status,
-          errorData.code
-        );
-      }
-
-      return await response.json();
-    } catch (err: unknown) {
-      if (err instanceof ConsumerApiError) throw err;
-      throw new ConsumerApiError(
-        'Unable to connect to Consumer Authentication Service. Please try again.',
-        503
-      );
-    }
+    const authType = await checkUnifiedPinAuthType(payload.phoneNumber);
+    return {
+      success: true,
+      authType,
+      message: 'Account verified for PIN login',
+    };
   },
 
   /**
-   * Verify PIN against Consumer App Identity API
+   * Checks consumer auth type first, then authenticates using
+   * Unified Identity `POST /auth/token` (grant_type: PASSWORD), without WSO2.
    */
   async verifyPin(payload: VerifyPinPayload): Promise<AuthTokenResponse> {
     const env = getServerEnv();
+    const unifiedUsername = toUnifiedUsernamePhone(payload.phoneNumber);
 
-    if (env.mockUpstreamApi) {
-      await new Promise((res) => setTimeout(res, 400));
+    if (env.mockAuthApi) {
+      await new Promise((res) => setTimeout(res, 250));
       const cleanPhone = payload.phoneNumber.replace(/[^\d+]/g, '');
 
       return {
@@ -95,48 +70,60 @@ export const consumerApiClient = {
       };
     }
 
-    try {
-      const response = await fetch(`${env.consumerApiBaseUrl}/token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          grantType: 'pin',
-          clientId: env.consumerClientId,
-          username: payload.phoneNumber,
-          password: payload.pin,
-        }),
-        cache: 'no-store',
-      });
+    await checkUnifiedPinAuthType(payload.phoneNumber);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new ConsumerApiError(
-          errorData.message || 'Invalid PIN code. Please verify and try again.',
-          response.status,
-          errorData.code
-        );
-      }
-
-      return await response.json();
-    } catch (err: unknown) {
-      if (err instanceof ConsumerApiError) throw err;
+    if (!env.identityRsaPublicKey) {
       throw new ConsumerApiError(
-        'Authentication verification service unreachable. Please try again.',
-        503
+        'IDENTITY_RSA_PUBLIC_KEY is required on the server to encrypt PINs for Unified /auth/token.',
+        500,
+        'MISSING_IDENTITY_PUBLIC_KEY'
       );
     }
+
+    const encryptedPin = encryptUnifiedPassword(
+      payload.pin,
+      env.identityRsaPublicKey,
+      env.identityRsaPadding
+    );
+
+    return requestUnifiedToken(
+      {
+        grant_type: 'PASSWORD',
+        client_id: env.identityClientId,
+        client_secret: env.identityClientSecret,
+        username: unifiedUsername,
+        password: encryptedPin,
+      },
+      payload.phoneNumber
+    );
   },
 
   /**
-   * Get authenticated user profile
+   * Refreshes access token via Unified Identity `POST /auth/token` (grant_type: REFRESH_TOKEN).
+   */
+  async refreshToken(refreshToken: string, fallbackPhone = ''): Promise<AuthTokenResponse> {
+    const env = getServerEnv();
+
+    return requestUnifiedToken(
+      {
+        refresh_token: refreshToken,
+        username: null,
+        password: null,
+        grant_type: 'REFRESH_TOKEN',
+        client_id: env.identityClientId,
+        client_secret: env.identityClientSecret,
+      },
+      fallbackPhone
+    );
+  },
+
+  /**
+   * Decodes user profile from the Unified JWT access token (mocked in mockAuthApi mode).
    */
   async getProfile(accessToken: string): Promise<UserProfile> {
     const env = getServerEnv();
 
-    if (env.mockUpstreamApi) {
+    if (env.mockAuthApi) {
       return {
         id: 'seller-default',
         phoneNumber: '+855 12 888 999',
@@ -146,24 +133,19 @@ export const consumerApiClient = {
       };
     }
 
-    try {
-      const response = await fetch(`${env.consumerApiBaseUrl}/user/profile`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          Accept: 'application/json',
-        },
-        cache: 'no-store',
-      });
-
-      if (!response.ok) {
-        throw new ConsumerApiError('Failed to load profile', response.status);
-      }
-
-      return await response.json();
-    } catch (err: unknown) {
-      if (err instanceof ConsumerApiError) throw err;
-      throw new ConsumerApiError('Failed to fetch user profile', 500);
+    const claims = decodeJwtPayload(accessToken);
+    if (!claims) {
+      throw new ConsumerApiError('Failed to decode user profile from session token', 401);
     }
+    return mapUnifiedClaimsToProfile(claims, claims.Mobile || claims.mobile || '');
+  },
+
+  /**
+   * Calls Unified Identity `POST /portal/auth/logout` with the user's Bearer access token.
+   */
+  async logout(accessToken?: string): Promise<void> {
+    const env = getServerEnv();
+    if (env.mockAuthApi || !accessToken) return;
+    await revokeUnifiedSession(accessToken);
   },
 };
-

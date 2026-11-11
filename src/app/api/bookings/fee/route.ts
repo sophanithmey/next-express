@@ -7,6 +7,8 @@ import { sessionService } from '@/server/auth/session-service';
 const feeCalculationSchema = z.object({
   pickup: coordinatesSchema,
   dropoff: coordinatesSchema,
+  additionalStopsCount: z.number().int().min(0).optional(),
+  deliveryOption: z.enum(['instant', 'same_day', 'scheduled']).optional(),
 });
 
 export async function POST(request: Request) {
@@ -25,7 +27,11 @@ export async function POST(request: Request) {
     const feeQuote = await expressApiClient.calculateFee(
       parsed.data.pickup,
       parsed.data.dropoff,
-      session?.accessToken
+      session?.accessToken,
+      {
+        additionalStopsCount: parsed.data.additionalStopsCount,
+        deliveryOption: parsed.data.deliveryOption,
+      }
     );
 
     return NextResponse.json(feeQuote);

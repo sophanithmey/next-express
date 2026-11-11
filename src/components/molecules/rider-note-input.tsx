@@ -46,10 +46,9 @@ export function RiderNoteInput({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <Label htmlFor={id} className="text-xs text-slate-600">
+        <Label htmlFor={id} optional>
           {label}
         </Label>
-        <span className="text-[10px] text-slate-400 font-medium">(Optional)</span>
       </div>
 
       <div className="flex items-center gap-2">
@@ -60,14 +59,14 @@ export function RiderNoteInput({
             value={noteValue}
             onChange={(e) => onChangeNote(e.target.value)}
             leftIcon={<FileText className="h-4 w-4 text-slate-400" />}
-            className="h-9 text-xs"
+            sizeVariant="sm"
           />
         </div>
 
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="h-9 px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 flex items-center gap-1.5 flex-shrink-0 transition cursor-pointer shadow-2xs"
+          className="h-9 px-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 hover:border-slate-400 text-xs font-semibold text-slate-700 flex items-center gap-1.5 flex-shrink-0 transition-all cursor-pointer shadow-2xs"
           title="Upload photo for courier"
         >
           <Camera className="h-3.5 w-3.5 text-brand-600" />

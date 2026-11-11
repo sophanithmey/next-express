@@ -57,7 +57,7 @@ export function LocationPickerPresets({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by Khan, Sangkat, Mall, or Market..."
-          className="w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-8 pr-3 py-2 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          className="w-full rounded-xl border border-slate-300 hover:border-slate-400 bg-white pl-8 pr-3 py-2 text-xs font-medium text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 transition-all shadow-2xs"
         />
         <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
       </div>
@@ -81,7 +81,7 @@ export function LocationPickerPresets({
             className={cn(
               'px-2.5 py-1 rounded-lg font-medium transition whitespace-nowrap',
               category === tab.id
-                ? 'bg-emerald-600 text-white shadow-2xs font-bold'
+                ? 'bg-brand-600 text-white shadow-2xs font-bold'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             )}
           >
@@ -107,12 +107,12 @@ export function LocationPickerPresets({
                 className={cn(
                   'p-2.5 rounded-xl border text-xs transition flex items-start justify-between gap-3 group',
                   isChosen
-                    ? 'border-emerald-500 bg-emerald-50/50 text-emerald-950 font-semibold'
+                    ? 'border-brand-500 bg-brand-50/50 text-brand-950 font-semibold'
                     : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
                 )}
               >
                 <div className="flex items-start gap-2 min-w-0">
-                  <MapPin className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                  <MapPin className="h-4 w-4 text-brand-600 mt-0.5 flex-shrink-0" />
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="font-bold text-slate-900 text-xs truncate">{zone.name}</span>
@@ -130,7 +130,7 @@ export function LocationPickerPresets({
                   <button
                     type="button"
                     onClick={() => handleSelectZone(zone)}
-                    className="flex items-center gap-1 px-2 py-1 text-[11px] font-semibold rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition"
+                    className="flex items-center gap-1 px-2 py-1 text-[11px] font-semibold rounded-lg bg-brand-50 text-brand-700 hover:bg-brand-600 hover:text-white transition"
                     title="Pin this location on Google Map"
                   >
                     <Compass className="h-3 w-3" />
@@ -142,7 +142,7 @@ export function LocationPickerPresets({
                       onSelect(toPickupLocation(zone));
                       onClose();
                     }}
-                    className="p-1 rounded-lg text-slate-400 hover:text-emerald-700 hover:bg-slate-100 transition"
+                    className="p-1 rounded-lg text-slate-400 hover:text-brand-700 hover:bg-slate-100 transition"
                     title="Select and confirm immediately"
                   >
                     <Check className="h-3.5 w-3.5" />

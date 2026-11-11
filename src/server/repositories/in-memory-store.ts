@@ -4,10 +4,16 @@ import {
   BookingOrder,
   CreateBookingPayload,
   DashboardStatistics,
+  DeliverySpeedOption,
   GeoCoordinates,
   PickupLocation,
   RecipientRecord,
 } from '@/features/booking/types/booking-types';
+import { MOCK_BOOKING_DETAILS } from '@/features/booking/data/mock-booking-detail-data';
+import {
+  calculateBookingFeeQuote,
+  calculateHaversineDistanceKm,
+} from '@/features/booking/services/pricing-service';
 
 export const INITIAL_SAVED_LOCATIONS: PickupLocation[] = [
   {
@@ -66,147 +72,11 @@ export const INITIAL_RECIPIENTS: RecipientRecord[] = [
   },
 ];
 
-export const INITIAL_ORDERS: BookingOrder[] = [
-  {
-    id: 'ord-1001',
-    trackingNumber: 'EXP-88239012',
-    trackingUrl: 'https://tracking.express.wingbank.com/EXP-88239012',
-    status: 'out_for_delivery',
-    pickup: INITIAL_SAVED_LOCATIONS[0],
-    dropoff: {
-      address: 'St 2004, Sangkat Kakab, Khan Por Senchey, Phnom Penh',
-      landmark: 'Near Northbridge International School',
-      coordinates: { lat: 11.545, lng: 104.862 },
-    },
-    recipient: {
-      name: 'Sokha Chan',
-      phoneNumber: '012998877',
-      notes: 'Call before delivery',
-    },
-    parcel: {
-      description: 'Cosmetics & skincare set (3 items)',
-      sellerOrderRef: 'FB-LIVE-2041',
-      quantity: 1,
-    },
-    cod: {
-      isCod: true,
-      amount: 45.0,
-    },
-    deliveryFee: 1.95,
-    totalSellerCharge: 1.95,
-    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-    updatedAt: new Date(Date.now() - 1800000).toISOString(),
-    deliverer: {
-      name: 'Chenda K.',
-      phone: '015 334 556',
-      plateNumber: '1AB-9921',
-    },
-  },
-  {
-    id: 'ord-1002',
-    trackingNumber: 'EXP-77192034',
-    trackingUrl: 'https://tracking.express.wingbank.com/EXP-77192034',
-    status: 'assigned',
-    pickup: INITIAL_SAVED_LOCATIONS[0],
-    dropoff: {
-      address: 'St 63, Sangkat Chaktomuk, Khan Daun Penh, Phnom Penh',
-      landmark: 'Behind Royal Palace',
-      coordinates: { lat: 11.558, lng: 104.931 },
-    },
-    recipient: {
-      name: 'Dara Vong',
-      phoneNumber: '098112233',
-    },
-    parcel: {
-      description: 'Linen casual shirt (Size L)',
-      sellerOrderRef: 'STORE-8812',
-      quantity: 1,
-    },
-    cod: {
-      isCod: true,
-      amount: 28.5,
-    },
-    deliveryFee: 1.6,
-    totalSellerCharge: 1.6,
-    createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
-    updatedAt: new Date(Date.now() - 3600000).toISOString(),
-    deliverer: {
-      name: 'Rithy S.',
-      phone: '016 778 899',
-    },
-  },
-  {
-    id: 'ord-1003',
-    trackingNumber: 'EXP-66281092',
-    trackingUrl: 'https://tracking.express.wingbank.com/EXP-66281092',
-    status: 'delivered',
-    pickup: INITIAL_SAVED_LOCATIONS[1],
-    dropoff: {
-      address: 'Russian Blvd, Sangkat Teuk Thla, Khan Sen Sok, Phnom Penh',
-      landmark: 'Next to Attwood Center',
-      coordinates: { lat: 11.564, lng: 104.881 },
-    },
-    recipient: {
-      name: 'Bopha Pich',
-      phoneNumber: '077445566',
-    },
-    parcel: {
-      description: 'Handmade leather tote bag',
-      sellerOrderRef: 'TIKTOK-0994',
-      quantity: 1,
-    },
-    cod: {
-      isCod: false,
-      amount: 0,
-    },
-    deliveryFee: 2.3,
-    totalSellerCharge: 2.3,
-    createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000 * 1 + 7200000).toISOString(),
-  },
-  {
-    id: 'ord-1004',
-    trackingNumber: 'EXP-55392018',
-    trackingUrl: 'https://tracking.express.wingbank.com/EXP-55392018',
-    status: 'pending',
-    pickup: INITIAL_SAVED_LOCATIONS[0],
-    dropoff: {
-      address: 'National Road 1, Sangkat Chbar Ampov I, Phnom Penh',
-      coordinates: { lat: 11.531, lng: 104.945 },
-    },
-    recipient: {
-      name: 'Veasna Sam',
-      phoneNumber: '085332211',
-    },
-    parcel: {
-      description: 'Wireless earbuds Pro',
-      sellerOrderRef: 'ONLINE-5541',
-      quantity: 1,
-    },
-    cod: {
-      isCod: true,
-      amount: 65.0,
-    },
-    deliveryFee: 1.75,
-    totalSellerCharge: 1.75,
-    createdAt: new Date(Date.now() - 3600000).toISOString(),
-    updatedAt: new Date(Date.now() - 3600000).toISOString(),
-  },
-];
+export const INITIAL_ORDERS: BookingOrder[] = Object.values(MOCK_BOOKING_DETAILS);
 
 // Helper: Haversine distance in km
 export function calculateHaversineDistance(c1: GeoCoordinates, c2: GeoCoordinates): number {
-  const R = 6371;
-  const dLat = ((c2.lat - c1.lat) * Math.PI) / 180;
-  const dLng = ((c2.lng - c1.lng) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((c1.lat * Math.PI) / 180) *
-      Math.cos((c2.lat * Math.PI) / 180) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return Math.max(0.5, Math.round(R * c * 10) / 10);
+  return calculateHaversineDistanceKm(c1, c2);
 }
 
 class InMemoryStore {
@@ -240,7 +110,23 @@ class InMemoryStore {
     );
   }
 
-  calculateFee(pickup: GeoCoordinates, dropoff: GeoCoordinates): BookingFeeQuote {
+  calculateFee(
+    pickup: GeoCoordinates,
+    dropoff: GeoCoordinates,
+    options?: {
+      additionalStopsCount?: number;
+      deliveryOption?: DeliverySpeedOption;
+    }
+  ): BookingFeeQuote {
+    if (options?.deliveryOption || typeof options?.additionalStopsCount === 'number') {
+      return calculateBookingFeeQuote({
+        pickupCoords: pickup,
+        dropoffCoords: dropoff,
+        additionalStopsCount: options.additionalStopsCount ?? 0,
+        deliverySpeed: options.deliveryOption ?? 'instant',
+      });
+    }
+
     const distanceKm = calculateHaversineDistance(pickup, dropoff);
     const baseFee = 1.25;
     const ratePerKm = 0.35;
@@ -250,18 +136,27 @@ class InMemoryStore {
   }
 
   createBooking(payload: CreateBookingPayload): BookingOrder {
-    const trackingNumber = `EXP-${Math.floor(10000000 + Math.random() * 90000000)}`;
+    const trackingNumber =
+      payload.trackingNumber || `EXP-${Math.floor(10000000 + Math.random() * 90000000)}`;
+    const additionalStopsCount = Math.max(0, (payload.dropoffs?.length || 1) - 1);
     const feeQuote =
       payload.feeQuote ||
-      this.calculateFee(payload.pickup.coordinates, payload.dropoff.coordinates);
+      this.calculateFee(payload.pickup.coordinates, payload.dropoff.coordinates, {
+        additionalStopsCount,
+        deliveryOption: payload.deliveryOption || 'instant',
+      });
 
     const newOrder: BookingOrder = {
       id: `ord-${Date.now()}`,
       trackingNumber,
       trackingUrl: `https://tracking.express.wingbank.com/${trackingNumber}`,
       status: 'pending',
+      paymentMethod: payload.paymentMethod,
+      paymentStatus: payload.paymentMethod && payload.paymentMethod !== 'cop' ? 'paid' : 'pending',
       pickup: payload.pickup,
       dropoff: payload.dropoff,
+      dropoffs: payload.dropoffs,
+      deliveryOption: payload.deliveryOption,
       recipient: payload.recipient,
       parcel: payload.parcel,
       cod: payload.cod,
@@ -330,6 +225,22 @@ class InMemoryStore {
         (o) => o.id === id || o.trackingNumber.toLowerCase() === id.toLowerCase()
       ) || null
     );
+  }
+
+  cancelOrder(id: string, reason?: string): BookingOrder | null {
+    const order = this.getOrderById(id);
+    if (!order) return null;
+    if (order.status === 'out_for_delivery' || order.status === 'delivered') {
+      return null;
+    }
+    order.status = 'cancelled';
+    order.cancellationReason = reason || 'Cancelled by seller';
+    order.cancelledAt = new Date().toISOString();
+    order.updatedAt = new Date().toISOString();
+    if (order.paymentStatus === 'paid') {
+      order.paymentStatus = 'refunded';
+    }
+    return order;
   }
 
   getStatistics(): DashboardStatistics {

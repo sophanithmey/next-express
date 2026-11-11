@@ -1,8 +1,8 @@
-# AGENTS.md — Express Seller Web App
+# AGENTS.md — WingExpress Web App
 
 ## 1. Project Overview
 
-Build a modern Express Seller web application that helps online sellers in Cambodia book and manage parcel deliveries quickly.
+Build a modern WingExpress web application that helps online sellers in Cambodia book and manage parcel deliveries quickly.
 
 The main goal is to make delivery booking simple, fast and accessible.
 
@@ -114,14 +114,14 @@ The interface must be modern, minimal, premium, and easy to understand.
 
 ### Visual Style
 
-- **Palette**: Clean white, accent surfaces (`bg-slate-50`, `bg-white`, `bg-[#f2f3f7]`).
+- **Palette**: Clean white, accent surfaces (`bg-slate-50`, `bg-white`, `bg-wingmall-accent`, `bg-accent`).
 - **Brand Colors (Wing & Wingmall)**:
-  - **Primary**: Wing Gold / Yellow (`#ffcc00` / `primary-500`, `primary-400`).
-  - **Secondary / Royal Blue**: Wing Corporate Blue (`#003494` / `secondary-600`, `brand-600`).
-  - **Brand Lime**: Wing Lime Accent (`#a9cc38` / `brand.lime-500`).
-  - **Success Green**: Wing Success Green (`#10b77f` / `emerald-600`).
-- **Typography**: Dark charcoal navy (`text-[#04172a]`, `text-slate-900`), muted secondary labels (`text-[#606d85]`, `text-slate-500`), subtle micro-copy (`text-xs`).
-- **Borders & Radii**: Subtle borders (`border-slate-200`, `border-slate-100`) and rounded corners (12–16px, `rounded-xl` or `rounded-2xl`).
+  - **Primary**: Wing Gold / Yellow (`primary-500`, `primary-400`, `primary`, `text-primary-foreground`).
+  - **Secondary / Royal Blue**: Wing Corporate Blue (`secondary-600`, `brand-600`, `secondary`, `brand`).
+  - **Brand Lime**: Wing Lime Accent (`brand-lime-500`, `brand-lime`).
+  - **Success Green**: Wing Success Green (`success-600`, `wingmall-success`, `success`).
+- **Typography**: Dark charcoal navy (`text-wingmall-foreground`, `text-slate-900`), muted secondary labels (`text-wingmall-muted-foreground`, `text-slate-500`), subtle micro-copy (`text-xs`).
+- **Borders & Radii**: Subtle borders (`border-slate-200`, `border-wingmall-border`, `border-slate-100`) and rounded corners (12–16px, `rounded-xl` or `rounded-2xl`).
 - **Spacing Efficiency**:
   - Save vertical space for secondary or optional sections.
   - Avoid deeply nested cards inside cards.
@@ -178,7 +178,7 @@ These business rules must always be respected across forms, schemas, and state:
 
 ## 8. Multi-Drop Destination Architecture
 
-Express Seller supports sequential multi-drop deliveries within a single booking dispatch:
+WingExpress supports sequential multi-drop deliveries within a single booking dispatch:
 
 ### Data Model Contract
 ```typescript

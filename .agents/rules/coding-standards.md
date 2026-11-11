@@ -1,4 +1,4 @@
-# Coding Standards & Agent Rules — Express Seller Web App
+# Coding Standards & Agent Rules — WingExpress Web App
 
 > **Single Source of Truth**: See [`AGENTS.md`](file:///Users/sophanith.mey/UAE/next-express/AGENTS.md) in the project root for the authoritative architecture, business rules, and UI guidelines.
 
@@ -23,7 +23,7 @@
 ### 3. Space-Efficient UI
 - Keep optional sections compact. Combine related simple fields (e.g., parcel info + COD toggle).
 - Do not use `bg-gradient`. Use Tailwind `bg-linear` only if genuinely needed.
-- Brand colors (cloned from shop.wingmall.com): Primary Wing Gold (`#ffcc00`), Wing Royal Blue (`#003494` / `brand-600`), Wing Lime (`#a9cc38`), and Success Green (`#10b77f`).
+- Brand colors (cloned from shop.wingmall.com): Primary Wing Gold (`primary` / `primary-500`), Wing Royal Blue (`secondary-600` / `brand-600`), Wing Lime (`brand-lime`), and Success Green (`success-600` / `wingmall-success`). Use theme utility classes exclusively.
 
 ### 4. Verification Commands
 Always verify before completing:

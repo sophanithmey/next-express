@@ -1,5 +1,5 @@
 import React from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { ArrowLeft } from 'lucide-react';
 
 interface BookingLayoutProps {
@@ -18,9 +18,9 @@ export function BookingLayout({
       <div className='flex items-center justify-between border-b border-slate-200 pb-4'>
         <div className='flex items-center gap-2'>
           <Link
-            href='/dashboard'
+            href='/bookings'
             className='rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition'
-            title='Return to Dashboard'
+            title='Return to Bookings'
           >
             <ArrowLeft className='h-5 w-5' />
           </Link>

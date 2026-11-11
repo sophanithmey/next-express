@@ -1,22 +1,31 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { DropoffStop, RecipientInfo, DropoffLocation } from '@/features/booking/types/booking-types';
-import { Input } from '../../atoms/input';
-import { Label } from '../../atoms/label';
-import { RiderNoteInput } from '../../molecules/rider-note-input';
-import { Navigation, User, Phone, MapPin, Trash2 } from 'lucide-react';
+import { DropoffStopFields } from '../../molecules/dropoff-stop-fields';
+import { DropoffStopHeader } from './dropoff-stop-header';
 
 interface DropoffStopItemProps {
   stop: DropoffStop;
   index: number;
   isMultiDrop: boolean;
-  onUpdateStop: (index: number, recipient: RecipientInfo, dropoff: DropoffLocation) => void;
+  onUpdateStop: (
+    index: number,
+    recipient: RecipientInfo,
+    dropoff: DropoffLocation,
+    codAmount?: number
+  ) => void;
   onRemoveStop: (index: number) => void;
   onOpenMap: (index: number) => void;
+  onMoveUp?: (index: number) => void;
+  onMoveDown?: (index: number) => void;
+  isLast?: boolean;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
   nameError?: string;
   phoneError?: string;
   addressError?: string;
+  codError?: string;
 }
 
 export function DropoffStopItem({
@@ -26,144 +35,71 @@ export function DropoffStopItem({
   onUpdateStop,
   onRemoveStop,
   onOpenMap,
+  onMoveUp,
+  onMoveDown,
+  isLast = false,
+  isCollapsed,
+  onToggleCollapse,
   nameError,
   phoneError,
   addressError,
+  codError,
 }: DropoffStopItemProps) {
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
+
+  const activeCollapsed = isCollapsed !== undefined ? isCollapsed : internalCollapsed;
+  const toggleCollapse =
+    onToggleCollapse || (() => setInternalCollapsed((prev) => !prev));
+  const hasError = Boolean(nameError || phoneError || addressError || codError);
+  const effectiveCollapsed = isMultiDrop && activeCollapsed && !hasError;
+
+  const summaryText = [stop.dropoff.address?.split(',')[0], stop.recipient.phoneNumber]
+    .filter(Boolean)
+    .join(' · ');
+
   return (
     <div
+      data-id={stop.id}
       className={`space-y-3 rounded-xl transition-all ${
-        isMultiDrop ? 'border border-slate-200 bg-slate-50/60 p-4 shadow-2xs' : ''
+        isMultiDrop
+          ? 'border border-slate-200 bg-slate-50/60 p-4 shadow-2xs'
+          : ''
       }`}
     >
       {/* Stop Header (Shown if multi-drop) */}
       {isMultiDrop && (
-        <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
-          <div className="flex items-center gap-2">
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[11px] font-bold text-white font-mono">
-              {index + 1}
-            </div>
-            <span className="text-xs font-bold text-slate-800">
-              Destination {index + 1}
-              {stop.recipient.name ? ` — ${stop.recipient.name}` : ''}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => onOpenMap(index)}
-              className="text-[11px] font-medium text-emerald-700 hover:text-emerald-900 flex items-center gap-1"
-            >
-              <MapPin className="h-3 w-3" /> Map
-            </button>
-            <button
-              type="button"
-              onClick={() => onRemoveStop(index)}
-              className="text-[11px] font-medium text-rose-600 hover:text-rose-800 flex items-center gap-1 hover:bg-rose-50 px-1.5 py-0.5 rounded transition cursor-pointer"
-              aria-label={`Remove destination ${index + 1}`}
-            >
-              <Trash2 className="h-3 w-3" /> Remove
-            </button>
-          </div>
-        </div>
+        <DropoffStopHeader
+          index={index}
+          recipientName={stop.recipient.name}
+          codAmount={stop.codAmount}
+          summaryText={summaryText}
+          isCollapsed={effectiveCollapsed}
+          onToggleCollapse={toggleCollapse}
+          onRemoveStop={() => onRemoveStop(index)}
+          onMoveUp={onMoveUp ? () => onMoveUp(index) : undefined}
+          onMoveDown={onMoveDown ? () => onMoveDown(index) : undefined}
+          isFirst={index === 0}
+          isLast={isLast}
+        />
       )}
 
-      {/* Recipient Details: Name (Optional) & Phone Number * */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <Label htmlFor={`recipient-name-${index}`} className="text-xs">
-              Recipient Name
-            </Label>
-            <span className="text-[10px] text-slate-400 font-medium">(Optional)</span>
-          </div>
-          <Input
-            id={`recipient-name-${index}`}
-            placeholder="e.g. Sokha Chan (Optional)"
-            value={stop.recipient.name}
-            onChange={(e) =>
-              onUpdateStop(index, { ...stop.recipient, name: e.target.value }, stop.dropoff)
+      {/* Destination Form Fields (Collapsible in multi-drop) */}
+      {!effectiveCollapsed && (
+        <div className="animate-in fade-in duration-150">
+          <DropoffStopFields
+            idPrefix={`dropoff-stop-${index}`}
+            stop={stop}
+            onUpdate={(recipient, dropoff, codAmount) =>
+              onUpdateStop(index, recipient, dropoff, codAmount)
             }
-            leftIcon={<User className="h-4 w-4 text-slate-400" />}
-            className="h-10 text-xs"
+            onOpenMap={() => onOpenMap(index)}
+            phoneError={phoneError}
+            addressError={addressError}
+            nameError={nameError}
+            codError={codError}
           />
-          {nameError && <p className="text-xs font-medium text-rose-600">{nameError}</p>}
         </div>
-
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <Label htmlFor={`recipient-phone-${index}`} className="text-xs">
-              Recipient Phone Number *
-            </Label>
-          </div>
-          <Input
-            id={`recipient-phone-${index}`}
-            type="tel"
-            placeholder="012 998 877"
-            value={stop.recipient.phoneNumber}
-            onChange={(e) =>
-              onUpdateStop(index, { ...stop.recipient, phoneNumber: e.target.value }, stop.dropoff)
-            }
-            leftIcon={<Phone className="h-4 w-4 text-slate-400" />}
-            error={Boolean(phoneError)}
-            className="h-10 text-xs font-mono"
-          />
-          {phoneError && <p className="text-xs font-medium text-rose-600">{phoneError}</p>}
-        </div>
-      </div>
-
-      {/* Drop-off Address + Google Map Pin Action */}
-      <div className="space-y-1">
-        <Label htmlFor={`dropoff-address-${index}`} className="text-xs">
-          Drop-off Address / Street *
-        </Label>
-        <div className="flex items-center gap-2">
-          <div className="flex-1">
-            <Input
-              id={`dropoff-address-${index}`}
-              placeholder="House / Street, Sangkat, Khan, or paste Google Maps link..."
-              value={stop.dropoff.address}
-              onChange={(e) =>
-                onUpdateStop(index, stop.recipient, { ...stop.dropoff, address: e.target.value })
-              }
-              leftIcon={<Navigation className="h-4 w-4 text-emerald-600" />}
-              error={Boolean(addressError)}
-              className="h-10 text-xs"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => onOpenMap(index)}
-            className="h-10 px-3.5 rounded-xl bg-emerald-50 hover:bg-emerald-100/90 border border-emerald-300 text-xs font-bold text-emerald-800 flex items-center gap-1.5 flex-shrink-0 transition cursor-pointer shadow-2xs"
-            title="Pin location on Google Map"
-          >
-            <MapPin className="h-4 w-4 text-emerald-600" />
-            <span>Pin on Map</span>
-          </button>
-        </div>
-        {addressError && <p className="text-xs font-medium text-rose-600">{addressError}</p>}
-      </div>
-
-      {/* Rider Note (Optional) with Photo Upload */}
-      <RiderNoteInput
-        id={`rider-note-${index}`}
-        label="Destination Rider Note"
-        placeholder="e.g. Call before arrival, leave at security gate, house #12B"
-        noteValue={stop.recipient.notes || ''}
-        imageValue={stop.imageUrl || stop.recipient.imageUrl}
-        onChangeNote={(note) =>
-          onUpdateStop(index, { ...stop.recipient, notes: note }, stop.dropoff)
-        }
-        onChangeImage={(img) =>
-          onUpdateStop(
-            index,
-            { ...stop.recipient, imageUrl: img },
-            { ...stop.dropoff }
-          )
-        }
-      />
+      )}
     </div>
   );
 }
-

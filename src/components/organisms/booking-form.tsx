@@ -8,13 +8,21 @@ import {
   DropoffStop,
   RecipientInfo,
   ParcelInfo,
-  CodInfo,
+  DeliverySpeedOption,
+  DeliverySchedule,
 } from '@/features/booking/types/booking-types';
 import { PickupSection } from './booking-sections/pickup-section';
 import { DropoffSection } from './booking-sections/dropoff-section';
+import { DeliveryOptionsSection } from './booking-sections/delivery-options-section';
 import { ParcelCodSection } from './booking-sections/parcel-cod-section';
+import { BookingHorizontalForm } from './booking-horizontal-form';
 import { LocationPickerModal } from '../molecules/location-picker-modal';
+import { SavedLocationItem } from '../molecules/location-picker-saved-list';
+import { CreateSavedLocationInput } from '@/features/booking/schemas/location-schema';
 import { StickyBookingActionBar } from '../molecules/sticky-booking-action-bar';
+import { BookingLayoutMode } from '../molecules/booking-layout-switcher';
+import { getSpeedOptionFees } from '@/features/booking/services/pricing-service';
+import { useTranslations } from 'next-intl';
 
 interface BookingFormProps {
   formData: BookingFormData;
@@ -22,12 +30,21 @@ interface BookingFormProps {
   onChangeDropoff: (dropoff: DropoffLocation) => void;
   onChangeRecipient: (recipient: RecipientInfo) => void;
   onChangeDropoffs?: (stops: DropoffStop[]) => void;
+  onChangeDeliveryOption?: (option: DeliverySpeedOption) => void;
+  onChangeDeliverySchedule?: (schedule: DeliverySchedule) => void;
   onChangeParcel: (parcel: ParcelInfo) => void;
-  onChangeCod: (cod: CodInfo) => void;
+  onOptimizeRoute?: () => void;
   onSubmit: () => void;
   isSubmitting?: boolean;
   errors: Record<string, string>;
   fee?: number;
+  savedLocations?: (PickupLocation & { tag?: string })[];
+  onCreateLocation?: (
+    input: CreateSavedLocationInput,
+  ) => Promise<SavedLocationItem | 'auth_required'>;
+  layoutMode?: BookingLayoutMode;
+  onSaveDraft?: () => void;
+  isSavingDraft?: boolean;
 }
 
 export function BookingForm({
@@ -36,15 +53,34 @@ export function BookingForm({
   onChangeDropoff,
   onChangeRecipient,
   onChangeDropoffs,
+  onChangeDeliveryOption,
+  onChangeDeliverySchedule,
   onChangeParcel,
-  onChangeCod,
+  onOptimizeRoute,
   onSubmit,
   isSubmitting = false,
   errors,
   fee = 1.75,
+  savedLocations,
+  onCreateLocation,
+  layoutMode = 'vertical',
+  onSaveDraft,
+  isSavingDraft = false,
 }: BookingFormProps) {
+  const tPickup = useTranslations('Pickup');
+  const tRecipient = useTranslations('Recipient');
   const [modalMode, setModalMode] = useState<'pickup' | 'dropoff' | null>(null);
   const [activeStopIndex, setActiveStopIndex] = useState(0);
+
+  const { instantFee, sameDayFee, scheduledFee } = getSpeedOptionFees(
+    fee,
+    formData.deliveryOption || 'instant',
+  );
+
+  const handleOpenMap = (mode: 'pickup' | 'dropoff', index = 0) => {
+    setActiveStopIndex(index);
+    setModalMode(mode);
+  };
 
   return (
     <>
@@ -53,41 +89,66 @@ export function BookingForm({
           e.preventDefault();
           onSubmit();
         }}
-        className='space-y-5'
+        className='space-y-6'
       >
-        {/* Section A: Pickup Location */}
-        <PickupSection
-          pickup={formData.pickup}
-          onChangePickup={onChangePickup}
-          onOpenMap={() => setModalMode('pickup')}
-          error={errors['pickup.address']}
-        />
+        {layoutMode === 'horizontal' ? (
+          <BookingHorizontalForm
+            formData={formData}
+            onChangePickup={onChangePickup}
+            onChangeDropoff={onChangeDropoff}
+            onChangeRecipient={onChangeRecipient}
+            onChangeDropoffs={onChangeDropoffs}
+            onChangeDeliveryOption={onChangeDeliveryOption}
+            onChangeDeliverySchedule={onChangeDeliverySchedule}
+            onChangeParcel={onChangeParcel}
+            onOptimizeRoute={onOptimizeRoute}
+            onOpenMap={handleOpenMap}
+            errors={errors}
+            fee={fee}
+            savedLocations={savedLocations}
+          />
+        ) : (
+          <div className='space-y-5'>
+            <PickupSection
+              pickup={formData.pickup}
+              onChangePickup={onChangePickup}
+              onOpenMap={() => handleOpenMap('pickup')}
+              error={errors['pickup.address']}
+              phoneError={errors['pickup.senderPhone']}
+              savedLocations={savedLocations}
+            />
 
-        {/* Section B: Drop-off Destinations & Recipients (Multi-Drop) */}
-        <DropoffSection
-          dropoff={formData.dropoff}
-          recipient={formData.recipient}
-          dropoffs={formData.dropoffs}
-          onChangeDropoff={onChangeDropoff}
-          onChangeRecipient={onChangeRecipient}
-          onChangeDropoffs={onChangeDropoffs}
-          onOpenMap={(index = 0) => {
-            setActiveStopIndex(index);
-            setModalMode('dropoff');
-          }}
-          errors={errors}
-        />
+            <DropoffSection
+              dropoff={formData.dropoff}
+              recipient={formData.recipient}
+              dropoffs={formData.dropoffs}
+              cod={formData.cod}
+              onChangeDropoff={onChangeDropoff}
+              onChangeRecipient={onChangeRecipient}
+              onChangeDropoffs={onChangeDropoffs}
+              onOptimizeRoute={onOptimizeRoute}
+              onOpenMap={(index = 0) => handleOpenMap('dropoff', index)}
+              errors={errors}
+            />
 
-        {/* Section C: Optional Parcel & Cash on Delivery (COD) Options */}
-        <ParcelCodSection
-          parcel={formData.parcel}
-          cod={formData.cod}
-          onChangeParcel={onChangeParcel}
-          onChangeCod={onChangeCod}
-          error={errors['cod.amount']}
-        />
+            <DeliveryOptionsSection
+              selectedOption={formData.deliveryOption || 'instant'}
+              onChangeOption={(option) => onChangeDeliveryOption?.(option)}
+              schedule={formData.deliverySchedule}
+              onChangeSchedule={onChangeDeliverySchedule}
+              instantFee={instantFee}
+              sameDayFee={sameDayFee}
+              scheduledFee={scheduledFee}
+            />
 
-        {/* Sticky Primary Action: Review & Payment */}
+            <ParcelCodSection
+              parcel={formData.parcel}
+              onChangeParcel={onChangeParcel}
+            />
+          </div>
+        )}
+
+        {/* Sticky Primary Action: Review & Payment & Save Draft */}
         <StickyBookingActionBar
           fee={fee}
           stopsCount={formData.dropoffs?.length || 1}
@@ -95,6 +156,8 @@ export function BookingForm({
           isCod={formData.cod.isCod}
           isSubmitting={isSubmitting}
           onClick={onSubmit}
+          onSaveDraft={onSaveDraft}
+          isSavingDraft={isSavingDraft}
         />
       </form>
 
@@ -104,8 +167,8 @@ export function BookingForm({
         onClose={() => setModalMode(null)}
         title={
           modalMode === 'pickup'
-            ? 'Select Pickup Hub (Demo)'
-            : `Select Drop-off Destination ${activeStopIndex + 1} (Demo)`
+            ? tPickup('selectLocation')
+            : tRecipient('destinationIndex', { index: activeStopIndex + 1 })
         }
         selectedAddress={
           modalMode === 'pickup'
@@ -113,35 +176,43 @@ export function BookingForm({
             : formData.dropoffs?.[activeStopIndex]?.dropoff.address ||
               formData.dropoff.address
         }
+        initialCoords={
+          modalMode === 'pickup'
+            ? formData.pickup.coordinates
+            : formData.dropoffs?.[activeStopIndex]?.dropoff.coordinates ||
+              formData.dropoff.coordinates
+        }
+        savedLocations={savedLocations}
+        defaultContact={modalMode === 'pickup' ? formData.pickup.senderPhone || '' : ''}
+        onCreateLocation={onCreateLocation}
         onSelect={(loc) => {
           if (modalMode === 'pickup') {
-            onChangePickup(loc);
-          } else {
-            if (formData.dropoffs && formData.dropoffs.length > 0) {
-              const nextStops = formData.dropoffs.map((s, idx) =>
-                idx === activeStopIndex
-                  ? {
-                      ...s,
-                      dropoff: {
-                        address: loc.address,
-                        coordinates: loc.coordinates,
-                      },
-                    }
-                  : s
-              );
-              onChangeDropoffs?.(nextStops);
-              if (activeStopIndex === 0) {
-                onChangeDropoff({
-                  address: loc.address,
-                  coordinates: loc.coordinates,
-                });
-              }
-            } else {
-              onChangeDropoff({
-                address: loc.address,
-                coordinates: loc.coordinates,
-              });
-            }
+            onChangePickup({
+              ...formData.pickup,
+              id: loc.id ?? formData.pickup.id,
+              name: loc.name,
+              address: loc.address,
+              coordinates: loc.coordinates,
+              riderNote: loc.riderNote ?? formData.pickup.riderNote,
+              imageUrl: loc.imageUrl ?? formData.pickup.imageUrl,
+              senderName: loc.senderName || formData.pickup.senderName,
+              senderPhone: loc.senderPhone || formData.pickup.senderPhone,
+            });
+            return;
+          }
+          const nextDropoff = {
+            address: loc.address,
+            coordinates: loc.coordinates,
+          };
+          if (formData.dropoffs && formData.dropoffs.length > 0) {
+            onChangeDropoffs?.(
+              formData.dropoffs.map((s, idx) =>
+                idx === activeStopIndex ? { ...s, dropoff: nextDropoff } : s,
+              ),
+            );
+          }
+          if (!formData.dropoffs?.length || activeStopIndex === 0) {
+            onChangeDropoff(nextDropoff);
           }
         }}
       />

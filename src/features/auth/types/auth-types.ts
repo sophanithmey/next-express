@@ -3,6 +3,8 @@ export interface UserProfile {
   phoneNumber: string;
   name: string;
   shopName?: string;
+  email?: string;
+  crUrId?: string;
   avatarUrl?: string;
   role?: string;
 }
@@ -15,6 +17,7 @@ export interface RequestPinPayload {
 export interface RequestPinResponse {
   success: boolean;
   message?: string;
+  authType?: string;
   expireInSeconds?: number;
   otpRef?: string;
 }

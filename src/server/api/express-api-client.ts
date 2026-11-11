@@ -6,6 +6,7 @@ import {
   BookingOrder,
   CreateBookingPayload,
   DashboardStatistics,
+  DeliverySpeedOption,
   GeoCoordinates,
   PickupLocation,
   RecipientRecord,
@@ -31,11 +32,15 @@ export const expressApiClient = {
     pickup: GeoCoordinates,
     dropoff: GeoCoordinates,
     accessToken?: string,
+    options?: {
+      additionalStopsCount?: number;
+      deliveryOption?: DeliverySpeedOption;
+    },
   ): Promise<BookingFeeQuote> {
     const env = getServerEnv();
 
     if (env.mockUpstreamApi) {
-      return inMemoryStore.calculateFee(pickup, dropoff);
+      return inMemoryStore.calculateFee(pickup, dropoff, options);
     }
 
     try {
@@ -46,7 +51,14 @@ export const expressApiClient = {
           Accept: 'application/json',
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
-        body: JSON.stringify({ pickup, dropoff }),
+        body: JSON.stringify({
+          pickup,
+          dropoff,
+          ...(options?.additionalStopsCount !== undefined
+            ? { additionalStopsCount: options.additionalStopsCount }
+            : {}),
+          ...(options?.deliveryOption ? { deliveryOption: options.deliveryOption } : {}),
+        }),
         cache: 'no-store',
       });
 
@@ -62,7 +74,7 @@ export const expressApiClient = {
     } catch (err: unknown) {
       if (err instanceof ExpressApiError) throw err;
       // Fallback calculation if network fails
-      return inMemoryStore.calculateFee(pickup, dropoff);
+      return inMemoryStore.calculateFee(pickup, dropoff, options);
     }
   },
 
@@ -335,5 +347,21 @@ export const expressApiClient = {
    */
   async getDashboardStatistics(): Promise<DashboardStatistics> {
     return inMemoryStore.getStatistics();
+  },
+
+  /**
+   * Cancel booking order
+   */
+  async cancelBooking(
+    id: string,
+    reason?: string,
+    accessToken?: string
+  ): Promise<BookingOrder | null> {
+    const env = getServerEnv();
+    if (env.mockUpstreamApi) {
+      await new Promise((res) => setTimeout(res, 200));
+      return inMemoryStore.cancelOrder(id, reason);
+    }
+    return inMemoryStore.cancelOrder(id, reason);
   },
 };
