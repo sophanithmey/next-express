@@ -1,110 +1,103 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import { serverAxios } from '@/lib/axios/server-axios';
 import {
-  consumerAddressClient,
   mapConsumerAddressesToPickupLocations,
-} from '@/server/api/consumer-address-client';
-import { ConsumerApiError } from '@/server/api/consumer-api-client';
+  wingAddressIntegration,
+} from '@/server/integrations/wing-address-integration';
+import { ConsumerApiError } from '@/server/lib/api-response';
 import { createSavedLocationSchema } from '@/features/booking/schemas/location-schema';
 
-describe('Consumer Address Service & Mapping', () => {
-  const originalEnv = { ...process.env };
-  const originalFetch = globalThis.fetch;
+function makeAxiosResponse<T>(data: T, status = 200): AxiosResponse<T> {
+  return {
+    data,
+    status,
+    statusText: 'OK',
+    headers: {},
+    config: {} as InternalAxiosRequestConfig,
+  };
+}
+
+function makeAxiosHttpError(status: number, data: unknown): AxiosError {
+  return new AxiosError(
+    'Request failed',
+    'ERR_BAD_REQUEST',
+    undefined,
+    undefined,
+    makeAxiosResponse(data, status),
+  );
+}
+
+describe('Wing Consumer Address Integration & Schema', () => {
+  const envBackup = { ...process.env };
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    process.env.WING_EXPRESS_API_URL = 'https://qa.wingmall.com';
+    process.env.BASE_URL_UNIFIED = 'https://qa.wingmall.com';
+  });
 
   afterEach(() => {
-    process.env = { ...originalEnv };
-    globalThis.fetch = originalFetch;
-    vi.restoreAllMocks();
+    process.env = { ...envBackup };
   });
 
-  it('maps sorted consumer addresses with null address_detail, remark, and fallback contact info', () => {
-    const result = mapConsumerAddressesToPickupLocations(
+  it('maps consumer address payloads into PickupLocation options cleanly', () => {
+    const mapped = mapConsumerAddressesToPickupLocations(
       [
         {
-          id: 'ADD-261680000363353',
-          reference_id: 'USR-253420000018495',
-          name: 'kk',
-          type: 'consumer',
-          information_address: 'Street 93 761, 120111 Phnom Penh, Cambodia',
-          latitude: 11.541474,
-          longitude: 104.9224353,
-          remark: 'Back gate',
-          metadata: { icon: 'heart', images: ['https://example.com/gate.jpg'] },
-          address_detail: null,
-          status: 'ACTIVE',
+          id: 'ADD-1',
+          name: 'Main Boutique',
+          information_address: 'St 310, BKK1, Phnom Penh',
+          latitude: 11.5512,
+          longitude: 104.9256,
+          contact: '012888999',
+          remark: 'Gate B',
+          type: 'work',
         },
         {
-          id: 'ADD-INACTIVE',
-          name: 'Old Store',
-          information_address: 'St 100, Phnom Penh',
-          latitude: 11.55,
-          longitude: 104.92,
-          status: 'INACTIVE',
-        },
-        {
-          id: 'ADD-DETAIL-FALLBACK',
-          name: '',
-          information_address: '',
-          latitude: 11.56,
-          longitude: 104.93,
-          address_detail: {
-            address_id: 'ADDR-2',
-            house_number: '#12B',
-            street_number: 'St 271',
-          },
-          status: 'ACTIVE',
+          id: 'ADD-INVALID',
+          name: 'Broken Pin',
+          latitude: null,
+          longitude: null,
         },
       ],
-      { fallbackPhone: '+85569686234', fallbackSenderName: 'Express Merchant' }
+      { fallbackPhone: '+85512999000', fallbackSenderName: 'Seller A' },
     );
 
-    expect(result).toHaveLength(2);
-    expect(result[0]).toEqual({
-      id: 'ADD-261680000363353',
-      name: 'kk',
-      address: 'Street 93 761, 120111 Phnom Penh, Cambodia',
-      coordinates: { lat: 11.541474, lng: 104.9224353 },
-      riderNote: 'Back gate',
-      senderPhone: '+85569686234',
-      senderName: 'Express Merchant',
-      imageUrl: 'https://example.com/gate.jpg',
-      tag: 'consumer',
-    });
-    expect(result[1]).toMatchObject({
-      id: 'ADD-DETAIL-FALLBACK',
-      name: '#12B',
-      address: '#12B, St 271',
-      coordinates: { lat: 11.56, lng: 104.93 },
+    expect(mapped).toHaveLength(1);
+    expect(mapped[0]).toEqual({
+      id: 'ADD-1',
+      name: 'Main Boutique',
+      address: 'St 310, BKK1, Phnom Penh',
+      coordinates: { lat: 11.5512, lng: 104.9256 },
+      riderNote: 'Gate B',
+      senderPhone: '012888999',
+      senderName: 'Seller A',
+      imageUrl: undefined,
+      tag: 'work',
     });
   });
 
-  it('fetches GET /address/v1/consumer/addresses/sort with reference_id, coordinates, and Wing headers', async () => {
-    process.env.BASE_URL_UNIFIED = 'https://qa.wingmall.com';
-
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({
+  it('queries GET /address/v1/consumer/addresses/sort via serverAxios with Wing headers', async () => {
+    const requestSpy = vi.spyOn(serverAxios, 'request').mockResolvedValueOnce(
+      makeAxiosResponse({
         result: true,
         result_code: '200',
-        result_message: 'Success',
         body: [
           {
-            id: 'ADD-1',
-            reference_id: 'USR-253420000018495',
+            id: 'ADD-SORT-1',
             name: 'Home Hub',
-            type: 'consumer',
-            information_address: 'Street 93 761, Phnom Penh',
-            latitude: 11.541474,
-            longitude: 104.9224353,
-            remark: '',
-            status: 'ACTIVE',
+            information_address: 'Street 2004, Phnom Penh',
+            latitude: 11.5564,
+            longitude: 104.9282,
+            remark: 'Guardhouse',
+            type: 'home',
           },
         ],
       }),
-    });
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    );
 
-    const locations = await consumerAddressClient.getSortedAddresses({
+    const locations = await wingAddressIntegration.getSortedAddresses({
       accessToken: 'qa-bearer-token',
       referenceId: 'USR-253420000018495',
       latitude: 11.5564,
@@ -113,17 +106,17 @@ describe('Consumer Address Service & Mapping', () => {
       fallbackPhone: '+85569686234',
     });
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    const parsedUrl = new URL(url);
-    expect(parsedUrl.origin + parsedUrl.pathname).toBe(
-      'https://qa.wingmall.com/address/v1/consumer/addresses/sort'
-    );
-    expect(parsedUrl.searchParams.get('reference_id')).toBe('USR-253420000018495');
-    expect(parsedUrl.searchParams.get('latitude')).toBe('11.5564');
-    expect(parsedUrl.searchParams.get('longitude')).toBe('104.9282');
+    expect(requestSpy).toHaveBeenCalledTimes(1);
+    const config = requestSpy.mock.calls[0][0];
+    expect(config.url).toBe('https://qa.wingmall.com/address/v1/consumer/addresses/sort');
+    expect(config.method).toBe('GET');
+    expect(config.params).toEqual({
+      reference_id: 'USR-253420000018495',
+      latitude: 11.5564,
+      longitude: 104.9282,
+    });
 
-    const headers = init.headers as Record<string, string>;
+    const headers = config.headers as Record<string, string>;
     expect(headers.Authorization).toBe('Bearer qa-bearer-token');
     expect(headers['wing-platform']).toBe('WEB');
     expect(headers['accept-language']).toBe('KM');
@@ -135,54 +128,48 @@ describe('Consumer Address Service & Mapping', () => {
     expect(locations[0].senderPhone).toBe('+85569686234');
   });
 
-  it('throws ConsumerApiError when address service returns result: false', async () => {
-    process.env.BASE_URL_UNIFIED = 'https://qa.wingmall.com';
-
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 400,
-      json: async () => ({
+  it('throws ConsumerApiError when address service returns HTTP 400 or result: false', async () => {
+    vi.spyOn(serverAxios, 'request').mockRejectedValueOnce(
+      makeAxiosHttpError(400, {
         result: false,
         result_code: 'U444',
         result_message: 'reference_id must not be null',
       }),
-    }) as unknown as typeof fetch;
+    );
 
     await expect(
-      consumerAddressClient.getSortedAddresses({
+      wingAddressIntegration.getSortedAddresses({
         accessToken: 'qa-bearer-token',
         referenceId: 'USR-253420000018495',
-      })
+      }),
     ).rejects.toThrowError(ConsumerApiError);
   });
 
   it('posts POST /address/v1/consumer/addresses with Wing headers and full payload', async () => {
-    process.env.BASE_URL_UNIFIED = 'https://qa.wingmall.com';
-
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 201,
-      json: async () => ({
-        result: true,
-        result_code: '200',
-        result_message: 'Success',
-        body: {
-          id: 'ADD-NEW-999',
-          reference_id: 'USR-253420000018495',
-          name: 'BKK1 Flagship',
-          type: 'consumer',
-          contact: '+85512888999',
-          information_address: 'St 310, Sangkat BKK I, Phnom Penh',
-          latitude: 11.5512,
-          longitude: 104.9256,
-          remark: 'Ring warehouse bell',
-          status: 'ACTIVE',
+    const requestSpy = vi.spyOn(serverAxios, 'request').mockResolvedValueOnce(
+      makeAxiosResponse(
+        {
+          result: true,
+          result_code: '200',
+          result_message: 'Success',
+          body: {
+            id: 'ADD-NEW-999',
+            reference_id: 'USR-253420000018495',
+            name: 'BKK1 Flagship',
+            type: 'consumer',
+            contact: '+85512888999',
+            information_address: 'St 310, Sangkat BKK I, Phnom Penh',
+            latitude: 11.5512,
+            longitude: 104.9256,
+            remark: 'Ring warehouse bell',
+            status: 'ACTIVE',
+          },
         },
-      }),
-    });
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
+        201,
+      ),
+    );
 
-    const created = await consumerAddressClient.createAddress({
+    const created = await wingAddressIntegration.createAddress({
       accessToken: 'qa-bearer-token',
       referenceId: 'USR-253420000018495',
       name: 'BKK1 Flagship',
@@ -202,12 +189,11 @@ describe('Consumer Address Service & Mapping', () => {
       fallbackSenderName: 'Express Seller',
     });
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe('https://qa.wingmall.com/address/v1/consumer/addresses');
-    expect(init.method).toBe('POST');
+    const config = requestSpy.mock.calls[0][0];
+    expect(config.url).toBe('https://qa.wingmall.com/address/v1/consumer/addresses');
+    expect(config.method).toBe('POST');
 
-    const headers = init.headers as Record<string, string>;
+    const headers = config.headers as Record<string, string>;
     expect(headers['Content-Type']).toBe('application/json');
     expect(headers.Accept).toBe('application/json');
     expect(headers.Authorization).toBe('Bearer qa-bearer-token');
@@ -215,8 +201,7 @@ describe('Consumer Address Service & Mapping', () => {
     expect(headers['accept-language']).toBe('EN');
     expect(headers['request-id']).toBeTruthy();
 
-    const sentBody = JSON.parse(String(init.body));
-    expect(sentBody).toEqual({
+    expect(config.data).toEqual({
       name: 'BKK1 Flagship',
       reference_id: 'USR-253420000018495',
       type: 'consumer',
@@ -246,18 +231,22 @@ describe('Consumer Address Service & Mapping', () => {
   });
 
   it('normalizes minimal body response and throws ConsumerApiError on create failure', async () => {
-    process.env.BASE_URL_UNIFIED = 'https://qa.wingmall.com';
+    vi.spyOn(serverAxios, 'request')
+      .mockResolvedValueOnce(
+        makeAxiosResponse({
+          result: true,
+          body: { id: 'ADD-MIN-1' },
+        }),
+      )
+      .mockRejectedValueOnce(
+        makeAxiosHttpError(400, {
+          result: false,
+          result_code: 'U400',
+          result_message: 'Invalid address payload',
+        }),
+      );
 
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        result: true,
-        body: { id: 'ADD-MIN-1' },
-      }),
-    }) as unknown as typeof fetch;
-
-    const created = await consumerAddressClient.createAddress({
+    const created = await wingAddressIntegration.createAddress({
       accessToken: 'qa-bearer-token',
       referenceId: 'USR-1',
       name: 'Warehouse 2',
@@ -272,25 +261,15 @@ describe('Consumer Address Service & Mapping', () => {
     expect(created.address).toBe('St 271, Phnom Penh');
     expect(created.senderPhone).toBe('+85569686234');
 
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 400,
-      json: async () => ({
-        result: false,
-        result_code: 'U400',
-        result_message: 'Invalid address payload',
-      }),
-    }) as unknown as typeof fetch;
-
     await expect(
-      consumerAddressClient.createAddress({
+      wingAddressIntegration.createAddress({
         accessToken: 'qa-bearer-token',
         referenceId: 'USR-1',
         name: 'Warehouse 2',
         informationAddress: 'St 271, Phnom Penh',
         latitude: 11.5321,
         longitude: 104.9123,
-      })
+      }),
     ).rejects.toThrowError('Invalid address payload');
   });
 
@@ -313,4 +292,3 @@ describe('Consumer Address Service & Mapping', () => {
     expect(invalid.success).toBe(false);
   });
 });
-

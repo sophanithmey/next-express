@@ -56,15 +56,7 @@ export function BookingDetailView({
   } = useBookingDetail(initialOrder, bookingId);
 
   if (!isAuthenticated) {
-    if (!order) {
     return (
-      <div className="mx-auto max-w-xl py-12 px-4 text-center text-xs text-slate-500">
-        {isLoadingOrder ? 'Loading booking details…' : 'Booking details unavailable.'}
-      </div>
-    );
-  }
-
-  return (
       <div className="mx-auto max-w-xl py-12 px-4 text-center space-y-4">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary-50 text-secondary-600 border border-secondary-200">
           <Lock className="h-7 w-7" />

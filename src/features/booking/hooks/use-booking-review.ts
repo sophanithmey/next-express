@@ -3,7 +3,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { useLocale, useTranslations } from 'next-intl';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { ApiClientError } from '@/lib/axios/client-axios';
+import { bookingApiService, CreateBookingSubmission } from '../services/booking-api-service';
+import { bookingKeys } from './booking-keys';
 import {
   BookingFormData,
   BookingFeeQuote,
@@ -12,6 +16,7 @@ import {
 import {
   loadBookingDraft,
   clearBookingDraft,
+  saveLastBookedStops,
 } from '../services/booking-draft-service';
 import { syncCodWithDropoffs } from '../services/booking-form-helpers';
 import {
@@ -131,8 +136,21 @@ export function useBookingReview() {
     }
   }, [isAuthenticated, openAuthModal, selectedPayment, paymentCardsState, tPayment]);
 
+  const queryClient = useQueryClient();
+
+  const createBookingMutation = useMutation({
+    mutationFn: (payload: CreateBookingSubmission) =>
+      bookingApiService.createBooking(payload, { locale }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: bookingKeys.lists() }),
+        queryClient.invalidateQueries({ queryKey: bookingKeys.drafts() }),
+      ]);
+    },
+  });
+
   const handleFinalPayment = useCallback(async () => {
-    if (!formData || isPaying) return;
+    if (!formData || isPaying || createBookingMutation.isPending) return;
 
     setIsPaying(true);
 
@@ -155,44 +173,19 @@ export function useBookingReview() {
         : formData.dropoff.address;
 
     try {
-      const res = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept-Language': locale.toUpperCase(),
-        },
-        body: JSON.stringify({
-          ...formData,
-          trackingNumber: fallbackTracking,
-          paymentMethod: selectedPayment,
-          paymentCardId:
-            isCardPaymentProvider(selectedPayment) && paymentCardsState.selectedCardId
-              ? paymentCardsState.selectedCardId
-              : undefined,
-          promoCode: appliedPromo?.code,
-          discountAmount,
-          tipAmount,
-          finalFee: netPayableFee,
-        }),
-      });
-
-      const data = (await res.json().catch(() => ({}))) as Partial<BookingOrder> & {
-        message?: string;
-      };
-
-      if (res.status === 401) {
-        setIsPaying(false);
-        openAuthModal(() => {
-          void handleFinalPayment();
-        });
-        return;
-      }
-
-      if (!res.ok) {
-        toast.error(data.message || 'Unable to submit booking. Please try again.');
-        setIsPaying(false);
-        return;
-      }
+      const data = await createBookingMutation.mutateAsync({
+        ...formData,
+        trackingNumber: fallbackTracking,
+        paymentMethod: selectedPayment,
+        paymentCardId:
+          isCardPaymentProvider(selectedPayment) && paymentCardsState.selectedCardId
+            ? paymentCardsState.selectedCardId
+            : undefined,
+        promoCode: appliedPromo?.code,
+        discountAmount,
+        tipAmount,
+        finalFee: netPayableFee,
+      } as CreateBookingSubmission & { trackingNumber?: string });
 
       const orderId = data.id || fallbackRef;
       const tracking = data.trackingNumber || fallbackTracking;
@@ -218,19 +211,34 @@ export function useBookingReview() {
         ...(data.paymentRedirectUrl ? { paymentUrl: data.paymentRedirectUrl } : {}),
       });
 
+      const resolvedStops =
+        data.dropoffs && data.dropoffs.length > 0
+          ? data.dropoffs
+          : formData.dropoffs || [];
+      saveLastBookedStops(tracking, resolvedStops);
       clearBookingDraft();
       setIsPaying(false);
       router.push(`/booking/success?${query.toString()}`);
-    } catch {
-      toast.error('Unable to reach booking service. Please try again.');
+    } catch (err: unknown) {
       setIsPaying(false);
+      if (err instanceof ApiClientError && err.statusCode === 401) {
+        openAuthModal(() => {
+          void handleFinalPayment();
+        });
+        return;
+      }
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Unable to submit booking. Please try again.',
+      );
     }
   }, [
     formData,
     isPaying,
     checkAvailability,
     selectedPayment,
-    locale,
+    createBookingMutation,
     paymentCardsState.selectedCardId,
     appliedPromo,
     discountAmount,

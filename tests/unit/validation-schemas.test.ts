@@ -8,7 +8,9 @@ import {
   recipientSchema,
 } from '@/features/booking/schemas/booking-schema';
 import {
+  createDefaultBookingForm,
   isDropoffStopDirty,
+  validateBookingFormData,
   validateDropoffStops,
 } from '@/features/booking/services/booking-form-helpers';
 
@@ -68,6 +70,9 @@ describe('Booking Validation Schemas', () => {
         address: 'St 271, Phnom Penh',
         coordinates: { lat: 11.532, lng: 104.912 },
         senderPhone: '012888999',
+        settlementBank: 'WING',
+        settlementAccountName: 'Main Warehouse Shop',
+        settlementAccountNumber: '012345678',
       },
       recipient: {
         name: 'Sokha Chan',
@@ -255,6 +260,125 @@ describe('Booking Validation Schemas', () => {
         })
       ).toBe(true);
     });
+  });
+
+  it('rejects bookings with more than 5 drop-off stops', () => {
+    const stops = Array.from({ length: 6 }, (_, index) => ({
+      id: `stop-${index + 1}`,
+      recipient: {
+        name: `Recipient ${index + 1}`,
+        phoneNumber: `01234567${index}`,
+      },
+      dropoff: {
+        address: `Street ${100 + index}, Phnom Penh`,
+        coordinates: { lat: 11.5512, lng: 104.9256 },
+      },
+    }));
+
+    const result = bookingFormSchema.safeParse({
+      pickup: {
+        name: 'Main Warehouse',
+        address: 'St 271, Phnom Penh',
+        coordinates: { lat: 11.532, lng: 104.912 },
+        senderPhone: '012888999',
+      },
+      recipient: {
+        name: 'Recipient 1',
+        phoneNumber: '012345670',
+      },
+      isBookingOnBehalf: false,
+      dropoff: {
+        address: 'Street 100, Phnom Penh',
+        coordinates: { lat: 11.5512, lng: 104.9256 },
+      },
+      dropoffs: stops,
+      parcel: {
+        description: 'Clothes',
+        quantity: 1,
+      },
+      cod: {
+        isCod: false,
+        amount: 0,
+      },
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('requires Wing Bank account details when COD is enabled and skips when COD is off', () => {
+    const codForm = createDefaultBookingForm();
+    codForm.cod = { isCod: true, amount: 25 };
+
+    const missingErrors = validateBookingFormData(codForm);
+    expect(missingErrors['pickup.settlementAccountName']).toBeDefined();
+    expect(missingErrors['pickup.settlementAccountNumber']).toBeDefined();
+
+    const invalidSchemaResult = bookingFormSchema.safeParse(codForm);
+    expect(invalidSchemaResult.success).toBe(false);
+
+    const noCodForm = {
+      ...codForm,
+      cod: { isCod: false, amount: 0 },
+      dropoffs: codForm.dropoffs?.map((s) => ({ ...s, codAmount: 0 })),
+    };
+    expect(validateBookingFormData(noCodForm)).toEqual({});
+    expect(bookingFormSchema.safeParse(noCodForm).success).toBe(true);
+
+    const completeCodForm = {
+      ...codForm,
+      pickup: {
+        ...codForm.pickup,
+        settlementBank: 'WING',
+        settlementAccountName: 'Sokha Boutique',
+        settlementAccountNumber: '012 345 678',
+      },
+    };
+    expect(validateBookingFormData(completeCodForm)).toEqual({});
+    expect(bookingFormSchema.safeParse(completeCodForm).success).toBe(true);
+  });
+
+  it('rejects total COD exceeding $60 USD across single or multiple drop-off points', () => {
+    const overSingleCod = codSchema.safeParse({ isCod: true, amount: 61 });
+    expect(overSingleCod.success).toBe(false);
+
+    const exactLimitForm = createDefaultBookingForm();
+    exactLimitForm.pickup.settlementBank = 'WING';
+    exactLimitForm.pickup.settlementAccountName = 'Sokha Boutique';
+    exactLimitForm.pickup.settlementAccountNumber = '012345678';
+    exactLimitForm.dropoffs = [
+      {
+        id: 'stop-1',
+        recipient: { name: 'A', phoneNumber: '012998877' },
+        dropoff: { address: 'St 310, Phnom Penh', coordinates: { lat: 11.55, lng: 104.92 } },
+        codAmount: 40,
+      },
+      {
+        id: 'stop-2',
+        recipient: { name: 'B', phoneNumber: '098112233' },
+        dropoff: { address: 'St 63, Phnom Penh', coordinates: { lat: 11.56, lng: 104.93 } },
+        codAmount: 20,
+      },
+    ];
+    exactLimitForm.cod = { isCod: true, amount: 60 };
+    expect(validateBookingFormData(exactLimitForm)).toEqual({});
+    expect(bookingFormSchema.safeParse(exactLimitForm).success).toBe(true);
+
+    const overLimitForm = {
+      ...exactLimitForm,
+      dropoffs: [
+        ...exactLimitForm.dropoffs,
+        {
+          id: 'stop-3',
+          recipient: { name: 'C', phoneNumber: '077445566' },
+          dropoff: { address: 'St 271, Phnom Penh', coordinates: { lat: 11.54, lng: 104.91 } },
+          codAmount: 1,
+        },
+      ],
+      cod: { isCod: true, amount: 61 },
+    };
+    const errors = validateBookingFormData(overLimitForm);
+    expect(errors['cod.amount']).toContain('$60');
+    expect(bookingFormSchema.safeParse(overLimitForm).success).toBe(false);
   });
 });
 

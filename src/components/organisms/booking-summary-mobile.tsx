@@ -78,7 +78,7 @@ export function BookingSummaryMobile({
           <div className='flex justify-between'>
             <span className='text-slate-400'>{tBooking('mobilePickupLabel')}</span>
             <span className='font-semibold text-slate-800 truncate max-w-50'>
-              {pickup.name}
+              {pickup.name || pickup.address || tBooking('pendingLabel')}
             </span>
           </div>
           <div className='flex justify-between'>

@@ -14,6 +14,7 @@ import {
 import { BookingOrder, DropoffStop } from '../types/booking-types';
 import { formatPhoneNumber } from '@/lib/phone-number';
 import { useTranslations } from 'next-intl';
+import { StopTrackCopyActions } from '@/components/molecules/stop-track-copy-actions';
 
 const DeliveryMap = dynamic(
   () => import('@/components/organisms/delivery-map').then((m) => m.DeliveryMap),
@@ -34,6 +35,7 @@ export function BookingDetailRoute({
   onToggleMap,
 }: BookingDetailRouteProps) {
   const tDetails = useTranslations('BookingDetails');
+  const tPayment = useTranslations('Payment');
   const hasCoordinates =
     Boolean(order.pickup?.coordinates?.lat) &&
     Boolean(order.dropoff?.coordinates?.lat);
@@ -119,19 +121,29 @@ export function BookingDetailRoute({
               <div className="absolute -left-6 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-secondary-600 text-xs font-bold text-white ring-4 ring-white">
                 {letter}
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-secondary-700">
-                  {tDetails('dropoffBadge')} {destinationStops.length > 1 ? `(${letter})` : ''}
-                </span>
-                {stop.recipient?.name && (
-                  <span className="text-xs font-semibold text-slate-900">
-                    {stop.recipient.name}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-secondary-700">
+                    {tDetails('dropoffBadge')} {destinationStops.length > 1 ? `(${letter})` : ''}
                   </span>
-                )}
-                {typeof stop.codAmount === 'number' && stop.codAmount > 0 && (
-                  <span className="rounded border border-primary-200 bg-primary-50 px-1.5 py-0.2 font-mono text-[10px] font-bold text-primary-900">
-                    COD ${stop.codAmount.toFixed(2)}
-                  </span>
+                  {stop.recipient?.name && (
+                    <span className="text-xs font-semibold text-slate-900">
+                      {stop.recipient.name}
+                    </span>
+                  )}
+                  {typeof stop.codAmount === 'number' && stop.codAmount > 0 && (
+                    <span className="rounded border border-primary-200 bg-primary-50 px-1.5 py-0.2 font-mono text-[10px] font-bold text-primary-900">
+                      COD ${stop.codAmount.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+                {destinationStops.length > 1 && order.status !== 'cancelled' && (
+                  <StopTrackCopyActions
+                    tracking={order.trackingNumber}
+                    stop={stop}
+                    index={idx}
+                    linkLabel={tPayment('copyLiveLink')}
+                  />
                 )}
               </div>
               <p className="text-xs text-slate-700 leading-relaxed font-medium">

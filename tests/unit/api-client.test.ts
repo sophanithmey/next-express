@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { inMemoryStore } from '@/server/repositories/in-memory-store';
+import { inMemoryStore } from '@/server/lib/mock-booking-store';
 
 describe('Express API Mock Adapter & In-Memory Store', () => {
   it('loads saved pickup locations', () => {

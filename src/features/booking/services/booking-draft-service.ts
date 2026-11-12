@@ -1,18 +1,10 @@
-import { BookingFormData } from '../types/booking-types';
+import { BookingFormData, DropoffStop, SavedBookingDraft } from '../types/booking-types';
 
 const PENDING_CHECKOUT_DRAFT_KEY = 'express_seller_pending_booking_draft';
+const LAST_BOOKED_STOPS_KEY = 'express_seller_last_booked_stops';
 const USER_SAVED_DRAFTS_KEY = 'express_seller_user_saved_drafts';
 
-export interface SavedBookingDraft {
-  id: string;
-  orderId?: string;
-  source?: 'api' | 'local';
-  userId?: string;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-  formData: BookingFormData;
-}
+export type { SavedBookingDraft } from '../types/booking-types';
 
 /**
  * Temporary session draft used for in-flight payment review navigation.
@@ -106,57 +98,30 @@ export function deleteUserBookingDraft(draftId: string): void {
 }
 
 /**
- * Backend API draft helpers backed by Wing Consumer Courier Orders (`order_status = DRAFT`).
+ * Temporarily caches per-stop recipient/COD details for the success receipt
+ * so each customer gets an isolated tracking link right after booking checkout.
  */
-export async function fetchApiSavedDrafts(
-  locale = 'EN',
-): Promise<SavedBookingDraft[]> {
-  const res = await fetch('/api/bookings/drafts', {
-    headers: { 'Accept-Language': locale.toUpperCase() },
-    cache: 'no-store',
-  });
-  if (!res.ok) return [];
-  const data = (await res.json().catch(() => ({}))) as {
-    items?: SavedBookingDraft[];
-  };
-  return Array.isArray(data.items) ? data.items : [];
-}
-
-export async function saveApiBookingDraft(
-  formData: BookingFormData,
-  locale = 'EN',
-): Promise<SavedBookingDraft> {
-  const res = await fetch('/api/bookings/drafts', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept-Language': locale.toUpperCase(),
-    },
-    body: JSON.stringify(formData),
-  });
-  const data = (await res.json().catch(() => ({}))) as {
-    draft?: SavedBookingDraft;
-    message?: string;
-  };
-  if (!res.ok || !data.draft) {
-    throw new Error(data.message || 'Failed to save draft');
+export function saveLastBookedStops(tracking: string, stops: DropoffStop[]): void {
+  if (typeof window === 'undefined' || !tracking || stops.length === 0) return;
+  try {
+    sessionStorage.setItem(
+      LAST_BOOKED_STOPS_KEY,
+      JSON.stringify({ tracking, stops })
+    );
+  } catch {
+    // Ignore storage quota errors
   }
-  return data.draft;
 }
 
-export async function deleteApiBookingDraft(
-  draftId: string,
-  locale = 'EN',
-): Promise<void> {
-  const res = await fetch(
-    `/api/bookings/drafts?id=${encodeURIComponent(draftId)}`,
-    {
-      method: 'DELETE',
-      headers: { 'Accept-Language': locale.toUpperCase() },
-    },
-  );
-  if (!res.ok) {
-    const data = (await res.json().catch(() => ({}))) as { message?: string };
-    throw new Error(data.message || 'Failed to delete draft');
+export function loadLastBookedStops(tracking: string): DropoffStop[] | null {
+  if (typeof window === 'undefined' || !tracking) return null;
+  try {
+    const raw = sessionStorage.getItem(LAST_BOOKED_STOPS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { tracking?: string; stops?: DropoffStop[] };
+    if (parsed.tracking !== tracking || !Array.isArray(parsed.stops)) return null;
+    return parsed.stops;
+  } catch {
+    return null;
   }
 }

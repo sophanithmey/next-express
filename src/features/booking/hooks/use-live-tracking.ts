@@ -1,9 +1,15 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import { useQuery } from '@tanstack/react-query';
 import { BookingOrder, DropoffStop } from '../types/booking-types';
 import { APP_CONFIG } from '@/lib/constants';
+import { bookingApiService } from '../services/booking-api-service';
+import { localDemoBookingStore } from '../services/local-demo-store';
+import { isLocalDemoStorageEnabled } from '@/lib/local-demo-storage';
+import { scopeOrderToStop } from '../services/tracking-share-helper';
+import { bookingKeys } from './booking-keys';
 
 function mapStatusToStep(status: BookingOrder['status']): number {
   if (status === 'delivered') return 3;
@@ -14,36 +20,37 @@ function mapStatusToStep(status: BookingOrder['status']): number {
 /**
  * Manages live tracking state, status refresh, and derived display metadata for receivers.
  */
-export function useLiveTracking(initialOrder: BookingOrder) {
+export function useLiveTracking(initialOrder: BookingOrder, scopedStopId?: string) {
   const tLive = useTranslations('LiveTracking');
   const tPayment = useTranslations('Payment');
   const locale = useLocale();
+  const localDemoMode = isLocalDemoStorageEnabled();
 
-  const [order, setOrder] = useState<BookingOrder>(initialOrder);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const targetId = initialOrder.trackingNumber || initialOrder.id;
+  const trackingQuery = useQuery({
+    queryKey: [...bookingKeys.detail(targetId), locale, 'tracking'],
+    queryFn: async ({ signal }) => {
+      if (localDemoMode) {
+        return localDemoBookingStore.getOrderById(targetId) ?? initialOrder;
+      }
+      return bookingApiService.getBookingById(targetId, locale, signal);
+    },
+    initialData: initialOrder,
+    staleTime: localDemoMode ? 0 : 15_000,
+    refetchOnMount: localDemoMode ? 'always' : true,
+    refetchOnWindowFocus: false,
+  });
 
-  useEffect(() => {
-    setOrder(initialOrder);
-  }, [initialOrder]);
+  const order = useMemo(
+    () => scopeOrderToStop(trackingQuery.data ?? initialOrder, scopedStopId),
+    [trackingQuery.data, initialOrder, scopedStopId]
+  );
+  const isRefreshing = trackingQuery.isFetching;
 
   const handleRefresh = useCallback(async () => {
-    if (isRefreshing) return;
-    setIsRefreshing(true);
-    try {
-      const res = await fetch(
-        `/api/bookings/${encodeURIComponent(order.trackingNumber)}`,
-        { cache: 'no-store' }
-      );
-      if (res.ok) {
-        const latest: BookingOrder = await res.json();
-        if (latest?.id) setOrder(latest);
-      }
-    } catch {
-      // Keep current visible tracking state if transient fetch fails
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [isRefreshing, order.trackingNumber]);
+    if (!targetId || trackingQuery.isFetching) return;
+    await trackingQuery.refetch();
+  }, [targetId, trackingQuery]);
 
   const isCancelled = order.status === 'cancelled';
   const activeStep = mapStatusToStep(order.status);

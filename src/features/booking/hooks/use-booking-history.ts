@@ -1,14 +1,20 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { useLocale, useTranslations } from 'next-intl';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { isLocalDemoStorageEnabled } from '@/lib/local-demo-storage';
 import { BookingOrder, DashboardStatistics } from '../types/booking-types';
 import { useAuthState } from '@/features/auth/hooks/use-auth-state';
 import { createPrefillFromOrder } from '../services/booking-form-helpers';
 import { saveBookingDraft } from '../services/booking-draft-service';
 import { buildTrackingSharePayload } from '../services/tracking-share-helper';
+import { buildOrderStatusFilter } from '../services/booking-order-filter';
+import { bookingApiService } from '../services/booking-api-service';
+import { localDemoBookingStore } from '../services/local-demo-store';
+import { bookingKeys } from './booking-keys';
 
 function deriveStatsFromOrders(orders: BookingOrder[]): DashboardStatistics {
   const today = new Date().toISOString().slice(0, 10);
@@ -61,69 +67,90 @@ export function useBookingHistory({
 }: UseBookingHistoryProps) {
   const router = useRouter();
   const locale = useLocale();
+  const queryClient = useQueryClient();
   const tCommon = useTranslations('Common');
+  const tHistory = useTranslations('BookingHistory');
   const tPayment = useTranslations('Payment');
+  const localDemoMode = isLocalDemoStorageEnabled();
   const { isAuthenticated, openAuthModal } = useAuthState();
-  const isFirstRender = useRef(true);
-  const wasAuthenticatedRef = useRef(isAuthenticated);
 
-  const [orders, setOrders] = useState<BookingOrder[]>(initialOrders);
-  const [stats, setStats] = useState<DashboardStatistics | undefined>(initialStats);
-  const [totalCount, setTotalCount] = useState(initialTotal);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(initialTotalPages);
-  const [isLoading, setIsLoading] = useState(false);
   const [copiedItem, setCopiedItem] = useState<CopiedState | null>(null);
 
-  const fetchOrders = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (search.trim()) params.set('search', search.trim());
-      if (statusFilter !== 'all') params.set('status', statusFilter);
-      params.set('page', String(page));
-      params.set('limit', '10');
-
-      const res = await fetch(`/api/bookings?${params.toString()}`, {
-        headers: { 'Accept-Language': locale.toUpperCase() },
-        cache: 'no-store',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const nextOrders: BookingOrder[] = data.items || [];
-        setOrders(nextOrders);
-        setTotalCount(data.pagination?.total ?? nextOrders.length ?? 0);
-        setTotalPages(data.pagination?.totalPages ?? 1);
-        if (statusFilter === 'all' && !search.trim() && page === 1) {
-          setStats(deriveStatsFromOrders(nextOrders));
-        }
-      }
-    } catch {
-      // Keep current visible orders if transient network error occurs
-    } finally {
-      setIsLoading(false);
-    }
-  }, [search, statusFilter, page, locale]);
-
   useEffect(() => {
-    if (isAuthenticated && !wasAuthenticatedRef.current) {
-      void fetchOrders();
-    }
-    wasAuthenticatedRef.current = isAuthenticated;
-  }, [isAuthenticated, fetchOrders]);
-
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
     const timer = setTimeout(() => {
-      void fetchOrders();
+      setDebouncedSearch(search.trim());
     }, 200);
     return () => clearTimeout(timer);
-  }, [fetchOrders]);
+  }, [search]);
+
+  const activeFilter = useMemo(
+    () => buildOrderStatusFilter(statusFilter),
+    [statusFilter],
+  );
+
+  const isDefaultUnfilteredPage =
+    page === 1 && !debouncedSearch && statusFilter === 'all';
+
+  const bookingsQuery = useQuery({
+    queryKey: [
+      ...bookingKeys.list({
+        page,
+        rpp: 10,
+        search: debouncedSearch || undefined,
+        status: statusFilter,
+        filter: activeFilter,
+      }),
+      locale,
+      isAuthenticated ? 'auth' : 'guest',
+    ],
+    queryFn: ({ signal }) =>
+      bookingApiService.listBookings(
+        {
+          page,
+          rpp: 10,
+          search: debouncedSearch || undefined,
+          filter: activeFilter,
+          locale,
+        },
+        signal,
+      ),
+    initialData:
+      !localDemoMode && isDefaultUnfilteredPage
+        ? {
+            items: initialOrders,
+            pagination: {
+              page: 1,
+              limit: 10,
+              total: initialTotal,
+              totalPages: initialTotalPages,
+            },
+          }
+        : undefined,
+    placeholderData: keepPreviousData,
+    staleTime: localDemoMode ? 0 : 15_000,
+    refetchOnMount: localDemoMode ? 'always' : true,
+  });
+
+  const orders = bookingsQuery.data?.items ?? initialOrders;
+  const totalCount = bookingsQuery.data?.pagination?.total ?? orders.length ?? 0;
+  const totalPages = bookingsQuery.data?.pagination?.totalPages ?? 1;
+  const isLoading = bookingsQuery.isFetching;
+
+  const stats = useMemo<DashboardStatistics | undefined>(() => {
+    if (localDemoMode && bookingsQuery.data) {
+      return deriveStatsFromOrders(
+        localDemoBookingStore.listOrders({ page: 1, rpp: 1000 }).items,
+      );
+    }
+    if (isDefaultUnfilteredPage && bookingsQuery.data?.items) {
+      return deriveStatsFromOrders(bookingsQuery.data.items);
+    }
+    return initialStats;
+  }, [bookingsQuery.data, initialStats, isDefaultUnfilteredPage, localDemoMode]);
 
   const handleFilterChange = useCallback((nextStatus: string) => {
     setStatusFilter(nextStatus);
@@ -187,6 +214,19 @@ export function useBookingHistory({
     [router]
   );
 
+  const handleResetDemoData = useCallback(async () => {
+    localDemoBookingStore.resetAllDemoData();
+    setSearch('');
+    setDebouncedSearch('');
+    setStatusFilter('all');
+    setPage(1);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: bookingKeys.all }),
+      queryClient.invalidateQueries({ queryKey: ['payments'] }),
+    ]);
+    toast.success(tHistory('demoResetSuccess'));
+  }, [queryClient, tHistory]);
+
   return {
     orders,
     stats,
@@ -196,6 +236,7 @@ export function useBookingHistory({
     page,
     totalPages,
     isLoading,
+    isLocalDemoMode: localDemoMode,
     isAuthenticated,
     openAuthModal,
     copiedItem,
@@ -203,7 +244,8 @@ export function useBookingHistory({
     handleFilterChange,
     handleSearchChange,
     handleClearFilters,
-    handleRefresh: () => void fetchOrders(),
+    handleRefresh: () => void bookingsQuery.refetch(),
+    handleResetDemoData,
     handleCopyTrackingId,
     handleCopyLiveLink,
     handleRepeatBooking,

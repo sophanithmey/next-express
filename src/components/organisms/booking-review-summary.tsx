@@ -34,8 +34,8 @@ export function BookingReviewSummary({ formData }: BookingReviewSummaryProps) {
   const isScheduled = formData.deliveryOption === 'scheduled';
   const scheduleInfo = formData.deliverySchedule;
   const activeShift =
-    DELIVERY_SHIFTS.find((s) => s.id === (scheduleInfo?.shift || 'evening')) ||
-    DELIVERY_SHIFTS[2];
+    DELIVERY_SHIFTS.find((s) => s.id === (scheduleInfo?.shift || 'morning')) ||
+    DELIVERY_SHIFTS[0];
   const matchedSlot = activeShift.slots.find(
     (slot) => slot.value === scheduleInfo?.timeSlot
   );

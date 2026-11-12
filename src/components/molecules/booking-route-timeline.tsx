@@ -3,7 +3,7 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import { DropoffStop, PickupLocation } from '@/features/booking/types/booking-types';
-import { MapPinHouse, Navigation, Image as ImageIcon } from 'lucide-react';
+import { MapPinHouse, Navigation, Image as ImageIcon, Landmark } from 'lucide-react';
 import { formatPhoneNumber } from '@/lib/phone-number';
 
 interface BookingRouteTimelineProps {
@@ -41,6 +41,16 @@ export function BookingRouteTimeline({ pickup, stops }: BookingRouteTimelineProp
           {pickup.name || tPickup('warehouse')}
         </p>
         <p className="text-slate-600 leading-relaxed">{pickup.address}</p>
+
+        {pickup.settlementAccountName?.trim() && pickup.settlementAccountNumber?.trim() && (
+          <div className="mt-1 flex items-center gap-1.5 text-[11px] font-medium text-secondary-700">
+            <Landmark className="h-3 w-3 shrink-0" />
+            <span>
+              {tPickup('wingBankTitle')}: {pickup.settlementAccountName} ·{' '}
+              {pickup.settlementAccountNumber}
+            </span>
+          </div>
+        )}
 
         {pickup.riderNote && (
           <div className="mt-1.5 rounded-lg bg-slate-50 p-2 text-[11px] text-slate-600 border border-slate-100">

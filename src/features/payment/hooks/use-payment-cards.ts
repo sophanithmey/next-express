@@ -1,163 +1,170 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useLocale } from 'next-intl';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import {
-  CreatePaymentCardResult,
-  PaymentCardItem,
-} from '../types/payment-types';
+import { paymentApiService } from '../services/payment-api-service';
+import { paymentKeys } from './payment-keys';
+import { PaymentCardItem } from '../types/payment-types';
 
-/**
- * Manages seller saved payment cards (`GET/POST /consumer/payment-cards`, default setting, delete).
- */
+const EMPTY_CARDS: PaymentCardItem[] = [];
+
 export function usePaymentCards(isAuthenticated: boolean) {
   const locale = useLocale();
-  const [cards, setCards] = useState<PaymentCardItem[]>([]);
-  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
-  const [isLoadingCards, setIsLoadingCards] = useState(false);
-  const [isMutatingCard, setIsMutatingCard] = useState(false);
-  const [cardError, setCardError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const [manualSelectedCardId, setManualSelectedCardId] = useState<string | null>(
+    null,
+  );
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  const loadCards = useCallback(async () => {
-    if (!isAuthenticated) {
-      setCards([]);
-      setSelectedCardId(null);
-      return;
+  const cardsQuery = useQuery({
+    queryKey: [...paymentKeys.cards(), locale],
+    queryFn: () => paymentApiService.listCards(locale),
+    enabled: isAuthenticated,
+    staleTime: 30_000,
+  });
+
+  const cards = isAuthenticated ? (cardsQuery.data ?? EMPTY_CARDS) : EMPTY_CARDS;
+
+  const selectedCardId = useMemo<string | null>(() => {
+    if (cards.length === 0) return null;
+    if (
+      manualSelectedCardId &&
+      cards.some((card) => card.id === manualSelectedCardId)
+    ) {
+      return manualSelectedCardId;
     }
+    return cards.find((card) => card.isDefault)?.id || cards[0]?.id || null;
+  }, [cards, manualSelectedCardId]);
 
-    setIsLoadingCards(true);
-    setCardError(null);
-    try {
-      const res = await fetch('/api/payments/cards', {
-        headers: { 'Accept-Language': locale.toUpperCase() },
-        cache: 'no-store',
-      });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { message?: string };
-        setCardError(body.message || null);
-        return;
+  const setSelectedCardId = useCallback((cardId: string | null) => {
+    setManualSelectedCardId(cardId);
+  }, []);
+
+  const refreshCards = useCallback(async () => {
+    if (!isAuthenticated) return;
+    setActionError(null);
+    await cardsQuery.refetch();
+  }, [cardsQuery, isAuthenticated]);
+
+  const createCardMutation = useMutation({
+    mutationFn: (vars: { provider: string; serviceCode: string }) =>
+      paymentApiService.createCard(
+        {
+          platform: 'UNIFIED',
+          provider: vars.provider,
+          serviceCode: vars.serviceCode,
+        },
+        locale,
+      ),
+    onSuccess: async (result) => {
+      setActionError(null);
+      if (result.card?.id) {
+        setManualSelectedCardId(result.card.id);
+        toast.success('Payment card added successfully');
       }
-      const data = (await res.json()) as { cards?: PaymentCardItem[] };
-      const list = Array.isArray(data.cards) ? data.cards : [];
-      setCards(list);
-      setSelectedCardId((prev) => {
-        if (prev && list.some((c) => c.id === prev)) return prev;
-        return list.find((c) => c.isDefault)?.id || list[0]?.id || null;
-      });
-    } catch {
-      setCardError('Unable to load saved cards.');
-    } finally {
-      setIsLoadingCards(false);
-    }
-  }, [isAuthenticated, locale]);
+      await queryClient.invalidateQueries({ queryKey: paymentKeys.cards() });
+    },
+    onError: (err) => {
+      const msg =
+        err instanceof Error ? err.message : 'Unable to register payment card';
+      setActionError(msg);
+      toast.error(msg);
+    },
+  });
 
-  useEffect(() => {
-    void loadCards();
-  }, [loadCards]);
+  const setDefaultCardMutation = useMutation({
+    mutationFn: (cardId: string) =>
+      paymentApiService.setDefaultCard({ cardId, isDefault: true, locale }),
+    onSuccess: async (_, cardId) => {
+      setActionError(null);
+      setManualSelectedCardId(cardId);
+      toast.success('Default payment card updated');
+      await queryClient.invalidateQueries({ queryKey: paymentKeys.cards() });
+    },
+    onError: (err) => {
+      const msg =
+        err instanceof Error ? err.message : 'Failed to update default card';
+      setActionError(msg);
+      toast.error(msg);
+    },
+  });
+
+  const deleteCardMutation = useMutation({
+    mutationFn: (cardId: string) =>
+      paymentApiService.deleteCard({ cardId, locale }),
+    onSuccess: async (_, cardId) => {
+      setActionError(null);
+      if (manualSelectedCardId === cardId) {
+        setManualSelectedCardId(null);
+      }
+      toast.success('Card removed');
+      await queryClient.invalidateQueries({ queryKey: paymentKeys.cards() });
+    },
+    onError: (err) => {
+      const msg = err instanceof Error ? err.message : 'Failed to delete card';
+      setActionError(msg);
+      toast.error(msg);
+    },
+  });
 
   const createCard = useCallback(
     async (provider: string, serviceCode = 'ST_EXPRESS'): Promise<string | null> => {
-      if (isMutatingCard) return null;
-      setIsMutatingCard(true);
-      setCardError(null);
+      if (!isAuthenticated) return null;
       try {
-        const res = await fetch('/api/payments/cards', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept-Language': locale.toUpperCase(),
-          },
-          body: JSON.stringify({
-            platform: 'UNIFIED',
-            provider,
-            serviceCode,
-          }),
+        const result = await createCardMutation.mutateAsync({
+          provider,
+          serviceCode,
         });
-        const data = (await res.json().catch(() => ({}))) as CreatePaymentCardResult & {
-          card?: PaymentCardItem;
-          message?: string;
-        };
-        if (!res.ok) {
-          toast.error(data.message || 'Unable to initiate card setup.');
-          return null;
-        }
-        await loadCards();
-        return data.redirectUrl || null;
+        return result.redirectUrl || null;
       } catch {
-        toast.error('Unable to reach payment card service.');
         return null;
-      } finally {
-        setIsMutatingCard(false);
       }
     },
-    [isMutatingCard, locale, loadCards],
+    [createCardMutation, isAuthenticated],
   );
 
   const setDefaultCard = useCallback(
     async (cardId: string) => {
-      if (isMutatingCard) return;
-      setIsMutatingCard(true);
+      if (!isAuthenticated || !cardId) return;
       try {
-        const res = await fetch(`/api/payments/cards/${encodeURIComponent(cardId)}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept-Language': locale.toUpperCase(),
-          },
-          body: JSON.stringify({ isDefault: true }),
-        });
-        if (!res.ok) {
-          const body = (await res.json().catch(() => ({}))) as { message?: string };
-          toast.error(body.message || 'Failed to set default card.');
-          return;
-        }
-        setSelectedCardId(cardId);
-        await loadCards();
+        await setDefaultCardMutation.mutateAsync(cardId);
       } catch {
-        toast.error('Failed to update default card.');
-      } finally {
-        setIsMutatingCard(false);
+        // Error surfaced in onError toast/state
       }
     },
-    [isMutatingCard, locale, loadCards],
+    [isAuthenticated, setDefaultCardMutation],
   );
 
   const deleteCard = useCallback(
     async (cardId: string) => {
-      if (isMutatingCard) return;
-      setIsMutatingCard(true);
+      if (!isAuthenticated || !cardId) return;
       try {
-        const res = await fetch(`/api/payments/cards/${encodeURIComponent(cardId)}`, {
-          method: 'DELETE',
-          headers: { 'Accept-Language': locale.toUpperCase() },
-        });
-        if (!res.ok) {
-          const body = (await res.json().catch(() => ({}))) as { message?: string };
-          toast.error(body.message || 'Failed to delete card.');
-          return;
-        }
-        await loadCards();
+        await deleteCardMutation.mutateAsync(cardId);
       } catch {
-        toast.error('Failed to delete payment card.');
-      } finally {
-        setIsMutatingCard(false);
+        // Error surfaced in onError toast/state
       }
     },
-    [isMutatingCard, locale, loadCards],
+    [deleteCardMutation, isAuthenticated],
   );
+
+  const queryError =
+    cardsQuery.error instanceof Error ? cardsQuery.error.message : null;
 
   return {
     cards,
     selectedCardId,
     setSelectedCardId,
-    isLoadingCards,
-    isMutatingCard,
-    cardError,
-    refreshCards: loadCards,
+    isLoadingCards: cardsQuery.isFetching,
+    isMutatingCard:
+      createCardMutation.isPending ||
+      setDefaultCardMutation.isPending ||
+      deleteCardMutation.isPending,
+    cardError: actionError ?? queryError,
+    refreshCards,
     createCard,
     setDefaultCard,
     deleteCard,
   };
 }
-

@@ -8,11 +8,13 @@ import {
   CodInfo,
 } from '@/features/booking/types/booking-types';
 import { FormSection } from '../../molecules/form-section';
-import { Navigation, Layers, Route } from 'lucide-react';
+import { Navigation, Layers, Route, AlertCircle } from 'lucide-react';
 import { DropoffStopItem } from './dropoff-stop-item';
 import { DropoffAddStopButton } from './dropoff-add-stop-button';
 import { BulkDropoffModal } from '../bulk-dropoff-modal';
 import { useDropoffSection } from '@/features/booking/hooks/use-dropoff-section';
+import { calculateTotalStopCod } from '@/features/booking/services/booking-form-helpers';
+import { MAX_TOTAL_COD_USD } from '@/lib/constants';
 import { useTranslations } from 'next-intl';
 
 interface DropoffSectionProps {
@@ -43,10 +45,13 @@ export function DropoffSection({
   const tRecipient = useTranslations('Recipient');
   const tBooking = useTranslations('Booking');
   const tCommon = useTranslations('Common');
+  const tValidation = useTranslations('Validation');
 
   const {
     currentStops,
     isMultiDrop,
+    maxStops,
+    isMaxStopsReached,
     isBulkModalOpen,
     setIsBulkModalOpen,
     collapsedStops,
@@ -68,6 +73,14 @@ export function DropoffSection({
     onChangeDropoffs,
   });
 
+  const totalCod = calculateTotalStopCod(currentStops);
+  const isCodOverLimit = totalCod > MAX_TOTAL_COD_USD;
+  const codLimitMessage = tValidation('codTotalExceeded', {
+    total: totalCod.toFixed(2),
+    max: MAX_TOTAL_COD_USD,
+  });
+  const codBannerError = isCodOverLimit ? codLimitMessage : errors['cod.amount'];
+
   return (
     <FormSection
       icon={<Navigation className="h-4 w-4" />}
@@ -81,9 +94,23 @@ export function DropoffSection({
       }
       action={
         <div className="flex items-center gap-2 flex-wrap">
+          {totalCod > 0 && (
+            <span
+              className={`text-[11px] font-bold px-2 py-1 rounded-md border font-mono ${
+                isCodOverLimit
+                  ? 'border-danger-200 bg-danger-50 text-danger-700'
+                  : 'border-amber-200 bg-amber-50 text-amber-800'
+              }`}
+            >
+              {tRecipient('totalCodProgress', {
+                total: totalCod.toFixed(2),
+                max: MAX_TOTAL_COD_USD,
+              })}
+            </span>
+          )}
           {isMultiDrop && (
             <span className="text-[11px] font-bold text-brand-800 bg-brand-50 px-2 py-1 rounded-md border border-brand-200">
-              {currentStops.length} {tCommon('stops')}
+              {currentStops.length}/{maxStops} {tCommon('stops')}
             </span>
           )}
           {isMultiDrop && onOptimizeRoute && (
@@ -109,6 +136,13 @@ export function DropoffSection({
         </div>
       }
     >
+      {codBannerError && (
+        <div className="mb-3 flex items-center gap-2 rounded-xl border border-danger-200 bg-danger-50 px-3.5 py-2.5 text-xs font-semibold text-danger-700">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{codBannerError}</span>
+        </div>
+      )}
+
       <div ref={sortableContainerRef} className="space-y-4">
         {currentStops.map((stop, index) => {
           const nameError = errors[`dropoffs.${index}.name`];
@@ -118,7 +152,9 @@ export function DropoffSection({
           const addressError =
             errors[`dropoffs.${index}.address`] ||
             (index === 0 ? errors['dropoff.address'] : '');
-          const codError = errors[`dropoffs.${index}.codAmount`];
+          const codError =
+            errors[`dropoffs.${index}.codAmount`] ||
+            (isCodOverLimit && (stop.codAmount ?? 0) > 0 ? codLimitMessage : undefined);
 
           return (
             <DropoffStopItem
@@ -142,7 +178,11 @@ export function DropoffSection({
           );
         })}
 
-        <DropoffAddStopButton onAddStop={handleAddStop} />
+        <DropoffAddStopButton
+          onAddStop={handleAddStop}
+          disabled={isMaxStopsReached}
+          maxStops={maxStops}
+        />
       </div>
 
       <BulkDropoffModal

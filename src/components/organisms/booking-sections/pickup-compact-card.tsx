@@ -2,17 +2,27 @@
 
 import React from 'react';
 import { PickupLocation } from '@/features/booking/types/booking-types';
-import { User, Phone, Edit3, HomeIcon } from 'lucide-react';
+import { User, Phone, Edit3, HomeIcon, Landmark } from 'lucide-react';
 import { formatPhoneNumber } from '@/lib/phone-number';
 import { useTranslations } from 'next-intl';
 
 interface PickupCompactCardProps {
   pickup: PickupLocation;
+  isCodRequired?: boolean;
   onChangeClick: () => void;
+  onOpenBankClick?: () => void;
 }
 
-export function PickupCompactCard({ pickup, onChangeClick }: PickupCompactCardProps) {
+export function PickupCompactCard({
+  pickup,
+  isCodRequired = false,
+  onChangeClick,
+  onOpenBankClick,
+}: PickupCompactCardProps) {
   const tPickup = useTranslations('Pickup');
+  const hasBankAccount = Boolean(
+    pickup.settlementAccountName?.trim() && pickup.settlementAccountNumber?.trim()
+  );
 
   return (
     <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-3.5 space-y-2.5">
@@ -45,7 +55,7 @@ export function PickupCompactCard({ pickup, onChangeClick }: PickupCompactCardPr
         {pickup.address}
       </p>
 
-      {(pickup.senderName || pickup.senderPhone) && (
+      {(pickup.senderName || pickup.senderPhone || hasBankAccount) && (
         <div className="flex flex-wrap items-center gap-3 pt-1 border-t border-slate-200/60 text-[11px] text-slate-600">
           {pickup.senderName && (
             <span className="flex items-center gap-1">
@@ -59,7 +69,31 @@ export function PickupCompactCard({ pickup, onChangeClick }: PickupCompactCardPr
               <span>{formatPhoneNumber(pickup.senderPhone)}</span>
             </span>
           )}
+          {hasBankAccount && (
+            <span className="flex items-center gap-1 font-medium text-secondary-700">
+              <Landmark className="h-3 w-3 text-secondary-600" />
+              <span>
+                {pickup.settlementAccountName} · {pickup.settlementAccountNumber}
+              </span>
+            </span>
+          )}
         </div>
+      )}
+
+      {isCodRequired && !hasBankAccount && onOpenBankClick && (
+        <button
+          type="button"
+          onClick={onOpenBankClick}
+          className="w-full flex items-center justify-between gap-2 rounded-lg border border-wing-bank bg-wing-bank px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-wing-bank-hover hover:border-wing-bank-hover transition cursor-pointer text-left shadow-2xs"
+        >
+          <span className="flex items-center gap-1.5 min-w-0 truncate">
+            <Landmark className="h-3.5 w-3.5 shrink-0 text-white" />
+            <span className="truncate">{tPickup('addWingBankRequiredChip')}</span>
+          </span>
+          <span className="text-[10px] font-bold uppercase tracking-wider shrink-0 text-white/95">
+            {tPickup('wingBankRequiredBadge')}
+          </span>
+        </button>
       )}
 
       {pickup.riderNote && (

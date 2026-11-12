@@ -1,12 +1,16 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { BookingOrder } from '../types/booking-types';
+import { BookingOrder, DropoffStop } from '../types/booking-types';
+import { loadLastBookedStops } from '../services/booking-draft-service';
 import { useAuthState } from '@/features/auth/hooks/use-auth-state';
 import { usePaymentDetail } from '@/features/payment/hooks/use-payment-detail';
+import { bookingApiService } from '../services/booking-api-service';
+import { bookingKeys } from './booking-keys';
 
 /**
  * Manages booking confirmation metadata, live order status syncing,
@@ -32,34 +36,46 @@ export function useBookingSuccess() {
   const deliverySpeed = searchParams.get('speed');
   const paymentIdParam = searchParams.get('paymentId');
 
+  const locale = useLocale();
+  const queryClient = useQueryClient();
   const { isAuthenticated } = useAuthState();
-  const [resolvedPaymentId, setResolvedPaymentId] = useState<string | null>(paymentIdParam);
-  const [orderStatus, setOrderStatus] = useState<BookingOrder['status']>('pending');
+  const [cancelledStatusOverride, setCancelledStatusOverride] =
+    useState<BookingOrder['status'] | null>(null);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
+
+  const lookupId = orderIdParam || tracking;
+
+  const orderQuery = useQuery({
+    queryKey: [...bookingKeys.detail(lookupId), locale],
+    queryFn: ({ signal }) =>
+      bookingApiService.getBookingById(lookupId, locale, signal),
+    enabled: Boolean(lookupId),
+    retry: false,
+    staleTime: 15_000,
+  });
+
+  const orderStatus =
+    cancelledStatusOverride ?? orderQuery.data?.status ?? 'pending';
+  const resolvedPaymentId = orderQuery.data?.paymentId ?? paymentIdParam;
 
   const { paymentDetail, isLoadingDetail, refreshDetail } = usePaymentDetail(
     resolvedPaymentId,
     isAuthenticated,
   );
 
-  const lookupId = orderIdParam || tracking;
-
-  useEffect(() => {
-    let active = true;
-    fetch(`/api/bookings/${encodeURIComponent(lookupId)}`, { cache: 'no-store' })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: BookingOrder | null) => {
-        if (!active || !data) return;
-        if (data.status) setOrderStatus(data.status);
-        if (data.paymentId) setResolvedPaymentId(data.paymentId);
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, [lookupId]);
+  const cancelMutation = useMutation({
+    mutationFn: (reason?: string) =>
+      bookingApiService.cancelBooking({
+        bookingId: lookupId,
+        reason: reason || 'Cancelled by seller before courier acceptance',
+        locale,
+      }),
+    onSuccess: async (updated) => {
+      queryClient.setQueryData([...bookingKeys.detail(lookupId), locale], updated);
+      await queryClient.invalidateQueries({ queryKey: bookingKeys.all });
+    },
+  });
 
   // Cancel allowed strictly before rider accepts or order is confirmed
   const canCancel = orderStatus === 'pending';
@@ -67,56 +83,56 @@ export function useBookingSuccess() {
 
   const handleConfirmCancel = useCallback(
     async (reason?: string) => {
-      if (!canCancel || isCancelling) return;
+      if (!canCancel || cancelMutation.isPending) return;
 
-      setIsCancelling(true);
       setCancelError(null);
 
       try {
-        const res = await fetch(`/api/bookings/${encodeURIComponent(lookupId)}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'cancel',
-            reason: reason || 'Cancelled by seller before courier acceptance',
-          }),
-        });
-
-      if (res.ok) {
-        const updated = (await res.json()) as BookingOrder;
-        setOrderStatus(updated.status || 'cancelled');
+        const updated = await cancelMutation.mutateAsync(reason);
+        setCancelledStatusOverride(updated.status || 'cancelled');
         setIsCancelModalOpen(false);
         toast.success(tPayment('cancelledTitle'));
-        return;
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : 'Unable to cancel booking right now. Please try again.';
+        setCancelError(message);
       }
+    },
+    [canCancel, cancelMutation, tPayment],
+  );
 
-      if (res.status === 400 || res.status === 401) {
-        const errBody = await res.json().catch(() => ({}));
-        setCancelError(
-          errBody.message || 'Cannot cancel this booking in its current state.'
-        );
-        return;
-      }
+  const stops: DropoffStop[] = useMemo(() => {
+    const apiStops = orderQuery.data?.dropoffs;
+    if (apiStops && apiStops.length > 0) return apiStops;
+    const cachedStops = loadLastBookedStops(tracking);
+    if (cachedStops && cachedStops.length > 0) return cachedStops;
+    return [
+      {
+        id: 'stop-1',
+        recipient: { name: recipient, phoneNumber: '' },
+        dropoff: { address: dropoff, coordinates: { lat: 11.5564, lng: 104.9282 } },
+        codAmount,
+      },
+    ];
+  }, [orderQuery.data?.dropoffs, tracking, recipient, dropoff, codAmount]);
 
-      setCancelError('Unable to cancel booking right now. Please try again.');
-    } catch {
-      setCancelError('Unable to reach cancellation service. Please try again.');
-    } finally {
-      setIsCancelling(false);
-    }
-  }, [canCancel, isCancelling, lookupId, tPayment]);
+  const bookingId = orderQuery.data?.id || lookupId;
 
   return {
+    bookingId,
     refCode,
     tracking,
     paymentRedirectUrl,
     pickup,
     dropoff,
     recipient,
+    stops,
     codAmount,
     tipAmount,
     feePaid,
-    stopsCount,
+    stopsCount: Math.max(stopsCount, stops.length),
     paymentMethod,
     deliverySpeed,
     orderStatus,
@@ -124,7 +140,7 @@ export function useBookingSuccess() {
     isCancelled,
     isCancelModalOpen,
     setIsCancelModalOpen,
-    isCancelling,
+    isCancelling: cancelMutation.isPending,
     cancelError,
     handleConfirmCancel,
     paymentDetail,

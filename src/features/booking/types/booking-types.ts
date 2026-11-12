@@ -13,6 +13,9 @@ export interface PickupLocation {
   riderNote?: string;
   imageUrl?: string;
   isDefault?: boolean;
+  settlementBank?: string;
+  settlementAccountName?: string;
+  settlementAccountNumber?: string;
 }
 
 export interface RecipientInfo {
@@ -167,5 +170,18 @@ export interface DashboardStatistics {
   inTransit: number;
   delivered: number;
   codCollection: number;
+}
+
+export type SavedLocationItem = PickupLocation & { tag?: string };
+
+export interface SavedBookingDraft {
+  id: string;
+  orderId?: string;
+  source?: 'api' | 'local';
+  userId?: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  formData: BookingFormData;
 }
 

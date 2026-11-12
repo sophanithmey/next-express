@@ -65,6 +65,39 @@ describe('Per-Stop COD Aggregation & CSV Parsing', () => {
     expect(errors['dropoffs.0.codAmount']).toBeDefined();
   });
 
+  it('allows total stop COD up to $60 USD and rejects totals above $60 USD', () => {
+    const validStops: DropoffStop[] = [
+      {
+        id: 'stop-1',
+        recipient: { name: 'Sokha', phoneNumber: '012998877' },
+        dropoff: { address: 'St 310, Phnom Penh', coordinates: { lat: 11.55, lng: 104.92 } },
+        codAmount: 35,
+      },
+      {
+        id: 'stop-2',
+        recipient: { name: 'Dara', phoneNumber: '098112233' },
+        dropoff: { address: 'St 63, Phnom Penh', coordinates: { lat: 11.56, lng: 104.93 } },
+        codAmount: 25,
+      },
+    ];
+    expect(validateDropoffStops(validStops)).toEqual({});
+
+    const exceedingStops: DropoffStop[] = [
+      ...validStops,
+      {
+        id: 'stop-3',
+        recipient: { name: 'Bopha', phoneNumber: '077445566' },
+        dropoff: { address: 'St 271, Phnom Penh', coordinates: { lat: 11.54, lng: 104.91 } },
+        codAmount: 0.5,
+      },
+    ];
+    const errors = validateDropoffStops(exceedingStops);
+    expect(errors['cod.amount']).toContain('$60');
+    expect(errors['dropoffs.0.codAmount']).toBeDefined();
+    expect(errors['dropoffs.1.codAmount']).toBeDefined();
+    expect(errors['dropoffs.2.codAmount']).toBeDefined();
+  });
+
   it('parses optional COD column in bulk CSV template and preserves notes without COD column', () => {
     const parsedWithCod = parseBulkDropoffText(SAMPLE_BULK_CSV);
     expect(parsedWithCod[0].codAmount).toBe(25);

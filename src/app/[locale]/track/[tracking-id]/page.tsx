@@ -1,12 +1,14 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { expressApiClient } from '@/server/api/express-api-client';
+import { bookingServerService } from '@/server/services/booking-server-service';
 import { LiveTrackingView } from '@/features/booking/components/live-tracking-view';
+import { scopeOrderToStop } from '@/features/booking/services/tracking-share-helper';
 import { BookingOrder } from '@/features/booking/types/booking-types';
 
 interface LiveTrackingPageProps {
   params: Promise<{ locale: string; 'tracking-id': string }>;
+  searchParams: Promise<{ stop?: string }>;
 }
 
 export async function generateMetadata({ params }: LiveTrackingPageProps) {
@@ -56,32 +58,42 @@ function buildDemoTrackingFallback(trackingId: string): BookingOrder {
   };
 }
 
-export default async function LiveTrackingPage({ params }: LiveTrackingPageProps) {
+export default async function LiveTrackingPage({
+  params,
+  searchParams,
+}: LiveTrackingPageProps) {
   const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
   const trackingId = decodeURIComponent(resolvedParams['tracking-id'] || '').trim();
+  const scopedStopId = resolvedSearchParams?.stop?.trim() || undefined;
 
   if (!trackingId) {
     notFound();
   }
 
-  const order = await expressApiClient.getBookingById(trackingId);
+  const order = await bookingServerService.getTrackingOrder(trackingId);
 
   if (order) {
+    const scopedOrder = scopeOrderToStop(order, scopedStopId);
     return (
       <div className="flex-1 flex flex-col bg-slate-50/60 antialiased font-sans">
         <main className="flex-1">
-          <LiveTrackingView order={order} />
+          <LiveTrackingView order={scopedOrder} scopedStopId={scopedStopId} />
         </main>
       </div>
     );
   }
 
-  // Graceful fallback for freshly generated demo EXP-* links across serverless resets
-  if (/^EXP-[A-Z0-9]{4,}$/i.test(trackingId)) {
+  // Graceful fallback for freshly generated demo links across serverless resets or browser-local storage
+  if (
+    /^EXP-[A-Z0-9]{4,}$/i.test(trackingId) ||
+    process.env.NEXT_PUBLIC_LOCAL_DEMO_STORAGE === 'true'
+  ) {
+    const scopedDemo = scopeOrderToStop(buildDemoTrackingFallback(trackingId), scopedStopId);
     return (
       <div className="flex-1 flex flex-col bg-slate-50/60 antialiased font-sans">
         <main className="flex-1">
-          <LiveTrackingView order={buildDemoTrackingFallback(trackingId)} />
+          <LiveTrackingView order={scopedDemo} scopedStopId={scopedStopId} />
         </main>
       </div>
     );

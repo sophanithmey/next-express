@@ -1,66 +1,40 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
-import { phoneSchema, pinSchema } from '@/features/auth/schemas/auth-schema';
-import { consumerApiClient, ConsumerApiError } from '@/server/api/consumer-api-client';
-import { sessionService } from '@/server/auth/session-service';
-
-const verifyPayloadSchema = z.object({
-  phoneNumber: phoneSchema.shape.phoneNumber,
-  pin: pinSchema.shape.pin,
-});
+import { verifyPinPayloadSchema } from '@/features/auth/schemas/auth-schema';
+import { authServerService } from '@/server/services/auth-server-service';
+import {
+  getRequestLanguage,
+  handleApiRouteError,
+  parseRequestBody,
+} from '@/server/lib/api-response';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const parsed = verifyPayloadSchema.safeParse(body);
-
-    if (!parsed.success) {
+    const parsed = await parseRequestBody(
+      request,
+      verifyPinPayloadSchema,
+      'Invalid phone number or PIN',
+    );
+    if ('errorResponse' in parsed) {
+      const body = (await parsed.errorResponse.json()) as { message?: string };
       return NextResponse.json(
-        {
-          success: false,
-          message: parsed.error.errors[0]?.message || 'Invalid phone number or PIN',
-        },
-        { status: 400 }
+        { success: false, message: body.message || 'Invalid phone number or PIN' },
+        { status: 400 },
       );
     }
 
-    const authResult = await consumerApiClient.verifyPin({
-      phoneNumber: parsed.data.phoneNumber,
-      pin: parsed.data.pin,
-    });
+    const user = await authServerService.loginWithPinAndCreateSession(
+      { phoneNumber: parsed.data.phoneNumber, pin: parsed.data.pin },
+      getRequestLanguage(request),
+    );
 
-    const userProfile = authResult.user || {
-      id: `seller-${parsed.data.phoneNumber}`,
-      phoneNumber: parsed.data.phoneNumber,
-      name: 'Express Merchant',
-      role: 'SELLER',
-    };
-
-    // Establish encrypted HttpOnly session cookie
-    await sessionService.createSession({
-      user: userProfile,
-      accessToken: authResult.accessToken,
-      refreshToken: authResult.refreshToken,
-      expiresIn: authResult.expiresIn,
-    });
-
-    // Return safe user profile only, NEVER the accessToken
     return NextResponse.json({
       success: true,
       message: 'Authentication successful',
-      user: userProfile,
+      user,
     });
   } catch (error: unknown) {
-    if (error instanceof ConsumerApiError) {
-      return NextResponse.json(
-        { success: false, message: error.message },
-        { status: error.statusCode }
-      );
-    }
-    return NextResponse.json(
-      { success: false, message: 'Authentication verification failed' },
-      { status: 500 }
-    );
+    return handleApiRouteError(error, 'Authentication verification failed', {
+      includeSuccessFalse: true,
+    });
   }
 }
-

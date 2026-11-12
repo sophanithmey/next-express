@@ -1,4 +1,5 @@
 import { APP_CONFIG } from '@/lib/constants';
+import { BookingOrder, DropoffStop } from '../types/booking-types';
 
 interface BuildTrackingShareInput {
   tracking: string;
@@ -7,6 +8,7 @@ interface BuildTrackingShareInput {
   recipient: string;
   dropoff: string;
   codAmount: number;
+  stopId?: string;
 }
 
 export interface TrackingSharePayload {
@@ -18,6 +20,7 @@ export interface TrackingSharePayload {
 
 /**
  * Builds canonical live tracking URLs and buyer-ready share messages.
+ * When `stopId` is provided, scopes the tracking link strictly to that customer's stop.
  */
 export function buildTrackingSharePayload({
   tracking,
@@ -26,8 +29,12 @@ export function buildTrackingSharePayload({
   recipient,
   dropoff,
   codAmount,
+  stopId,
 }: BuildTrackingShareInput): TrackingSharePayload {
-  const trackingPath = `/track/${tracking}`;
+  const basePath = `/track/${tracking}`;
+  const trackingPath = stopId
+    ? `${basePath}?stop=${encodeURIComponent(stopId)}`
+    : basePath;
   const fullTrackingUrl = origin
     ? `${origin}/${locale}${trackingPath}`
     : `/${locale}${trackingPath}`;
@@ -56,6 +63,54 @@ export function buildTrackingSharePayload({
     fullTrackingUrl,
     buyerMessage,
     telegramShareUrl,
+  };
+}
+
+/**
+ * Filters a multi-drop BookingOrder down to a single customer stop so buyers
+ * only see Pickup -> their own Drop-off, recipient details, and stop COD.
+ */
+export function scopeOrderToStop(
+  order: BookingOrder,
+  stopId?: string
+): BookingOrder {
+  const cleanStopId = stopId?.trim();
+  if (!cleanStopId) return order;
+
+  const stops = order.dropoffs;
+  if (!stops || stops.length === 0) return order;
+
+  let matched: DropoffStop | undefined = stops.find((s) => s.id === cleanStopId);
+  if (!matched) {
+    const indexMatch = cleanStopId.match(/^stop-(\d+)$/i);
+    if (indexMatch) {
+      const idx = Number(indexMatch[1]) - 1;
+      if (idx >= 0 && idx < stops.length) {
+        matched = stops[idx];
+      }
+    }
+  }
+
+  if (!matched) {
+    matched = stops[0];
+  }
+
+  const stopCod =
+    typeof matched.codAmount === 'number'
+      ? Math.max(0, matched.codAmount)
+      : stops.length === 1
+      ? order.cod?.amount || 0
+      : 0;
+
+  return {
+    ...order,
+    dropoff: matched.dropoff,
+    recipient: matched.recipient,
+    dropoffs: [matched],
+    cod: {
+      isCod: stopCod > 0,
+      amount: stopCod,
+    },
   };
 }
 

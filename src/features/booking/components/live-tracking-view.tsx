@@ -9,6 +9,7 @@ import { LiveTrackingSidebar } from './live-tracking-sidebar';
 
 interface LiveTrackingViewProps {
   order: BookingOrder;
+  scopedStopId?: string;
 }
 
 /**
@@ -17,6 +18,7 @@ interface LiveTrackingViewProps {
  */
 export function LiveTrackingView({
   order: initialOrder,
+  scopedStopId,
 }: LiveTrackingViewProps) {
   const {
     order,
@@ -31,7 +33,7 @@ export function LiveTrackingView({
     destinationStops,
     formattedUpdatedAt,
     handleRefresh,
-  } = useLiveTracking(initialOrder);
+  } = useLiveTracking(initialOrder, scopedStopId);
 
   return (
     <div className='mx-auto max-w-7xl w-full py-6 sm:py-8 space-y-6'>

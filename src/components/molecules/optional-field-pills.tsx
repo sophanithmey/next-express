@@ -11,6 +11,8 @@ export interface OptionalFieldPill {
   icon: React.ReactNode;
   isOpen: boolean;
   hasValue: boolean;
+  idleClasses?: string;
+  openClasses?: string;
   filledClasses?: string;
   extraBadge?: React.ReactNode;
   onToggle: () => void;
@@ -43,10 +45,12 @@ export function OptionalFieldPills({
       )}
       {pills.map((pill) => {
         const stateClasses = pill.isOpen
-          ? 'border-secondary-500 bg-secondary-50 text-secondary-800 ring-1 ring-secondary-500/20 font-semibold'
+          ? pill.openClasses ||
+            'border-secondary-500 bg-secondary-50 text-secondary-800 ring-1 ring-secondary-500/20 font-semibold'
           : pill.hasValue
           ? pill.filledClasses || DEFAULT_FILLED_CLASSES
-          : 'border-slate-200 bg-slate-50/90 text-slate-600 hover:border-brand-300 hover:bg-brand-50/50 hover:text-brand-700 font-medium';
+          : pill.idleClasses ||
+            'border-slate-200 bg-slate-50/90 text-slate-600 hover:border-brand-300 hover:bg-brand-50/50 hover:text-brand-700 font-medium';
 
         return (
           <button

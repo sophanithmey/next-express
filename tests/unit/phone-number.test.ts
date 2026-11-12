@@ -89,8 +89,11 @@ describe('Phone Number Utility — Cambodia (+855)', () => {
       );
       const defaultForm = createDefaultBookingForm();
 
-      // Given local formatted numbers
+      // Given local formatted numbers and required COD Wing Bank account
       defaultForm.pickup.senderPhone = '012 888 999';
+      defaultForm.pickup.settlementBank = 'WING';
+      defaultForm.pickup.settlementAccountName = 'Sokha Shop';
+      defaultForm.pickup.settlementAccountNumber = '012345678';
       defaultForm.recipient.phoneNumber = '012 998 877';
       defaultForm.dropoffs = [
         {

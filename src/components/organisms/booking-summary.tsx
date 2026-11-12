@@ -32,6 +32,7 @@ export function BookingSummary({
   feeQuote, isLoadingFee,
 }: BookingSummaryProps) {
   const tBooking = useTranslations('Booking');
+  const tPickup = useTranslations('Pickup');
   const tDelivery = useTranslations('Delivery');
   const tCommon = useTranslations('Common');
   const tRecipient = useTranslations('Recipient');
@@ -59,10 +60,10 @@ export function BookingSummary({
             <MapPinHouse className='h-4 w-4 text-secondary-600 mt-0.5 shrink-0' />
             <div className='min-w-0'>
               <span className='text-[11px] font-medium text-slate-400 block uppercase tracking-wider'>
-                {tCommon('stop')} 1 · {pickup.name}
+                {tCommon('stop')} 1 · {pickup.name || tPickup('origin')}
               </span>
               <p className='text-slate-500 text-[11px] truncate'>
-                {pickup.address}
+                {pickup.address || tBooking('addressPending')}
               </p>
             </div>
           </div>

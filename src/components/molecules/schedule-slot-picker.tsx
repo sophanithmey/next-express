@@ -70,7 +70,7 @@ export function ScheduleSlotPicker({
         </span>
       </div>
 
-      {/* Step 1: Choose Shift */}
+      {/* Step 1: Pick up at */}
       <div className='space-y-1'>
         <label className='text-[11px] font-bold text-slate-700 flex items-center gap-1.5'>
           <Clock className='h-3.5 w-3.5 text-secondary-600' />
@@ -110,7 +110,7 @@ export function ScheduleSlotPicker({
         </div>
       </div>
 
-      {/* Step 2: Optional 1-Hour Time Window */}
+      {/* Step 3: Optional 1-Hour Delivery Window */}
       <div className='space-y-1.5 pt-1 border-t border-secondary-200/50'>
         <div className='flex items-center justify-between gap-2'>
           <span className='text-[11px] font-bold text-slate-700'>

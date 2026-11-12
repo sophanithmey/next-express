@@ -14,9 +14,12 @@ interface PickupDetailsModalProps {
   pickup: PickupLocation;
   onSavePickup: (pickup: PickupLocation) => void;
   onOpenMap: () => void;
+  isCod?: boolean;
   savedLocations?: (PickupLocation & { tag?: string })[];
   error?: string;
   phoneError?: string;
+  bankNameError?: string;
+  bankNumberError?: string;
 }
 
 export function PickupDetailsModal({
@@ -25,9 +28,12 @@ export function PickupDetailsModal({
   pickup,
   onSavePickup,
   onOpenMap,
+  isCod = false,
   savedLocations,
   error,
   phoneError,
+  bankNameError,
+  bankNumberError,
 }: PickupDetailsModalProps) {
   const tPickup = useTranslations('Pickup');
   const tCommon = useTranslations('Common');
@@ -39,7 +45,7 @@ export function PickupDetailsModal({
     handleGetCurrentLocation,
     localErrors,
     handleSave,
-  } = usePickupDetailsModal(isOpen, pickup, onSavePickup, onClose);
+  } = usePickupDetailsModal(isOpen, pickup, onSavePickup, onClose, isCod);
 
   if (!isOpen) return null;
 
@@ -75,9 +81,12 @@ export function PickupDetailsModal({
             onOpenMap={onOpenMap}
             onUseCurrentLocation={handleGetCurrentLocation}
             isLocating={isLocating}
+            isCod={isCod}
             savedLocations={savedLocations}
             addressError={localErrors.address || error}
             phoneError={localErrors.senderPhone || phoneError}
+            bankNameError={localErrors.settlementAccountName || bankNameError}
+            bankNumberError={localErrors.settlementAccountNumber || bankNumberError}
           />
         </div>
 

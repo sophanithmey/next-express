@@ -8,6 +8,7 @@ import {
   CodInfo,
 } from '../types/booking-types';
 import { seedPerStopCodOnExpand } from '../services/booking-form-helpers';
+import { MAX_DROPOFF_STOPS } from '@/lib/constants';
 import { useSortableList } from '@/hooks/use-sortable-list';
 
 interface UseDropoffSectionProps {
@@ -38,6 +39,8 @@ export function useDropoffSection({
   const currentStops: DropoffStop[] =
     dropoffs && dropoffs.length > 0 ? dropoffs : [{ id: 'stop-1', recipient, dropoff }];
   const isMultiDrop = currentStops.length > 1;
+  const maxStops = MAX_DROPOFF_STOPS;
+  const isMaxStopsReached = currentStops.length >= maxStops;
 
   const handleToggleCollapse = useCallback((stopId: string) => {
     setCollapsedStops((prev) => ({ ...prev, [stopId]: !prev[stopId] }));
@@ -70,6 +73,7 @@ export function useDropoffSection({
   );
 
   const handleAddStop = useCallback(() => {
+    if (currentStops.length >= MAX_DROPOFF_STOPS) return;
     const seededStops = cod ? seedPerStopCodOnExpand(currentStops, cod) : currentStops;
     const nextIdx = seededStops.length + 1;
     const newStopId = `stop-${Date.now()}`;
@@ -108,9 +112,10 @@ export function useDropoffSection({
   const handleBulkApply = useCallback(
     (importedStops: DropoffStop[]) => {
       if (importedStops.length === 0) return;
-      onChangeRecipient(importedStops[0].recipient);
-      onChangeDropoff(importedStops[0].dropoff);
-      onChangeDropoffs?.(importedStops);
+      const boundedStops = importedStops.slice(0, MAX_DROPOFF_STOPS);
+      onChangeRecipient(boundedStops[0].recipient);
+      onChangeDropoff(boundedStops[0].dropoff);
+      onChangeDropoffs?.(boundedStops);
     },
     [onChangeRecipient, onChangeDropoff, onChangeDropoffs]
   );
@@ -152,6 +157,8 @@ export function useDropoffSection({
   return {
     currentStops,
     isMultiDrop,
+    maxStops,
+    isMaxStopsReached,
     isBulkModalOpen,
     setIsBulkModalOpen,
     collapsedStops,

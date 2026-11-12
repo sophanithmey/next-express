@@ -1,4 +1,5 @@
 import { DropoffStop } from '../types/booking-types';
+import { MAX_DROPOFF_STOPS } from '@/lib/constants';
 import { normalizePhoneNumber, isValidCambodiaPhoneNumber } from '@/lib/phone-number';
 
 export interface ParsedBulkStop {
@@ -97,6 +98,7 @@ export function parseBulkDropoffText(text: string): ParsedBulkStop[] {
 export function convertParsedToDropoffStops(parsed: ParsedBulkStop[]): DropoffStop[] {
   return parsed
     .filter((p) => p.isValid)
+    .slice(0, MAX_DROPOFF_STOPS)
     .map((p, idx) => ({
       id: `stop-${Date.now()}-${idx + 1}`,
       recipient: {

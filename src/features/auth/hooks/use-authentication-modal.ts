@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { UserProfile } from '../types/auth-types';
+import { useCallback, useEffect, useState } from 'react';
+import { useLocale } from 'next-intl';
+import { useMutation } from '@tanstack/react-query';
 import {
-  isValidCambodiaPhoneNumber,
-  normalizePhoneNumber,
+  sanitizeCambodiaPhoneInput,
+  validatePhoneNumber,
 } from '@/lib/phone-number';
+import { authApiService } from '../services/auth-api-service';
+import { UserProfile } from '../types/auth-types';
 
 export type AuthModalStep = 'phone' | 'pin';
 
@@ -14,36 +17,42 @@ interface UseAuthenticationModalParams {
   onSuccess: (user: UserProfile) => void;
 }
 
-/**
- * Manages two-step phone + PIN authentication state, validation, and API calls
- * for `AuthenticationModal`.
- */
 export function useAuthenticationModal({
   isOpen,
   onSuccess,
 }: UseAuthenticationModalParams) {
+  const locale = useLocale();
   const [step, setStep] = useState<AuthModalStep>('phone');
   const [phone, setPhone] = useState('');
   const [pin, setPin] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (isOpen) {
-      setStep('phone');
-      setPhone('');
-      setPin('');
-      setError('');
-    }
+    if (!isOpen) return;
+    setStep('phone');
+    setPhone('');
+    setPin('');
+    setError('');
   }, [isOpen]);
 
-  const handlePhoneChange = useCallback((val: string) => {
-    setPhone(val);
+  const requestPinMutation = useMutation({
+    mutationFn: (phoneNumber: string) =>
+      authApiService.requestPin({ phoneNumber }, locale),
+  });
+
+  const verifyPinMutation = useMutation({
+    mutationFn: (vars: { phoneNumber: string; pin: string }) =>
+      authApiService.verifyPin(vars, locale),
+  });
+
+  const handlePhoneChange = useCallback((value: string) => {
+    setPhone(sanitizeCambodiaPhoneInput(value));
     setError('');
   }, []);
 
-  const handlePinChange = useCallback((val: string) => {
-    setPin(val);
+  const handlePinChange = useCallback((value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 4);
+    setPin(digits);
     setError('');
   }, []);
 
@@ -54,84 +63,62 @@ export function useAuthenticationModal({
   }, []);
 
   const handleRequestPin = useCallback(async () => {
-    if (isLoading) return;
-    if (!isValidCambodiaPhoneNumber(phone)) {
-      setError(
-        'Please enter a valid Cambodian phone number (e.g. 012 888 999).',
-      );
+    const validation = validatePhoneNumber(phone);
+    if (!validation.isValid) {
+      setError(validation.error || 'Please enter a valid Cambodian phone number');
       return;
     }
 
-    const normalized = normalizePhoneNumber(phone);
-    setIsLoading(true);
     setError('');
-
     try {
-      const res = await fetch('/api/auth/request-pin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: normalized }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setError(data.message || 'Failed to send PIN. Please try again.');
+      const result = await requestPinMutation.mutateAsync(phone);
+      if (!result.success) {
+        setError(result.message || 'Unable to process login request');
         return;
       }
       setStep('pin');
-    } catch {
-      setError('Unable to reach authentication service. Please try again.');
-    } finally {
-      setIsLoading(false);
+      setPin('');
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : 'Unable to process login request',
+      );
     }
-  }, [isLoading, phone]);
+  }, [phone, requestPinMutation]);
 
   const handleVerifyPin = useCallback(
-    async (enteredPin = pin) => {
-      if (isLoading) return;
-      if (enteredPin.length !== 4) {
-        setError('Please enter your 4-digit PIN.');
+    async (pinToVerify?: string) => {
+      const code = (pinToVerify ?? pin).replace(/\D/g, '').slice(0, 4);
+      if (code.length < 4) {
+        setError('Please enter your 4-digit PIN');
         return;
       }
 
-      const normalized = normalizePhoneNumber(phone);
-      setIsLoading(true);
+      if (verifyPinMutation.isPending) return;
       setError('');
-
       try {
-        const res = await fetch('/api/auth/verify-pin', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phoneNumber: normalized, pin: enteredPin }),
+        const result = await verifyPinMutation.mutateAsync({
+          phoneNumber: phone,
+          pin: code,
         });
-        const data = await res.json();
-        if (!res.ok || !data.success) {
-          setPin('');
-          setError(data.message || 'Incorrect PIN code. Please try again.');
+        if (!result.success || !result.user) {
+          setError(result.message || 'Incorrect PIN. Please try again.');
           return;
         }
-
-        const verifiedUser: UserProfile = data.user || {
-          id: `seller-${phone.replace(/[^\d]/g, '')}`,
-          phoneNumber: phone,
-          name: 'Express Merchant Store',
-          shopName: 'Central Express Boutique',
-          role: 'SELLER',
-        };
-        onSuccess(verifiedUser);
-      } catch {
-        setError('Verification service unavailable. Please try again.');
-      } finally {
-        setIsLoading(false);
+        onSuccess(result.user);
+      } catch (err: unknown) {
+        setError(
+          err instanceof Error ? err.message : 'Unable to verify PIN right now.',
+        );
       }
     },
-    [isLoading, onSuccess, phone, pin],
+    [onSuccess, phone, pin, verifyPinMutation],
   );
 
   return {
     step,
     phone,
     pin,
-    isLoading,
+    isLoading: requestPinMutation.isPending || verifyPinMutation.isPending,
     error,
     handlePhoneChange,
     handlePinChange,
@@ -140,4 +127,3 @@ export function useAuthenticationModal({
     handleVerifyPin,
   };
 }
-

@@ -3,6 +3,7 @@
 import React from 'react';
 import { Banknote } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { MAX_TOTAL_COD_USD } from '@/lib/constants';
 import { Input } from '../atoms/input';
 import { Label } from '../atoms/label';
 
@@ -18,16 +19,15 @@ interface StopCodInputProps {
  */
 export function StopCodInput({ id, value, onChange, error }: StopCodInputProps) {
   const tRecipient = useTranslations('Recipient');
-  const tCommon = useTranslations('Common');
 
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <Label htmlFor={id} optional>
           {tRecipient('stopCodLabel')}
         </Label>
         <span className="text-[10px] font-medium text-slate-400">
-          {tCommon('usd')}
+          {tRecipient('stopCodMaxHint', { max: MAX_TOTAL_COD_USD })}
         </span>
       </div>
       <Input

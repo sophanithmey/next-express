@@ -6,7 +6,55 @@ import {
   BookingOrder,
 } from '../types/booking-types';
 import { SAMPLE_PHNOM_PENH_LOCATIONS } from '../data/mock-booking-data';
+import { APP_CONFIG, MAX_DROPOFF_STOPS, MAX_TOTAL_COD_USD } from '@/lib/constants';
 import { isValidCambodiaPhoneNumber, normalizePhoneNumber } from '@/lib/phone-number';
+
+export function createEmptyBookingForm(): BookingFormData {
+  return {
+    pickup: {
+      name: '',
+      address: '',
+      coordinates: { ...APP_CONFIG.defaultCoordinates },
+      senderName: '',
+      senderPhone: '',
+      riderNote: '',
+    },
+    dropoff: {
+      address: '',
+      coordinates: { ...APP_CONFIG.defaultCoordinates },
+    },
+    recipient: {
+      name: '',
+      phoneNumber: '',
+      notes: '',
+    },
+    dropoffs: [
+      {
+        id: 'stop-1',
+        recipient: {
+          name: '',
+          phoneNumber: '',
+          notes: '',
+        },
+        dropoff: {
+          address: '',
+          coordinates: { ...APP_CONFIG.defaultCoordinates },
+        },
+      },
+    ],
+    parcel: {
+      description: '',
+      sellerOrderRef: '',
+      quantity: 1,
+    },
+    cod: {
+      isCod: false,
+      amount: 0,
+    },
+    deliveryOption: 'instant',
+    isBookingOnBehalf: false,
+  };
+}
 
 export function createDefaultBookingForm(
   initialPickup?: PickupLocation
@@ -55,6 +103,19 @@ export interface DropoffValidationMessages {
   phoneRequired?: (index: number) => string;
   phoneInvalid?: (index: number) => string;
   addressRequired?: (index: number) => string;
+  codTotalExceeded?: (total: number, max: number) => string;
+}
+
+/**
+ * Computes total rounded USD COD amount across a list of drop-off stops.
+ */
+export function calculateTotalStopCod(stops?: DropoffStop[]): number {
+  if (!stops || stops.length === 0) return 0;
+  const total = stops.reduce(
+    (sum, stop) => sum + Math.max(0, Number(stop.codAmount) || 0),
+    0
+  );
+  return Math.round(total * 100) / 100;
 }
 
 /**
@@ -119,6 +180,21 @@ export function seedPerStopCodOnExpand(
 }
 
 /**
+ * Normalizes Wing Bank account numbers by stripping spaces and hyphens.
+ */
+export function normalizeWingAccountNumber(value?: string | null): string {
+  return (value || '').replace(/[\s-]+/g, '').trim();
+}
+
+/**
+ * Validates that a Wing Bank account number contains 5 to 20 digits.
+ */
+export function isValidWingAccountNumber(value?: string | null): boolean {
+  const digits = normalizeWingAccountNumber(value);
+  return /^\d{5,20}$/.test(digits);
+}
+
+/**
  * Validates required recipient phone number and drop-off address (>= 3 chars) across all stops.
  */
 export function validateDropoffStops(
@@ -152,6 +228,19 @@ export function validateDropoffStops(
     }
   });
 
+  const totalCod = calculateTotalStopCod(stops);
+  if (totalCod > MAX_TOTAL_COD_USD) {
+    const codMessage =
+      messages?.codTotalExceeded?.(totalCod, MAX_TOTAL_COD_USD) ||
+      `Total COD across all drop-off points ($${totalCod.toFixed(2)}) cannot exceed $${MAX_TOTAL_COD_USD} USD.`;
+    errors['cod.amount'] = codMessage;
+    stops.forEach((stop, idx) => {
+      if ((stop.codAmount ?? 0) > 0 && !errors[`dropoffs.${idx}.codAmount`]) {
+        errors[`dropoffs.${idx}.codAmount`] = codMessage;
+      }
+    });
+  }
+
   return errors;
 }
 
@@ -171,6 +260,9 @@ export function validateBookingFormData(
   }
 
   if (formData.dropoffs && formData.dropoffs.length > 0) {
+    if (formData.dropoffs.length > MAX_DROPOFF_STOPS) {
+      errors.dropoffs = `Maximum ${MAX_DROPOFF_STOPS} drop-off points allowed per booking.`;
+    }
     Object.assign(errors, validateDropoffStops(formData.dropoffs));
   } else {
     if (!formData.dropoff.address?.trim()) {
@@ -189,6 +281,27 @@ export function validateBookingFormData(
 
   if (effectiveCod.isCod && (!effectiveCod.amount || effectiveCod.amount <= 0)) {
     errors['cod.amount'] = 'Please enter a COD amount greater than 0.';
+  } else if (effectiveCod.amount > MAX_TOTAL_COD_USD && !errors['cod.amount']) {
+    errors['cod.amount'] =
+      `Total COD across all drop-off points ($${effectiveCod.amount.toFixed(2)}) cannot exceed $${MAX_TOTAL_COD_USD} USD.`;
+  }
+
+  const isCodActive = Boolean(effectiveCod.isCod && effectiveCod.amount > 0);
+  const accountName = formData.pickup.settlementAccountName?.trim() || '';
+  const accountNumberRaw = formData.pickup.settlementAccountNumber?.trim() || '';
+
+  if (isCodActive) {
+    if (accountName.length < 2) {
+      errors['pickup.settlementAccountName'] =
+        'Wing Bank account name is required when COD is enabled.';
+    }
+    if (!accountNumberRaw || !isValidWingAccountNumber(accountNumberRaw)) {
+      errors['pickup.settlementAccountNumber'] =
+        'Please enter a valid Wing Bank account number for COD.';
+    }
+  } else if (accountNumberRaw && !isValidWingAccountNumber(accountNumberRaw)) {
+    errors['pickup.settlementAccountNumber'] =
+      'Please enter a valid Wing Bank account number (digits only).';
   }
 
   return errors;

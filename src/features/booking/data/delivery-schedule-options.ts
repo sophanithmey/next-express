@@ -1,4 +1,16 @@
 import { Sunrise, Sun, Moon } from 'lucide-react';
+import { DeliveryShift } from '../types/booking-types';
+
+/** Look up the translation labelKey for a 1-hour shift slot value. */
+export function findDeliverySlotLabelKey(
+  shiftId: DeliveryShift,
+  slotValue?: string
+): string | null {
+  if (!slotValue) return null;
+  const shift = DELIVERY_SHIFTS.find((s) => s.id === shiftId);
+  const matched = shift?.slots.find((slot) => slot.value === slotValue);
+  return matched?.labelKey ?? null;
+}
 
 export const DELIVERY_SHIFTS = [
   {

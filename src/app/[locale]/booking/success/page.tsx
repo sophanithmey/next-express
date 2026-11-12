@@ -6,18 +6,21 @@ import { CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { useBookingSuccess } from '@/features/booking/hooks/use-booking-success';
 import { BookingSuccessReceipt } from '@/components/organisms/booking-success-receipt';
 import { ShareTrackingCard } from '@/components/molecules/share-tracking-card';
+import { BookingSuccessPaymentCard } from '@/components/molecules/booking-success-payment-card';
 import { BookingSuccessActions } from '@/components/molecules/booking-success-actions';
 import { PaymentDetailCard } from '@/components/molecules/payment-detail-card';
 
 function BookingSuccessContent() {
   const tPayment = useTranslations('Payment');
   const {
+    bookingId,
     refCode,
     tracking,
     paymentRedirectUrl,
     pickup,
     dropoff,
     recipient,
+    stops,
     codAmount,
     tipAmount,
     feePaid,
@@ -45,9 +48,9 @@ function BookingSuccessContent() {
       : 1;
 
   return (
-    <div className="mx-auto max-w-7xl w-full space-y-6">
+    <div className="mx-auto max-w-7xl w-full space-y-5">
       {/* Compact Horizontal Status Hero */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white px-5 py-4 shadow-2xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white px-5 py-3.5 shadow-2xs">
         <div className="flex items-center gap-3.5">
           {isCancelled ? (
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-danger-100 text-danger-600">
@@ -110,20 +113,17 @@ function BookingSuccessContent() {
             pickup={pickup}
             dropoff={dropoff}
             recipient={recipient}
+            stops={stops}
             stopsCount={stopsCount}
-            codAmount={codAmount}
-            tipAmount={tipAmount}
-            feePaid={feePaid}
-            paymentMethod={paymentMethod}
             deliverySpeed={deliverySpeed}
             isCancelled={isCancelled}
             activeStep={activeStep}
           />
         </div>
 
-        {/* Right Side: Live Tracking Share Hub + Instant Actions */}
+        {/* Right Side: Summary + Share Hub (Single-stop only) + Actions */}
         <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-6 space-y-4">
-          {!isCancelled && (
+          {!isCancelled && stops.length <= 1 && (
             <ShareTrackingCard
               tracking={tracking}
               recipient={recipient}
@@ -132,7 +132,15 @@ function BookingSuccessContent() {
             />
           )}
 
+          <BookingSuccessPaymentCard
+            paymentMethod={paymentMethod}
+            feePaid={feePaid}
+            tipAmount={tipAmount}
+            codAmount={codAmount}
+          />
+
           <BookingSuccessActions
+            bookingId={bookingId}
             tracking={tracking}
             paymentRedirectUrl={paymentRedirectUrl}
             canCancel={canCancel}

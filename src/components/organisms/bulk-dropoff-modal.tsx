@@ -11,6 +11,7 @@ import {
 } from '@/features/booking/services/bulk-dropoff-parser';
 import { Button } from '../atoms/button';
 import { BulkDropoffPreviewTable } from '../molecules/bulk-dropoff-preview-table';
+import { MAX_DROPOFF_STOPS, MAX_TOTAL_COD_USD } from '@/lib/constants';
 import { X, Layers, Download, Zap, UploadCloud } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -48,9 +49,13 @@ export function BulkDropoffModal({
   };
 
   const validStops = parsedList.filter((s) => s.isValid);
+  const importCount = Math.min(validStops.length, MAX_DROPOFF_STOPS);
+  const importTotalCod = validStops
+    .slice(0, MAX_DROPOFF_STOPS)
+    .reduce((sum, s) => sum + Math.max(0, s.codAmount ?? 0), 0);
 
   const handleImport = () => {
-    if (validStops.length === 0) return;
+    if (importCount === 0) return;
     onApplyStops(convertParsedToDropoffStops(parsedList));
     onClose();
   };
@@ -139,6 +144,21 @@ export function BulkDropoffModal({
             />
           </div>
 
+          {validStops.length > MAX_DROPOFF_STOPS && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs font-medium text-amber-800">
+              {tBooking('bulkMaxStopsNotice', { max: MAX_DROPOFF_STOPS })}
+            </div>
+          )}
+
+          {importTotalCod > MAX_TOTAL_COD_USD && (
+            <div className="rounded-xl border border-danger-200 bg-danger-50 px-3.5 py-2.5 text-xs font-medium text-danger-700">
+              {tBooking('bulkMaxCodNotice', {
+                total: importTotalCod.toFixed(2),
+                max: MAX_TOTAL_COD_USD,
+              })}
+            </div>
+          )}
+
           {/* Parsed Preview Table */}
           <BulkDropoffPreviewTable
             parsedList={parsedList}
@@ -156,10 +176,10 @@ export function BulkDropoffModal({
             variant="primary"
             size="md"
             onClick={handleImport}
-            disabled={validStops.length === 0}
+            disabled={importCount === 0}
             leftIcon={<Layers className="h-4 w-4" />}
           >
-            {tBooking('bulkImportButton', { count: validStops.length })}
+            {tBooking('bulkImportButton', { count: importCount })}
           </Button>
         </div>
       </div>

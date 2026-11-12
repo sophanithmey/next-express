@@ -11,7 +11,7 @@ import {
   isResolvableGoogleMapsUrl,
   parseGoogleMapsLocationInput,
 } from '@/lib/google-maps-link';
-import { resolveGoogleMapsLink } from '@/lib/resolve-map-link';
+import { locationApiService } from '@/features/booking/services/location-api-service';
 import { SavedLocationItem } from '@/components/molecules/location-picker-saved-list';
 import { CreateLocationDraft } from './use-location-create-form';
 
@@ -88,7 +88,7 @@ export function useLocationPicker({
         const controller = new AbortController();
         resolveAbortRef.current = controller;
 
-        resolveGoogleMapsLink(val, controller.signal)
+        locationApiService.resolveGoogleMapsLink(val, controller.signal)
           .then((res) => {
             if (controller.signal.aborted) return;
             setPinnedCoords(res.coordinates);

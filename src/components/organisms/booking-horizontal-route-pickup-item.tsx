@@ -2,22 +2,27 @@
 
 import React from 'react';
 import { PickupLocation } from '@/features/booking/types/booking-types';
-import { CheckCircle2, Pencil } from 'lucide-react';
+import { CheckCircle2, Pencil, Landmark } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface BookingHorizontalRoutePickupItemProps {
   pickup: PickupLocation;
   isValid: boolean;
+  isCodRequired?: boolean;
   onOpenModal: () => void;
 }
 
 export function BookingHorizontalRoutePickupItem({
   pickup,
   isValid,
+  isCodRequired = false,
   onOpenModal,
 }: BookingHorizontalRoutePickupItemProps) {
   const tPickup = useTranslations('Pickup');
   const tCommon = useTranslations('Common');
+  const hasBankAccount = Boolean(
+    pickup.settlementAccountName?.trim() && pickup.settlementAccountNumber?.trim()
+  );
 
   return (
     <div
@@ -64,6 +69,20 @@ export function BookingHorizontalRoutePickupItem({
             {pickup.senderName ? ` • ${pickup.senderName}` : ''}
           </p>
         )}
+
+        {hasBankAccount ? (
+          <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-secondary-700">
+            <Landmark className="h-3 w-3 shrink-0" />
+            <span>
+              {pickup.settlementAccountName} · {pickup.settlementAccountNumber}
+            </span>
+          </p>
+        ) : isCodRequired ? (
+          <p className="mt-1 inline-flex items-center gap-1 rounded border border-wing-bank bg-wing-bank px-1.5 py-0.5 text-[10px] font-semibold text-white">
+            <Landmark className="h-3 w-3 shrink-0" />
+            <span>{tPickup('addWingBankRequiredChip')}</span>
+          </p>
+        ) : null}
       </div>
 
       {/* Edit Trigger */}

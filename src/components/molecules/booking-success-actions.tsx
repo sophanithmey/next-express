@@ -3,11 +3,12 @@
 import React from 'react';
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
-import { ArrowRight, ExternalLink, Lock, Plus, XCircle } from 'lucide-react';
+import { ArrowRight, ExternalLink, FileText, Lock, Plus, XCircle } from 'lucide-react';
 import { Button } from '@/components/atoms/button';
 import { CancelOrderModal } from './cancel-order-modal';
 
 interface BookingSuccessActionsProps {
+  bookingId?: string;
   tracking: string;
   paymentRedirectUrl?: string | null;
   canCancel: boolean;
@@ -21,6 +22,7 @@ interface BookingSuccessActionsProps {
 }
 
 export function BookingSuccessActions({
+  bookingId,
   tracking,
   paymentRedirectUrl,
   canCancel,
@@ -48,7 +50,7 @@ export function BookingSuccessActions({
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
         )}
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-1">
+        <div className="flex flex-col gap-2.5">
           <Link href="/booking" className="w-full">
             <Button
               type="button"
@@ -61,33 +63,44 @@ export function BookingSuccessActions({
             </Button>
           </Link>
 
-          <Link href="/bookings" className="w-full">
+          <Link
+            href={`/bookings/${encodeURIComponent(bookingId || tracking)}`}
+            className="w-full"
+          >
             <Button
               type="button"
               variant="outline"
               size="md"
-              className="w-full min-h-11"
-              rightIcon={<ArrowRight className="h-4 w-4" />}
+              className="w-full min-h-11 border-secondary-200 text-secondary-700 hover:bg-secondary-50/70"
+              leftIcon={<FileText className="h-4 w-4" />}
             >
-              {tPayment('viewAll')}
+              {tPayment('viewBookingDetails')}
             </Button>
+          </Link>
+
+          <Link
+            href="/bookings"
+            className="inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition"
+          >
+            <span>{tPayment('viewAll')}</span>
+            <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
-        {/* Cancel Section — Only allowed before courier acceptance/confirmation */}
+        {/* Cancel Section — Subtle low-emphasis action so primary CTAs stand out */}
         {!isCancelled && (
-          <div className="border-t border-slate-100 pt-3">
+          <div className="border-t border-slate-100 pt-2.5">
             {canCancel ? (
-              <div className="space-y-1.5">
+              <div className="space-y-1 text-center">
                 <button
                   type="button"
                   onClick={onOpenCancelModal}
-                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-danger-200 bg-danger-50/60 px-4 py-2 text-xs font-bold text-danger-600 hover:bg-danger-100/70 hover:border-danger-300 transition"
+                  className="inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold text-danger-600 hover:bg-danger-50/80 transition cursor-pointer"
                 >
-                  <XCircle className="h-4 w-4 shrink-0" />
+                  <XCircle className="h-3.5 w-3.5 shrink-0" />
                   <span>{tPayment('cancelOrder')}</span>
                 </button>
-                <p className="text-center text-xs text-slate-400">
+                <p className="text-[11px] text-slate-400">
                   {tPayment('cancelHint')}
                 </p>
               </div>

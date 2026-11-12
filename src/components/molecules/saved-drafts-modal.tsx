@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import {
-  SavedBookingDraft,
-  deleteApiBookingDraft,
-  deleteUserBookingDraft,
-} from '@/features/booking/services/booking-draft-service';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { bookingApiService } from '@/features/booking/services/booking-api-service';
+import { bookingKeys } from '@/features/booking/hooks/booking-keys';
+import { deleteUserBookingDraft } from '@/features/booking/services/booking-draft-service';
+import { SavedBookingDraft } from '@/features/booking/types/booking-types';
 import { Button } from '../atoms/button';
 import { X, FileText, Trash2, ArrowRight, Clock, MapPin, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -29,7 +29,19 @@ export function SavedDraftsModal({
   const t = useTranslations('Booking');
   const tCommon = useTranslations('Common');
   const locale = useLocale();
+  const queryClient = useQueryClient();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const deleteDraftMutation = useMutation({
+    mutationFn: (draft: SavedBookingDraft) =>
+      bookingApiService.deleteDraft(draft.orderId || draft.id, locale),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: bookingKeys.drafts() }),
+        queryClient.invalidateQueries({ queryKey: bookingKeys.lists() }),
+      ]);
+    },
+  });
 
   if (!isOpen) return null;
 
@@ -38,7 +50,7 @@ export function SavedDraftsModal({
     setDeletingId(draft.id);
     try {
       if (draft.source === 'api' || draft.orderId) {
-        await deleteApiBookingDraft(draft.orderId || draft.id, locale);
+        await deleteDraftMutation.mutateAsync(draft);
       }
       deleteUserBookingDraft(draft.id);
       onDraftDeleted();

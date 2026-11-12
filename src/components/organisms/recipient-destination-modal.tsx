@@ -13,7 +13,9 @@ import { RecipientModalStopTabs } from '../molecules/recipient-modal-stop-tabs';
 import { BulkDropoffModal } from './bulk-dropoff-modal';
 import { DeleteStopConfirmModal } from '../molecules/delete-stop-confirm-modal';
 import { Button } from '../atoms/button';
-import { X, Check, Layers } from 'lucide-react';
+import { X, Check, Layers, AlertCircle } from 'lucide-react';
+import { calculateTotalStopCod } from '@/features/booking/services/booking-form-helpers';
+import { MAX_TOTAL_COD_USD } from '@/lib/constants';
 import { useTranslations } from 'next-intl';
 
 interface RecipientDestinationModalProps {
@@ -48,6 +50,7 @@ export function RecipientDestinationModal({
   const tRecipient = useTranslations('Recipient');
   const tBooking = useTranslations('Booking');
   const tCommon = useTranslations('Common');
+  const tValidation = useTranslations('Validation');
 
   const {
     activeTab,
@@ -80,6 +83,18 @@ export function RecipientDestinationModal({
   });
 
   if (!isOpen || stops.length === 0 || !currentStop) return null;
+
+  const totalCod = calculateTotalStopCod(stops);
+  const isCodOverLimit = totalCod > MAX_TOTAL_COD_USD;
+  const codLimitMessage = tValidation('codTotalExceeded', {
+    total: totalCod.toFixed(2),
+    max: MAX_TOTAL_COD_USD,
+  });
+  const modalCodBanner = isCodOverLimit ? codLimitMessage : mergedErrors['cod.amount'];
+  const stopErrors =
+    isCodOverLimit && (currentStop.codAmount ?? 0) > 0 && !mergedErrors[`dropoffs.${activeTab}.codAmount`]
+      ? { ...mergedErrors, [`dropoffs.${activeTab}.codAmount`]: codLimitMessage }
+      : mergedErrors;
 
   return (
     <>
@@ -130,6 +145,12 @@ export function RecipientDestinationModal({
 
           {/* Modal Scrollable Body */}
           <div className="flex-1 overflow-y-auto p-5 sm:p-6">
+            {modalCodBanner && (
+              <div className="mb-4 flex items-center gap-2 rounded-xl border border-danger-200 bg-danger-50 px-3.5 py-2.5 text-xs font-semibold text-danger-700">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{modalCodBanner}</span>
+              </div>
+            )}
             <RecipientModalStopForm
               currentStop={currentStop}
               activeTab={activeTab}
@@ -137,7 +158,7 @@ export function RecipientDestinationModal({
               onUpdateCurrentStop={handleUpdateCurrentStop}
               onAddStop={handleAddStop}
               onOpenMap={onOpenMap}
-              errors={mergedErrors}
+              errors={stopErrors}
             />
           </div>
 

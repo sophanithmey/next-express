@@ -2,14 +2,13 @@
 
 import React from 'react';
 import { Link } from '@/i18n/routing';
-import { PlusCircle, RefreshCw } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import { BookingOrder, DashboardStatistics } from '../types/booking-types';
 import { useBookingHistory } from '../hooks/use-booking-history';
 import { BookingHistoryTable } from '@/components/organisms/booking-history-table';
-import { SearchInput } from '@/components/molecules/search-input';
 import { Button } from '@/components/atoms/button';
 import { BookingOperationsStats } from './booking-operations-stats';
-import { cn } from '@/lib/cn';
+import { BookingHistoryToolbar } from './booking-history-toolbar';
 import { useTranslations } from 'next-intl';
 
 interface BookingHistoryManagerProps {
@@ -19,16 +18,6 @@ interface BookingHistoryManagerProps {
   stats?: DashboardStatistics;
   sellerName?: string;
 }
-
-const STATUS_TAB_KEYS = [
-  { id: 'all', labelKey: 'tabAll' },
-  { id: 'draft', labelKey: 'tabDraft' },
-  { id: 'pending', labelKey: 'tabPending' },
-  { id: 'assigned', labelKey: 'tabAssigned' },
-  { id: 'out_for_delivery', labelKey: 'tabTransit' },
-  { id: 'delivered', labelKey: 'tabDelivered' },
-  { id: 'cancelled', labelKey: 'tabCancelled' },
-] as const;
 
 export function BookingHistoryManager({
   initialOrders,
@@ -47,6 +36,7 @@ export function BookingHistoryManager({
     page,
     totalPages,
     isLoading,
+    isLocalDemoMode,
     isAuthenticated,
     openAuthModal,
     copiedItem,
@@ -55,6 +45,7 @@ export function BookingHistoryManager({
     handleSearchChange,
     handleClearFilters,
     handleRefresh,
+    handleResetDemoData,
     handleCopyTrackingId,
     handleCopyLiveLink,
     handleRepeatBooking,
@@ -80,6 +71,11 @@ export function BookingHistoryManager({
             <span className="rounded-full border border-slate-200 bg-white px-2.5 py-0.5 font-mono text-xs font-bold text-slate-600">
               {tHistory('ordersCountBadge', { count: totalCount })}
             </span>
+            {isLocalDemoMode && (
+              <span className="rounded-full border border-secondary-200 bg-secondary-50 px-2.5 py-0.5 text-xs font-semibold text-secondary-700">
+                {tHistory('localDemoBadge')}
+              </span>
+            )}
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
             {tHistory('operationsSubtitle')}
@@ -108,49 +104,16 @@ export function BookingHistoryManager({
       )}
 
       {/* Filter Tabs, Search & Refresh Controls */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
-          {STATUS_TAB_KEYS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => handleFilterChange(tab.id)}
-              className={cn(
-                'min-h-9 rounded-xl px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer',
-                statusFilter === tab.id
-                  ? 'bg-slate-900 text-white shadow-2xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              )}
-            >
-              {tHistory(tab.labelKey)}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-2 w-full lg:w-auto">
-          <div className="flex-1 lg:w-72">
-            <SearchInput
-              placeholder={tHistory('searchCompactPlaceholder')}
-              value={search}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              onClear={() => handleSearchChange('')}
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={handleRefresh}
-            disabled={isLoading}
-            title={tHistory('refreshTitle')}
-            aria-label={tHistory('refreshTitle')}
-            className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition"
-          >
-            <RefreshCw
-              className={cn('h-4 w-4', isLoading && 'animate-spin text-secondary-600')}
-            />
-          </button>
-        </div>
-      </div>
+      <BookingHistoryToolbar
+        statusFilter={statusFilter}
+        search={search}
+        isLoading={isLoading}
+        isLocalDemoMode={isLocalDemoMode}
+        onFilterChange={handleFilterChange}
+        onSearchChange={handleSearchChange}
+        onRefresh={handleRefresh}
+        onResetDemoData={handleResetDemoData}
+      />
 
       {/* Sign-in Prompt when browsing Bookings unauthenticated */}
       {!isAuthenticated && orders.length === 0 && (

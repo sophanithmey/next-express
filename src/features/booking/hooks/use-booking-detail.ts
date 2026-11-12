@@ -3,12 +3,15 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { useLocale, useTranslations } from 'next-intl';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { BookingOrder, BookingFormData } from '../types/booking-types';
 import { APP_CONFIG } from '@/lib/constants';
 import { useAuthState } from '@/features/auth/hooks/use-auth-state';
 import { saveBookingDraft } from '../services/booking-draft-service';
 import { usePaymentDetail } from '@/features/payment/hooks/use-payment-detail';
+import { bookingApiService } from '../services/booking-api-service';
+import { bookingKeys } from './booking-keys';
 import {
   formatOrderTimestamp,
   buildDefaultTimeline,
@@ -39,45 +42,40 @@ export function useBookingDetail(
 ) {
   const router = useRouter();
   const locale = useLocale();
+  const queryClient = useQueryClient();
   const tCommon = useTranslations('Common');
   const tPayment = useTranslations('Payment');
   const { isAuthenticated, openAuthModal } = useAuthState();
 
-  const [order, setOrder] = useState<BookingOrder | null>(initialOrder);
-  const [isLoadingOrder, setIsLoadingOrder] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<'tracking' | 'id' | null>(null);
   const [showMap, setShowMap] = useState(true);
   const [showFullLog, setShowFullLog] = useState(false);
+
+  const detailKey = useMemo(
+    () => [...bookingKeys.detail(bookingId || initialOrder?.id || ''), locale],
+    [bookingId, initialOrder?.id, locale],
+  );
+
+  const orderQuery = useQuery({
+    queryKey: detailKey,
+    queryFn: ({ signal }) =>
+      bookingApiService.getBookingById(bookingId!, locale, signal),
+    enabled: isAuthenticated && !initialOrder && Boolean(bookingId),
+    initialData: initialOrder ?? undefined,
+    staleTime: 30_000,
+    retry: false,
+  });
+
+  const order = orderQuery.data ?? initialOrder;
+  const isLoadingOrder = orderQuery.isFetching;
 
   useEffect(() => {
     if (!isAuthenticated) {
       openAuthModal();
     }
   }, [isAuthenticated, openAuthModal]);
-
-  useEffect(() => {
-    if (!isAuthenticated || order || !bookingId) return;
-    let active = true;
-    setIsLoadingOrder(true);
-    fetch(`/api/bookings/${encodeURIComponent(bookingId)}`, {
-      headers: { 'Accept-Language': locale.toUpperCase() },
-      cache: 'no-store',
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((fetched: BookingOrder | null) => {
-        if (active && fetched) setOrder(fetched);
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (active) setIsLoadingOrder(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [isAuthenticated, order, bookingId, locale]);
 
   const activeOrder = order || FALLBACK_EMPTY_ORDER;
   const {
@@ -159,40 +157,42 @@ export function useBookingDetail(
     router.push('/booking/review');
   }, [handleBookAgain, router]);
 
+  const cancelMutation = useMutation({
+    mutationFn: (vars: { id: string; reason?: string }) =>
+      bookingApiService.cancelBooking({
+        bookingId: vars.id,
+        reason: vars.reason || 'Seller requested cancellation',
+        locale,
+      }),
+    onSuccess: async (updated) => {
+      queryClient.setQueryData(detailKey, updated);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: bookingKeys.lists() }),
+        queryClient.invalidateQueries({ queryKey: bookingKeys.drafts() }),
+      ]);
+    },
+  });
+
+  const isCancelling = cancelMutation.isPending;
+
   const handleConfirmCancel = useCallback(
     async (reason?: string) => {
-      if (!canCancel || isCancelling || !order) return;
-      setIsCancelling(true);
+      if (!canCancel || cancelMutation.isPending || !order) return;
       setCancelError(null);
 
       try {
-        const res = await fetch(`/api/bookings/${encodeURIComponent(order.id)}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept-Language': locale.toUpperCase(),
-          },
-          body: JSON.stringify({
-            action: 'cancel',
-            reason: reason || 'Seller requested cancellation',
-          }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setOrder(data.order || (data.id ? data : { ...order, status: 'cancelled' }));
-          setIsCancelModalOpen(false);
-          toast.success(tPayment('cancelledTitle'));
-          return;
-        }
-        const err = await res.json().catch(() => ({}));
-        setCancelError(err.message || 'Unable to cancel booking right now.');
-      } catch {
-        setCancelError('Unable to reach cancellation service. Please try again.');
-      } finally {
-        setIsCancelling(false);
+        await cancelMutation.mutateAsync({ id: order.id, reason });
+        setIsCancelModalOpen(false);
+        toast.success(tPayment('cancelledTitle'));
+      } catch (err: unknown) {
+        setCancelError(
+          err instanceof Error
+            ? err.message
+            : 'Unable to cancel booking right now.',
+        );
       }
     },
-    [canCancel, isCancelling, order, locale, tPayment],
+    [canCancel, cancelMutation, order, tPayment],
   );
 
   return {

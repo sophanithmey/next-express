@@ -33,5 +33,24 @@ describe('Bulk Dropoff Parser', () => {
     expect(stops[0].dropoff.address).toContain('St 310 BKK1');
     expect(stops[0].dropoff.coordinates.lat).toBeGreaterThan(11);
   });
+
+  it('caps converted dropoff stops at MAX_DROPOFF_STOPS (5)', () => {
+    const csv = [
+      'Recipient Name,Recipient Phone,Drop-off Address,COD Amount,Delivery Note',
+      'Stop 1,012345671,St 101 Phnom Penh,10,Note 1',
+      'Stop 2,012345672,St 102 Phnom Penh,10,Note 2',
+      'Stop 3,012345673,St 103 Phnom Penh,10,Note 3',
+      'Stop 4,012345674,St 104 Phnom Penh,10,Note 4',
+      'Stop 5,012345675,St 105 Phnom Penh,10,Note 5',
+      'Stop 6,012345676,St 106 Phnom Penh,10,Note 6',
+    ].join('\n');
+
+    const parsed = parseBulkDropoffText(csv);
+    expect(parsed).toHaveLength(6);
+
+    const stops = convertParsedToDropoffStops(parsed);
+    expect(stops).toHaveLength(5);
+    expect(stops[4].recipient.name).toBe('Stop 5');
+  });
 });
 

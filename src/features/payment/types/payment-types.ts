@@ -33,6 +33,7 @@ export interface CreatePaymentCardPayload {
 }
 
 export interface CreatePaymentCardResult {
+  card?: PaymentCardItem;
   redirectUrl?: string;
 }
 

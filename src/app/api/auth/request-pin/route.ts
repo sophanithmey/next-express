@@ -1,38 +1,35 @@
 import { NextResponse } from 'next/server';
 import { phoneSchema } from '@/features/auth/schemas/auth-schema';
-import { consumerApiClient, ConsumerApiError } from '@/server/api/consumer-api-client';
+import { authServerService } from '@/server/services/auth-server-service';
+import {
+  handleApiRouteError,
+  parseRequestBody,
+} from '@/server/lib/api-response';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const parsed = phoneSchema.safeParse(body);
-
-    if (!parsed.success) {
+    const parsed = await parseRequestBody(
+      request,
+      phoneSchema,
+      'Invalid phone number format',
+    );
+    if ('errorResponse' in parsed) {
+      const body = (await parsed.errorResponse.json()) as { message?: string };
       return NextResponse.json(
-        {
-          success: false,
-          message: parsed.error.errors[0]?.message || 'Invalid phone number format',
-        },
-        { status: 400 }
+        { success: false, message: body.message || 'Invalid phone number format' },
+        { status: 400 },
       );
     }
 
-    const result = await consumerApiClient.requestPin({
+    const result = await authServerService.requestPin({
       phoneNumber: parsed.data.phoneNumber,
     });
-
     return NextResponse.json(result);
   } catch (error: unknown) {
-    if (error instanceof ConsumerApiError) {
-      return NextResponse.json(
-        { success: false, message: error.message },
-        { status: error.statusCode }
-      );
-    }
-    return NextResponse.json(
-      { success: false, message: 'Internal server error processing PIN request' },
-      { status: 500 }
+    return handleApiRouteError(
+      error,
+      'Internal server error processing PIN request',
+      { includeSuccessFalse: true },
     );
   }
 }
-

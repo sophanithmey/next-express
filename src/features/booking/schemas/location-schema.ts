@@ -16,10 +16,7 @@ export const createSavedLocationSchema = z.object({
     .trim()
     .min(1, 'Location name is required')
     .max(80, 'Location name must be 80 characters or fewer'),
-  address: z
-    .string()
-    .trim()
-    .min(3, 'Address must be at least 3 characters'),
+  address: z.string().trim().min(3, 'Address must be at least 3 characters'),
   coordinates: coordinatesSchema,
   type: z.string().trim().optional(),
   contact: z.string().trim().optional(),
@@ -30,6 +27,9 @@ export const createSavedLocationSchema = z.object({
   addressDetail: addressDetailInputSchema.optional(),
 });
 
+export const resolveMapLocationSchema = z.object({
+  input: z.string().trim().min(1, 'Location input is required'),
+});
+
 export type AddressDetailInput = z.infer<typeof addressDetailInputSchema>;
 export type CreateSavedLocationInput = z.infer<typeof createSavedLocationSchema>;
-

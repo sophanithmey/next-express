@@ -25,9 +25,12 @@ export const APP_DOWNLOAD_URL = 'https://wingmall.onelink.me/qlVW/wmmc1';
 export const SOCIAL_LINKS = APP_CONFIG.socialLinks;
 
 export const SESSION_COOKIE_NAME = 'express_seller_session';
+export const MAX_DROPOFF_STOPS = 5;
+export const MAX_TOTAL_COD_USD = 60;
 
 export const UNIFIED_API_PATHS = {
   IDENTITY: '/identity/v1',
+  USER: '/user/v1',
   ADDRESS: '/address/v1',
   ORDER: '/order/v1',
   PAYMENT: '/payment/v1',

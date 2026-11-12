@@ -1,8 +1,28 @@
 import { describe, it, expect } from 'vitest';
-import { createDefaultBookingForm, validateBookingFormData } from '@/features/booking/services/booking-form-helpers';
+import {
+  createDefaultBookingForm,
+  createEmptyBookingForm,
+  validateBookingFormData,
+} from '@/features/booking/services/booking-form-helpers';
 import { SAMPLE_PHNOM_PENH_LOCATIONS } from '@/features/booking/data/mock-booking-data';
 
 describe('Booking Layout & State Preservation', () => {
+  it('creates an empty booking form with no prefilled tester data', () => {
+    const empty = createEmptyBookingForm();
+    expect(empty.pickup.name).toBe('');
+    expect(empty.pickup.address).toBe('');
+    expect(empty.dropoff.address).toBe('');
+    expect(empty.recipient.name).toBe('');
+    expect(empty.recipient.phoneNumber).toBe('');
+    expect(empty.dropoffs).toHaveLength(1);
+    expect(empty.dropoffs?.[0].dropoff.address).toBe('');
+    expect(empty.parcel.sellerOrderRef).toBe('');
+    expect(empty.parcel.description).toBe('');
+    expect(empty.cod.isCod).toBe(false);
+    expect(empty.cod.amount).toBe(0);
+    expect(empty.deliveryOption).toBe('instant');
+  });
+
   it('creates default booking form with instant delivery preselected and default warehouse', () => {
     const form = createDefaultBookingForm(SAMPLE_PHNOM_PENH_LOCATIONS[0]);
     expect(form.deliveryOption).toBe('instant');
@@ -16,6 +36,12 @@ describe('Booking Layout & State Preservation', () => {
     // Simulate user edits in vertical mode
     const modified = {
       ...initial,
+      pickup: {
+        ...initial.pickup,
+        settlementBank: 'WING',
+        settlementAccountName: 'Sokha Store',
+        settlementAccountNumber: '012345678',
+      },
       recipient: { name: 'Dara Vong', phoneNumber: '098 112 233' },
       deliveryOption: 'same_day' as const,
       cod: { isCod: true, amount: 50 },

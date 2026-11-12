@@ -1,75 +1,45 @@
 import { NextResponse } from 'next/server';
-import { consumerPaymentClient } from '@/server/api/consumer-payment-client';
-import { ConsumerApiError } from '@/server/api/consumer-api-client';
-import { sessionService } from '@/server/auth/session-service';
-import { getServerEnv } from '@/server/config/server-env';
-import { mockPaymentStore } from '@/server/repositories/mock-payment-store';
-
-function getRequestLanguage(request: Request): string {
-  const header = request.headers.get('accept-language') || 'EN';
-  return header.slice(0, 2).toUpperCase();
-}
+import { updatePaymentCardSettingSchema } from '@/features/payment/schemas/payment-schema';
+import { paymentServerService } from '@/server/services/payment-server-service';
+import { sessionService } from '@/server/lib/session';
+import {
+  getRequestLanguage,
+  handleApiRouteError,
+  parseRequestBody,
+} from '@/server/lib/api-response';
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ 'card-id': string }> },
 ) {
   try {
-    const env = getServerEnv();
     const session = await sessionService.getSession();
-    const resolved = await params;
-    const cardId = resolved['card-id']?.trim();
-    const body = (await request.json().catch(() => ({}))) as {
-      isDefault?: unknown;
-      is_default?: unknown;
-    };
-
+    const cardId = (await params)['card-id']?.trim();
     if (!cardId) {
       return NextResponse.json({ message: 'Missing card ID' }, { status: 400 });
     }
 
-    const rawDefault =
-      typeof body.isDefault === 'boolean'
-        ? body.isDefault
-        : typeof body.is_default === 'boolean'
-        ? body.is_default
-        : undefined;
+    const parsed = await parseRequestBody(
+      request,
+      updatePaymentCardSettingSchema,
+      'isDefault boolean is required',
+    );
+    if ('errorResponse' in parsed) return parsed.errorResponse;
 
-    if (rawDefault === undefined) {
-      return NextResponse.json(
-        { message: 'isDefault boolean is required' },
-        { status: 400 },
-      );
-    }
+    const isDefault =
+      typeof parsed.data.isDefault === 'boolean'
+        ? parsed.data.isDefault
+        : Boolean(parsed.data.is_default);
 
-    if (env.mockPaymentApi) {
-      mockPaymentStore.setDefaultCard(cardId, rawDefault);
-      return NextResponse.json({ success: true });
-    }
-
-    if (!session?.accessToken) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
-
-    await consumerPaymentClient.configurePaymentCard({
-      accessToken: session.accessToken,
+    await paymentServerService.setDefaultCard({
+      session,
       acceptLanguage: getRequestLanguage(request),
-      paymentCardId: cardId,
-      isDefault: rawDefault,
+      cardId,
+      isDefault,
     });
-
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    if (error instanceof ConsumerApiError) {
-      return NextResponse.json(
-        { message: error.message },
-        { status: error.statusCode },
-      );
-    }
-    return NextResponse.json(
-      { message: 'Failed to update payment card setting' },
-      { status: 500 },
-    );
+    return handleApiRouteError(error, 'Failed to update payment card setting');
   }
 }
 
@@ -78,42 +48,19 @@ export async function DELETE(
   { params }: { params: Promise<{ 'card-id': string }> },
 ) {
   try {
-    const env = getServerEnv();
     const session = await sessionService.getSession();
-    const resolved = await params;
-    const cardId = resolved['card-id']?.trim();
-
+    const cardId = (await params)['card-id']?.trim();
     if (!cardId) {
       return NextResponse.json({ message: 'Missing card ID' }, { status: 400 });
     }
 
-    if (env.mockPaymentApi) {
-      mockPaymentStore.deleteCard(cardId);
-      return NextResponse.json({ success: true });
-    }
-
-    if (!session?.accessToken) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
-
-    await consumerPaymentClient.deletePaymentCard({
-      accessToken: session.accessToken,
+    await paymentServerService.deleteCard({
+      session,
       acceptLanguage: getRequestLanguage(request),
-      paymentCardId: cardId,
+      cardId,
     });
-
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    if (error instanceof ConsumerApiError) {
-      return NextResponse.json(
-        { message: error.message },
-        { status: error.statusCode },
-      );
-    }
-    return NextResponse.json(
-      { message: 'Failed to delete payment card' },
-      { status: 500 },
-    );
+    return handleApiRouteError(error, 'Failed to delete payment card');
   }
 }
-

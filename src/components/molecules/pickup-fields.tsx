@@ -1,17 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { PickupLocation } from '@/features/booking/types/booking-types';
 import { SavedPickupPills } from '@/features/booking/components/saved-pickup-pills';
-import { MapPin, LocateFixed, Loader2, User, FileText, Camera } from 'lucide-react';
+import { usePickupFieldsState } from '@/features/booking/hooks/use-pickup-fields-state';
+import { User, FileText, Camera, Landmark } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Input } from '../atoms/input';
 import { Label } from '../atoms/label';
 import { PhoneInput } from './phone-input';
 import { OptionalFieldPills, OptionalFieldPill } from './optional-field-pills';
 import { PickupOptionalDrawer } from './pickup-optional-drawer';
-import { focusFieldById } from '@/lib/dom-helpers';
-import { isDetectableLocationInput } from '@/lib/google-maps-link';
+import { PickupAddressField } from './pickup-address-field';
 
 interface PickupFieldsProps {
   idPrefix: string;
@@ -20,14 +19,18 @@ interface PickupFieldsProps {
   onOpenMap: () => void;
   onUseCurrentLocation: () => void;
   isLocating?: boolean;
+  isCod?: boolean;
+  defaultBankOpen?: boolean;
   savedLocations?: (PickupLocation & { tag?: string })[];
   addressError?: string;
   phoneError?: string;
+  bankNameError?: string;
+  bankNumberError?: string;
 }
 
 /**
- * Progressive-disclosure pickup form prioritizing the two required fields
- * (Pickup Address and Contact Phone) and tucking optional Name and Note/Photo into 1-click pills.
+ * Progressive-disclosure pickup form prioritizing required Address and Phone,
+ * with toggleable Wing Bank Account (required when COD), Name, and Note/Photo drawers.
  */
 export function PickupFields({
   idPrefix,
@@ -36,33 +39,54 @@ export function PickupFields({
   onOpenMap,
   onUseCurrentLocation,
   isLocating = false,
+  isCod = false,
+  defaultBankOpen = false,
   savedLocations,
   addressError,
   phoneError,
+  bankNameError,
+  bankNumberError,
 }: PickupFieldsProps) {
   const tPickup = useTranslations('Pickup');
-  const [showName, setShowName] = useState(false);
-  const [showNote, setShowNote] = useState(false);
-
   const addressId = `${idPrefix}-address`;
   const phoneId = `${idPrefix}-phone`;
-  const trimmedName = pickup.senderName?.trim() || '';
-  const hasName = Boolean(trimmedName);
-  const hasAttachment = Boolean(pickup.riderNote?.trim() || pickup.imageUrl);
 
-  const handleToggleName = () => {
-    const next = !showName;
-    setShowName(next);
-    if (next) focusFieldById(`${idPrefix}-name`);
-  };
+  const {
+    showName,
+    showNote,
+    isBankOpen,
+    trimmedName,
+    hasName,
+    hasAttachment,
+    trimmedBankName,
+    trimmedBankNumber,
+    hasBankAccount,
+    handleToggleName,
+    handleToggleNote,
+    handleToggleBank,
+  } = usePickupFieldsState({ idPrefix, pickup, isCod, defaultBankOpen, bankNameError, bankNumberError });
 
-  const handleToggleNote = () => {
-    const next = !showNote;
-    setShowNote(next);
-    if (next) focusFieldById(`${idPrefix}-note`);
-  };
+  const bankChipLabel = hasBankAccount
+    ? `${trimmedBankName} · ${trimmedBankNumber}`
+    : isCod
+      ? tPickup('addWingBankRequiredChip')
+      : tPickup('addWingBankChip');
+
+  const wingBankButtonClasses =
+    'border-wing-bank bg-wing-bank text-white hover:bg-wing-bank-hover hover:border-wing-bank-hover font-semibold shadow-2xs';
 
   const optionalPills: OptionalFieldPill[] = [
+    {
+      key: 'wingBank',
+      label: bankChipLabel,
+      icon: <Landmark className="h-3.5 w-3.5 shrink-0" />,
+      isOpen: isBankOpen,
+      hasValue: hasBankAccount,
+      idleClasses: wingBankButtonClasses,
+      openClasses: `${wingBankButtonClasses} ring-2 ring-wing-bank/25`,
+      filledClasses: wingBankButtonClasses,
+      onToggle: handleToggleBank,
+    },
     {
       key: 'name',
       label: hasName ? trimmedName : tPickup('addNameChip'),
@@ -77,9 +101,7 @@ export function PickupFields({
       icon: <FileText className="h-3.5 w-3.5 shrink-0" />,
       isOpen: showNote,
       hasValue: hasAttachment,
-      extraBadge: pickup.imageUrl ? (
-        <Camera className="h-3 w-3 shrink-0 text-brand-600" />
-      ) : undefined,
+      extraBadge: pickup.imageUrl ? <Camera className="h-3 w-3 shrink-0 text-brand-600" /> : undefined,
       onToggle: handleToggleNote,
     },
   ];
@@ -95,80 +117,26 @@ export function PickupFields({
               ...loc,
               senderPhone: loc.senderPhone || pickup.senderPhone,
               senderName: loc.senderName ?? pickup.senderName,
+              settlementBank: loc.settlementBank ?? pickup.settlementBank,
+              settlementAccountName:
+                loc.settlementAccountName ?? pickup.settlementAccountName,
+              settlementAccountNumber:
+                loc.settlementAccountNumber ?? pickup.settlementAccountNumber,
             })
           }
         />
       )}
 
       {/* Row 1: Required Pickup Address + Current GPS & Map Pin Trigger */}
-      <div className="space-y-1">
-        <div className="flex items-center justify-between gap-2">
-          <Label htmlFor={addressId} required>
-            {tPickup('addressLabel')}
-          </Label>
-          <button
-            type="button"
-            onClick={onUseCurrentLocation}
-            disabled={isLocating}
-            className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1 cursor-pointer transition select-none disabled:opacity-60"
-          >
-            {isLocating ? (
-              <Loader2 className="h-3 w-3 animate-spin text-brand-600" />
-            ) : (
-              <LocateFixed className="h-3 w-3 text-brand-600" />
-            )}
-            <span>{isLocating ? tPickup('locating') : tPickup('useCurrentLocation')}</span>
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="flex-1 min-w-0">
-            <Input
-              id={addressId}
-              placeholder={tPickup('addressPlaceholder')}
-              value={pickup.address}
-              onChange={(e) =>
-                onChange({
-                  ...pickup,
-                  address: e.target.value,
-                  name: e.target.value.split(',')[0] || 'My Location',
-                })
-              }
-              onPaste={(e) => {
-                const pasted = e.clipboardData.getData('text').trim();
-                if (pasted && isDetectableLocationInput(pasted)) {
-                  e.preventDefault();
-                  onChange({
-                    ...pickup,
-                    address: pasted,
-                    name: pasted.split(',')[0] || 'My Location',
-                  });
-                  onOpenMap();
-                }
-              }}
-              leftIcon={<MapPin className="h-4 w-4 text-brand-600" />}
-              error={Boolean(addressError)}
-              sizeVariant="md"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={onOpenMap}
-            className="h-10 px-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 hover:border-slate-400 text-xs font-semibold text-slate-700 flex items-center gap-1.5 shrink-0 transition-all cursor-pointer shadow-2xs"
-            title={tPickup('pinOnMap')}
-          >
-            <MapPin className="h-4 w-4 text-brand-600" />
-            <span className="hidden sm:inline">{tPickup('pinOnMap')}</span>
-          </button>
-        </div>
-        {addressError ? (
-          <p className="text-xs font-medium text-danger-600">{addressError}</p>
-        ) : isDetectableLocationInput(pickup.address) ? (
-          <p className="text-xs font-medium text-brand-700">
-            Map link or coordinates detected — click Pin on Map to confirm pin location.
-          </p>
-        ) : null}
-      </div>
+      <PickupAddressField
+        addressId={addressId}
+        pickup={pickup}
+        onChange={onChange}
+        onOpenMap={onOpenMap}
+        onUseCurrentLocation={onUseCurrentLocation}
+        isLocating={isLocating}
+        addressError={addressError}
+      />
 
       {/* Row 2: Required Contact Phone + 1-Click Optional Pills */}
       <div className="space-y-2">
@@ -194,6 +162,10 @@ export function PickupFields({
         pickup={pickup}
         isNameOpen={showName}
         isNoteOpen={showNote}
+        isBankOpen={isBankOpen}
+        isCodRequired={isCod}
+        bankNameError={bankNameError}
+        bankNumberError={bankNumberError}
         onChange={onChange}
       />
     </div>

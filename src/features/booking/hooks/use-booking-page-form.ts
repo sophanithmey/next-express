@@ -26,7 +26,8 @@ import {
   clearBookingDraft,
 } from '../services/booking-draft-service';
 import {
-  createDefaultBookingForm,
+  createEmptyBookingForm,
+  isDropoffStopDirty,
   validateBookingFormData,
   createPrefillFromOrder,
   normalizeBookingPhones,
@@ -43,7 +44,7 @@ export function useBookingPageForm(
   const tBooking = useTranslations('Booking');
 
   const [formData, setFormData] = useState<BookingFormData>(() =>
-    createDefaultBookingForm(initialLocations[0]),
+    createEmptyBookingForm(),
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,7 +53,15 @@ export function useBookingPageForm(
   // Restore draft if returning from Review page or previous session, preserving deliveryOption
   useEffect(() => {
     const draft = loadBookingDraft();
-    if (draft && draft.pickup?.address) {
+    const hasDraftInput = Boolean(
+      draft &&
+        (draft.pickup?.address?.trim() ||
+          draft.dropoff?.address?.trim() ||
+          draft.recipient?.phoneNumber?.trim() ||
+          draft.parcel?.sellerOrderRef?.trim() ||
+          draft.dropoffs?.some(isDropoffStopDirty)),
+    );
+    if (draft && hasDraftInput) {
       const restoredStops = draft.dropoffs?.length ? draft.dropoffs : undefined;
       const updatedDraft: BookingFormData = {
         ...draft,
@@ -66,22 +75,6 @@ export function useBookingPageForm(
     }
     isHydratedRef.current = true;
   }, []);
-
-  // Auto-prefill primary saved address once live consumer locations load,
-  // unless the user already edited or selected a different pickup address.
-  useEffect(() => {
-    const primary = initialLocations[0];
-    const demoDefault = SAMPLE_PHNOM_PENH_LOCATIONS[0];
-    if (!primary || primary.id === demoDefault.id) return;
-
-    setFormData((prev) => {
-      const stillOnDemoDefault =
-        prev.pickup.id === demoDefault.id &&
-        prev.pickup.address === demoDefault.address;
-      if (!stillOnDemoDefault) return prev;
-      return { ...prev, pickup: primary };
-    });
-  }, [initialLocations]);
 
   // Debounced auto-save to sessionStorage so page reloads do not discard seller edits
   useEffect(() => {
@@ -125,11 +118,11 @@ export function useBookingPageForm(
 
   const handleResetForm = useCallback(() => {
     clearBookingDraft();
-    setFormData(createDefaultBookingForm(initialLocations[0]));
+    setFormData(createEmptyBookingForm());
     setErrors({});
     toast.info(tBooking('formResetBanner'));
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [initialLocations, tBooking]);
+  }, [tBooking]);
 
   const handleOptimizeRoute = useCallback(() => {
     const currentStops = formData.dropoffs || [
@@ -188,6 +181,8 @@ export function useBookingPageForm(
         ...prev,
         'pickup.address': '',
         'pickup.senderPhone': '',
+        'pickup.settlementAccountName': '',
+        'pickup.settlementAccountNumber': '',
       }));
     },
     onChangeDropoff: (dropoff: DropoffLocation) => {
@@ -216,7 +211,8 @@ export function useBookingPageForm(
           if (
             !key.startsWith('dropoffs.') &&
             key !== 'dropoff.address' &&
-            key !== 'recipient.phoneNumber'
+            key !== 'recipient.phoneNumber' &&
+            key !== 'cod.amount'
           ) {
             next[key] = val;
           }
@@ -227,7 +223,19 @@ export function useBookingPageForm(
     onChangeParcel: (parcel: ParcelInfo) =>
       setFormData((prev) => ({ ...prev, parcel })),
     onChangeDeliveryOption: (deliveryOption: DeliverySpeedOption) =>
-      setFormData((prev) => ({ ...prev, deliveryOption })),
+      setFormData((prev) => ({
+        ...prev,
+        deliveryOption,
+        deliverySchedule:
+          deliveryOption === 'scheduled' && !prev.deliverySchedule
+            ? {
+                date: 'tomorrow',
+                dateLabel: 'Tomorrow',
+                shift: 'morning',
+                timeSlot: '',
+              }
+            : prev.deliverySchedule,
+      })),
     onChangeDeliverySchedule: (deliverySchedule: DeliverySchedule) =>
       setFormData((prev) => ({ ...prev, deliverySchedule })),
     onOptimizeRoute: handleOptimizeRoute,

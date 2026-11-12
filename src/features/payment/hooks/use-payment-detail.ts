@@ -1,50 +1,35 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useLocale } from 'next-intl';
-import { PaymentDetailRecord } from '../types/payment-types';
+import { useQuery } from '@tanstack/react-query';
+import { paymentApiService } from '../services/payment-api-service';
+import { paymentKeys } from './payment-keys';
 
-/**
- * Fetches and refreshes transaction details (`GET /api/payments/:paymentId`).
- */
 export function usePaymentDetail(
   paymentId: string | null | undefined,
   enabled = true,
 ) {
   const locale = useLocale();
-  const [paymentDetail, setPaymentDetail] = useState<PaymentDetailRecord | null>(null);
-  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const trimmedId = paymentId?.trim() || '';
+
+  const detailQuery = useQuery({
+    queryKey: [...paymentKeys.detail(trimmedId), locale],
+    queryFn: () => paymentApiService.getPaymentDetail(trimmedId, locale),
+    enabled: enabled && trimmedId.length > 0,
+    staleTime: 30_000,
+    retry: false,
+  });
 
   const refreshDetail = useCallback(async () => {
-    const trimmed = paymentId?.trim();
-    if (!trimmed || !enabled) return;
-
-    setIsLoadingDetail(true);
-    try {
-      const res = await fetch(`/api/payments/${encodeURIComponent(trimmed)}`, {
-        headers: { 'Accept-Language': locale.toUpperCase() },
-        cache: 'no-store',
-      });
-      if (!res.ok) return;
-      const data = (await res.json()) as PaymentDetailRecord;
-      if (data?.id) {
-        setPaymentDetail(data);
-      }
-    } catch {
-      // Non-blocking enrichment
-    } finally {
-      setIsLoadingDetail(false);
-    }
-  }, [paymentId, enabled, locale]);
-
-  useEffect(() => {
-    void refreshDetail();
-  }, [refreshDetail]);
+    if (!enabled || !trimmedId) return null;
+    const res = await detailQuery.refetch();
+    return res.data ?? null;
+  }, [detailQuery, enabled, trimmedId]);
 
   return {
-    paymentDetail,
-    isLoadingDetail,
+    paymentDetail: detailQuery.data ?? null,
+    isLoadingDetail: detailQuery.isFetching,
     refreshDetail,
   };
 }
-

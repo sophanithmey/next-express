@@ -2,6 +2,8 @@ export interface UserProfile {
   id: string;
   phoneNumber: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   shopName?: string;
   email?: string;
   crUrId?: string;
@@ -43,3 +45,14 @@ export interface SessionData {
   expiresAt: number;
 }
 
+export interface AuthContextValue {
+  isAuthenticated: boolean;
+  user: UserProfile | null;
+  isLoading: boolean;
+  login: (user: UserProfile) => void;
+  logout: () => Promise<void>;
+  refreshSession: () => Promise<void>;
+  isAuthModalOpen: boolean;
+  openAuthModal: (callback?: (user: UserProfile) => void) => void;
+  closeAuthModal: () => void;
+}

@@ -48,24 +48,22 @@ export function BookingHorizontalRoutePreview({
 }: BookingHorizontalRoutePreviewProps) {
   const tBooking = useTranslations('Booking');
   // Normalize drop-offs into canonical stops array
-  const stops: DropoffStop[] = useMemo(() => {
-    if (dropoffs && dropoffs.length > 0) {
-      return dropoffs;
-    }
-    return [
-      {
-        id: 'stop-1',
-        recipient,
-        dropoff,
-      },
-    ];
-  }, [dropoffs, recipient, dropoff]);
+  const stops: DropoffStop[] = useMemo(
+    () => (dropoffs && dropoffs.length > 0 ? dropoffs : [{ id: 'stop-1', recipient, dropoff }]),
+    [dropoffs, recipient, dropoff]
+  );
 
   const isStopValid = (s: DropoffStop) =>
     Boolean(s.dropoff?.address && s.dropoff.address.trim().length >= 3) &&
     Boolean(s.recipient?.phoneNumber && s.recipient.phoneNumber.replace(/\D/g, '').length >= 8);
 
-  const isPickupValid = Boolean(pickup.address && pickup.address.trim().length >= 3);
+  const isCodRequired = stops.some((s) => (s.codAmount ?? 0) > 0) || cod.isCod;
+  const hasBankAccount = Boolean(
+    pickup.settlementAccountName?.trim() && pickup.settlementAccountNumber?.trim()
+  );
+  const isPickupValid =
+    Boolean(pickup.address && pickup.address.trim().length >= 3) &&
+    (!isCodRequired || hasBankAccount);
   const isReady = isPickupValid && stops.every(isStopValid);
 
   const handleReorder = (oldIndex: number, newIndex: number) => {
@@ -117,6 +115,7 @@ export function BookingHorizontalRoutePreview({
         <BookingHorizontalRoutePickupItem
           pickup={pickup}
           isValid={isPickupValid}
+          isCodRequired={isCodRequired}
           onOpenModal={onOpenPickupModal}
         />
 

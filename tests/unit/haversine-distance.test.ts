@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   calculateHaversineDistance,
   inMemoryStore,
-} from '@/server/repositories/in-memory-store';
+} from '@/server/lib/mock-booking-store';
 
 describe('Pricing and Distance Engine', () => {
   it('calculates Haversine distance between two coordinates', () => {

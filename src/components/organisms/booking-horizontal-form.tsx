@@ -152,9 +152,15 @@ export function BookingHorizontalForm({
         pickup={formData.pickup}
         onSavePickup={onChangePickup}
         onOpenMap={() => onOpenMap('pickup')}
+        isCod={
+          currentStops.some((stop) => (stop.codAmount ?? 0) > 0) ||
+          formData.cod.isCod
+        }
         savedLocations={savedLocations}
         error={errors['pickup.address']}
         phoneError={errors['pickup.senderPhone']}
+        bankNameError={errors['pickup.settlementAccountName']}
+        bankNumberError={errors['pickup.settlementAccountNumber']}
       />
 
       {/* Point B: Recipient & Destination Modal */}

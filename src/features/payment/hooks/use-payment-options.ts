@@ -1,84 +1,65 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useLocale } from 'next-intl';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { paymentApiService } from '../services/payment-api-service';
+import { paymentKeys } from './payment-keys';
 import {
   PaymentAvailabilityResult,
   PaymentOptionItem,
 } from '../types/payment-types';
 
-interface PaymentOptionsResponse {
-  options?: PaymentOptionItem[];
-  source?: 'live' | 'mock' | 'preview';
-}
-
-/**
- * Loads Express payment options (`ST_EXPRESS`) and provides live provider availability checks.
- */
 export function usePaymentOptions(
   isAuthenticated: boolean,
   serviceType = 'ST_EXPRESS',
 ) {
   const locale = useLocale();
-  const [options, setOptions] = useState<PaymentOptionItem[]>([]);
-  const [source, setSource] = useState<'live' | 'mock' | 'preview'>('preview');
-  const [isLoadingOptions, setIsLoadingOptions] = useState(true);
+  const queryClient = useQueryClient();
 
-  const loadOptions = useCallback(async () => {
-    setIsLoadingOptions(true);
-    try {
-      const res = await fetch(
-        `/api/payments/options?serviceType=${encodeURIComponent(serviceType)}`,
-        {
-          headers: { 'Accept-Language': locale.toUpperCase() },
-          cache: 'no-store',
-        },
-      );
-      if (!res.ok) return;
-      const data = (await res.json()) as PaymentOptionsResponse;
-      if (Array.isArray(data.options)) {
-        setOptions(data.options);
-      }
-      if (data.source) {
-        setSource(data.source);
-      }
-    } catch {
-      // Keep previous/fallback options silently
-    } finally {
-      setIsLoadingOptions(false);
-    }
-  }, [locale, serviceType]);
+  const optionsQuery = useQuery({
+    queryKey: [
+      ...paymentKeys.options(serviceType),
+      locale,
+      isAuthenticated ? 'auth' : 'guest',
+    ],
+    queryFn: () => paymentApiService.listOptions({ serviceType, locale }),
+    staleTime: 60_000,
+  });
 
-  useEffect(() => {
-    void loadOptions();
-  }, [loadOptions, isAuthenticated]);
+  const refreshOptions = useCallback(async () => {
+    await optionsQuery.refetch();
+  }, [optionsQuery]);
 
   const checkAvailability = useCallback(
     async (providerCode: string): Promise<PaymentAvailabilityResult | null> => {
       if (!providerCode) return null;
       try {
-        const res = await fetch(
-          `/api/payments/options/${encodeURIComponent(providerCode)}/availability?serviceType=${encodeURIComponent(serviceType)}`,
-          {
-            headers: { 'Accept-Language': locale.toUpperCase() },
-            cache: 'no-store',
-          },
-        );
-        if (!res.ok) return null;
-        return (await res.json()) as PaymentAvailabilityResult;
+        return await queryClient.fetchQuery({
+          queryKey: [...paymentKeys.availability(providerCode, serviceType), locale],
+          queryFn: () =>
+            paymentApiService.checkAvailability({
+              providerCode,
+              serviceType,
+              locale,
+            }),
+          staleTime: 10_000,
+        });
       } catch {
         return null;
       }
     },
-    [locale, serviceType],
+    [locale, queryClient, serviceType],
   );
+
+  const options: PaymentOptionItem[] = optionsQuery.data?.options ?? [];
+  const source = optionsQuery.data?.source ?? 'preview';
 
   return {
     options,
     source,
-    isLoadingOptions,
-    refreshOptions: loadOptions,
+    isLoadingOptions: optionsQuery.isFetching,
+    refreshOptions,
     checkAvailability,
   };
 }
-

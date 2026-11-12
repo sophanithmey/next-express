@@ -37,15 +37,21 @@ export function useRecipientDestinationModal({
   const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null);
   const wasOpenRef = useRef(false);
 
-  const clearFieldError = useCallback((stopIdx: number, field: 'phoneNumber' | 'address') => {
-    setLocalErrors((prev) => {
-      const key = `dropoffs.${stopIdx}.${field}`;
-      if (!(key in prev)) return prev;
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
-  }, []);
+  const clearFieldError = useCallback(
+    (stopIdx: number, field: 'phoneNumber' | 'address' | 'codAmount') => {
+      setLocalErrors((prev) => {
+        const key = `dropoffs.${stopIdx}.${field}`;
+        const hasKey = key in prev;
+        const hasCodSummary = field === 'codAmount' && 'cod.amount' in prev;
+        if (!hasKey && !hasCodSummary) return prev;
+        const next = { ...prev };
+        delete next[key];
+        if (field === 'codAmount') delete next['cod.amount'];
+        return next;
+      });
+    },
+    []
+  );
 
   useEffect(() => {
     const incomingStops =
@@ -72,6 +78,19 @@ export function useRecipientDestinationModal({
 
   const handleUpdateCurrentStop = useCallback(
     (updRecipient: RecipientInfo, updDropoff: DropoffLocation, codAmount?: number) => {
+      if (codAmount !== undefined) {
+        setLocalErrors((prev) => {
+          const hasCodErr = Object.keys(prev).some(
+            (k) => k === 'cod.amount' || k.endsWith('.codAmount')
+          );
+          if (!hasCodErr) return prev;
+          const next: Record<string, string> = {};
+          for (const [k, v] of Object.entries(prev)) {
+            if (k !== 'cod.amount' && !k.endsWith('.codAmount')) next[k] = v;
+          }
+          return next;
+        });
+      }
       setStops((prev) =>
         prev.map((s, idx) => {
           if (idx !== activeTab) return s;
@@ -153,6 +172,8 @@ export function useRecipientDestinationModal({
       phoneRequired: () => tValidation('recipientPhoneRequired'),
       phoneInvalid: () => tValidation('recipientPhoneInvalid'),
       addressRequired: () => tValidation('dropoffAddressRequired'),
+      codTotalExceeded: (total: number, max: number) =>
+        tValidation('codTotalExceeded', { total: total.toFixed(2), max }),
     }),
     [tValidation]
   );
@@ -163,13 +184,15 @@ export function useRecipientDestinationModal({
       setLocalErrors(validationErrors);
       const currentHasError =
         Boolean(validationErrors[`dropoffs.${activeTab}.phoneNumber`]) ||
-        Boolean(validationErrors[`dropoffs.${activeTab}.address`]);
+        Boolean(validationErrors[`dropoffs.${activeTab}.address`]) ||
+        Boolean(validationErrors[`dropoffs.${activeTab}.codAmount`]);
 
       if (!currentHasError) {
         const firstInvalidIdx = stops.findIndex(
           (_, idx) =>
             Boolean(validationErrors[`dropoffs.${idx}.phoneNumber`]) ||
-            Boolean(validationErrors[`dropoffs.${idx}.address`])
+            Boolean(validationErrors[`dropoffs.${idx}.address`]) ||
+            Boolean(validationErrors[`dropoffs.${idx}.codAmount`])
         );
         if (firstInvalidIdx >= 0) setActiveTab(firstInvalidIdx);
       }

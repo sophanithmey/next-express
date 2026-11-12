@@ -3,7 +3,7 @@ import {
   calculateBookingFeeQuote,
   getSpeedOptionFees,
 } from '@/features/booking/services/pricing-service';
-import { inMemoryStore } from '@/server/repositories/in-memory-store';
+import { inMemoryStore } from '@/server/lib/mock-booking-store';
 
 describe('Unified Pricing & Speed Option Parity', () => {
   const pickup = { lat: 11.5321, lng: 104.9123 };

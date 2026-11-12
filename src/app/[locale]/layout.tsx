@@ -4,8 +4,9 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing, Locale } from '@/i18n/routing';
+import { QueryProvider } from '@/lib/query/query-provider';
 import { AuthProvider } from '@/features/auth/components/auth-provider';
-import { sessionService } from '@/server/auth/session-service';
+import { authServerService } from '@/server/services/auth-server-service';
 import { AppHeader } from '@/components/organisms/app-header';
 import { ToastProvider } from '@/components/atoms/toast-provider';
 
@@ -47,17 +48,19 @@ export default async function LocaleLayout({
   }
 
   const messages = await getMessages();
-  const user = await sessionService.getCurrentUser().catch(() => null);
+  const user = await authServerService.getCurrentUser().catch(() => null);
 
   return (
     <html lang={locale}>
       <body className="min-h-screen bg-slate-50 antialiased flex flex-col font-sans">
         <NextIntlClientProvider messages={messages} locale={locale}>
-          <AuthProvider initialUser={user}>
-            <AppHeader user={user} />
-            {children}
-            <ToastProvider />
-          </AuthProvider>
+          <QueryProvider>
+            <AuthProvider initialUser={user}>
+              <AppHeader user={user} />
+              {children}
+              <ToastProvider />
+            </AuthProvider>
+          </QueryProvider>
         </NextIntlClientProvider>
       </body>
     </html>

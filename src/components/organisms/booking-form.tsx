@@ -113,8 +113,14 @@ export function BookingForm({
               pickup={formData.pickup}
               onChangePickup={onChangePickup}
               onOpenMap={() => handleOpenMap('pickup')}
+              isCod={
+                Boolean(formData.dropoffs?.some((stop) => (stop.codAmount ?? 0) > 0)) ||
+                formData.cod.isCod
+              }
               error={errors['pickup.address']}
               phoneError={errors['pickup.senderPhone']}
+              bankNameError={errors['pickup.settlementAccountName']}
+              bankNumberError={errors['pickup.settlementAccountNumber']}
               savedLocations={savedLocations}
             />
 
