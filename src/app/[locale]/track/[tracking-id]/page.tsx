@@ -5,6 +5,7 @@ import { bookingServerService } from '@/server/services/booking-server-service';
 import { LiveTrackingView } from '@/features/booking/components/live-tracking-view';
 import { scopeOrderToStop } from '@/features/booking/services/tracking-share-helper';
 import { BookingOrder } from '@/features/booking/types/booking-types';
+import { buildPageSeoMetadata } from '@/lib/seo';
 
 interface LiveTrackingPageProps {
   params: Promise<{ locale: string; 'tracking-id': string }>;
@@ -16,10 +17,10 @@ export async function generateMetadata({ params }: LiveTrackingPageProps) {
   const tracking = decodeURIComponent(rawTrackingId || '').trim().toUpperCase();
   const t = await getTranslations({ locale, namespace: 'LiveTracking' });
 
-  return {
+  return buildPageSeoMetadata({
     title: t('metaTitle', { tracking: tracking || 'WingExpress' }),
     description: t('metaDescription'),
-  };
+  });
 }
 
 function buildDemoTrackingFallback(trackingId: string): BookingOrder {

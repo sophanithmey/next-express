@@ -9,11 +9,30 @@ import { AuthProvider } from '@/features/auth/components/auth-provider';
 import { authServerService } from '@/server/services/auth-server-service';
 import { AppHeader } from '@/components/organisms/app-header';
 import { ToastProvider } from '@/components/atoms/toast-provider';
+import {
+  DEFAULT_SEO_DESCRIPTION,
+  DEFAULT_SEO_IMAGE,
+  DEFAULT_SEO_TITLE,
+  resolveMetadataBase,
+} from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'WingExpress — High-Speed Delivery Platform',
-  description:
-    'Fast, modern delivery booking and management for online merchants and sellers',
+  metadataBase: resolveMetadataBase(),
+  title: DEFAULT_SEO_TITLE,
+  description: DEFAULT_SEO_DESCRIPTION,
+  openGraph: {
+    title: DEFAULT_SEO_TITLE,
+    description: DEFAULT_SEO_DESCRIPTION,
+    type: 'website',
+    siteName: 'WingExpress',
+    images: [DEFAULT_SEO_IMAGE],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: DEFAULT_SEO_TITLE,
+    description: DEFAULT_SEO_DESCRIPTION,
+    images: [DEFAULT_SEO_IMAGE.url],
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },

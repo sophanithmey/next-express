@@ -2,6 +2,7 @@ import React from 'react';
 import { getTranslations } from 'next-intl/server';
 import { LandingPageClient } from '@/features/landing/components/landing-page-client';
 import { LandingFooter } from '@/features/landing/components/landing-footer';
+import { buildPageSeoMetadata } from '@/lib/seo';
 
 interface HomePageProps {
   params: Promise<{ locale: string }>;
@@ -11,10 +12,10 @@ export async function generateMetadata({ params }: HomePageProps) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Home' });
 
-  return {
+  return buildPageSeoMetadata({
     title: t('metaTitle'),
     description: t('metaDescription'),
-  };
+  });
 }
 
 export default function HomePage() {
