@@ -105,6 +105,34 @@
       "item4Title": "Faster Repeat Orders",
       "item4Desc": "1-tap reordering prefills previous recipient and route details so returning sellers save valuable time."
     },
+    "instantAccess": {
+      "badge": "Frictionless 2-Click Access",
+      "title": "Book First, Verify in Seconds",
+      "subtitle": "No upfront sign-up required. Book immediately on page 1, then verify quickly when confirming:",
+      "tabAll": "All Flows",
+      "tabExisting": "Returning Seller (2 Clicks)",
+      "tabNew": "New Seller (Fast Setup)",
+      "existingBadge": "Returning Seller",
+      "existingTitle": "Instant 2-Step Login",
+      "existingDesc": "Already have an account? Log in in seconds with your phone and PIN:",
+      "existingStep1": "Input Phone Number",
+      "existingStep1Desc": "Enter your registered Cambodian mobile number.",
+      "existingStep1Mock": "012 888 999",
+      "existingStep2": "Input 4-Digit PIN",
+      "existingStep2Desc": "Enter your 4-digit PIN to log in immediately.",
+      "existingPerk": "Instant access to saved drafts, past addresses & tracking",
+      "newBadge": "New Seller",
+      "newTitle": "Simple 3-Step Setup",
+      "newDesc": "First time booking? No lengthy profile forms or paperwork needed:",
+      "newStep1": "Input Phone Number",
+      "newStep1Desc": "Start by entering your mobile number.",
+      "newStep2": "Verify SMS OTP",
+      "newStep2Desc": "Enter the 4-digit verification code sent via SMS.",
+      "newStep3": "Set 4-Digit PIN & Login",
+      "newStep3Desc": "Choose your 4-digit PIN and your account is ready.",
+      "newPerk": "Zero passwords to remember • Ready in under 60 seconds",
+      "bottomNote": "Start booking immediately without logging in first. Authentication is only requested at confirmation."
+    },
     "ctaSection": {
       "badge": "Simple, Fast & Reliable Logistics",
       "title": "Ready to send your next delivery?",
@@ -113,8 +141,8 @@
       "trustNote": "Secure checkout • Verified couriers • Real-time updates"
     },
     "faq": {
-      "badge": "Frequently Asked Questions",
-      "title": "Common Questions from Online Sellers",
+      "badge": "FAQ",
+      "title": "Frequently Asked Questions",
       "subtitle": "Quick answers on pricing, multi-drop routes, COD remittance, and live parcel tracking.",
       "q1": "Do I need to log in before booking a delivery?",
       "a1": "No. You can fill in pickup and drop-off details, add multi-drop stops, and view live estimated delivery fees right away. Phone verification is only requested when confirming payment or saving a draft.",
@@ -128,7 +156,10 @@
       "a5": "On the Review & Payment screen, sellers can pay with KHQR, Cash on Pickup directly with the courier, Wing Wallet balance, or card.",
       "q6": "How do recipients track their delivery?",
       "a6": "Once confirmed, you receive a booking reference and live tracking link showing courier assignment, transit updates, and delivery completion that you can copy and share directly with customers.",
-      "supportPrompt": "Still have questions? Call Seller Support at"
+      "supportPrompt": "Still have questions? Call Seller Support at",
+      "stillHaveQuestionsTitle": "Still have questions?",
+      "stillHaveQuestionsSubtitle": "We understand. Let's get in touch directly with our team, then.",
+      "contactUsCta": "Contact Us"
     }
   },
   "Booking": {

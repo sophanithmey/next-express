@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
-import { ChevronDown, HelpCircle, PhoneCall } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { APP_CONFIG } from '@/lib/constants';
 
 const FAQ_KEYS = [
@@ -18,52 +18,55 @@ export function LandingFaq() {
   const t = useTranslations('Home.faq');
 
   return (
-    <section className="py-12 border-t border-slate-200/80">
-      <div className="text-center max-w-xl mx-auto space-y-2 mb-10">
-        <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-secondary-700 bg-secondary-50 px-2.5 py-0.5 rounded-full border border-secondary-200">
-          <HelpCircle className="h-3 w-3 text-secondary-600" />
-          <span>{t('badge')}</span>
-        </span>
-        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-snug">
-          {t('title')}
-        </h2>
-        <p className="text-xs sm:text-sm text-slate-500">
-          {t('subtitle')}
-        </p>
-      </div>
+    <section id="faq" className="py-8 sm:py-12">
+      <div className="rounded-3xl border border-slate-200/90 bg-white p-7 sm:p-12 lg:p-16 shadow-xs">
+        {/* Header (Centered like other landing sections) */}
+        <div className="text-center max-w-2xl mx-auto space-y-2.5">
+          <span className="inline-flex items-center text-xs font-semibold px-3 py-1 rounded-full bg-secondary-50 text-secondary-700 border border-secondary-200/70">
+            {t('badge')}
+          </span>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+            {t('title')}
+          </h2>
+          <p className="text-sm sm:text-base text-slate-500 leading-relaxed pt-1">
+            {t('subtitle')}
+          </p>
+        </div>
 
-      <div className="space-y-3">
-        {FAQ_KEYS.map((item, idx) => (
-          <details
-            key={item.q}
-            open={idx === 0}
-            className="group rounded-2xl border border-slate-200/90 bg-white shadow-2xs transition open:border-secondary-200 open:shadow-xs"
-          >
-            <summary className="flex items-center justify-between gap-4 px-5 py-4 min-h-11 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-500/30">
-              <span className="text-xs sm:text-sm font-bold text-slate-900 group-open:text-secondary-800 transition-colors leading-snug">
+        {/* 3-Column FAQ Grid (2 rows x 3 columns) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 lg:gap-x-12 gap-y-8 sm:gap-y-10 mt-10 sm:mt-12 lg:mt-14">
+          {FAQ_KEYS.map((item) => (
+            <div key={item.q} className="space-y-2">
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight leading-snug">
                 {t(item.q)}
-              </span>
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-50 border border-slate-200/80 text-slate-500 group-hover:bg-slate-100 group-open:bg-secondary-50 group-open:border-secondary-200 group-open:text-secondary-700 transition">
-                <ChevronDown className="h-4 w-4 transition-transform duration-200 group-open:rotate-180" />
-              </span>
-            </summary>
-
-            <div className="px-5 pb-4 pt-3 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100">
-              {t(item.a)}
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                {t(item.a)}
+              </p>
             </div>
-          </details>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-1.5 text-xs text-slate-500">
-        <PhoneCall className="h-3.5 w-3.5 text-secondary-600 shrink-0" />
-        <span>{t('supportPrompt')}</span>
-        <a
-          href={`tel:${APP_CONFIG.supportPhoneRaw}`}
-          className="font-mono font-bold text-secondary-700 hover:underline"
-        >
-          {APP_CONFIG.supportPhone}
-        </a>
+        {/* Bottom Contact Callout Banner */}
+        <div className="mt-12 sm:mt-16 rounded-2xl bg-slate-50 border border-slate-200/70 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+          <div className="space-y-1">
+            <h4 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+              {t('stillHaveQuestionsTitle')}
+            </h4>
+            <p className="text-xs sm:text-sm text-slate-500">
+              {t('stillHaveQuestionsSubtitle')}
+            </p>
+          </div>
+
+          <a
+            href={`tel:${APP_CONFIG.supportPhoneRaw}`}
+            title={`Call ${APP_CONFIG.supportPhone} (Daily 06:00 AM - 09:00 PM)`}
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-secondary-600 hover:bg-secondary-700 active:scale-95 text-white text-xs sm:text-sm font-semibold px-6 py-2.5 shadow-xs transition shrink-0 cursor-pointer"
+          >
+            <span>{t('contactUsCta')}</span>
+            <ArrowRight className="h-4 w-4" />
+          </a>
+        </div>
       </div>
     </section>
   );

@@ -7,6 +7,7 @@ import { LandingAuthenticatedBanner } from './landing-authenticated-banner';
 import { LandingHero } from './landing-hero';
 import { LandingHowItWorks } from './landing-how-it-works';
 import { LandingBenefits } from './landing-benefits';
+import { LandingInstantAccess } from './landing-instant-access';
 import { LandingFaq } from './landing-faq';
 import { LandingCta } from './landing-cta';
 
@@ -37,7 +38,10 @@ export function LandingPageClient() {
       {/* Seller Benefits */}
       <LandingBenefits />
 
-      {/* Seller FAQ Accordion */}
+      {/* Zero-Hassle 2-Click Access */}
+      <LandingInstantAccess />
+
+      {/* Seller FAQ */}
       <LandingFaq />
 
       {/* Primary Bottom Action */}
