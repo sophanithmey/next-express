@@ -5,6 +5,7 @@ export interface GeoCoordinates {
 
 export interface PickupLocation {
   id?: string;
+  placeId?: string;
   name: string;
   address: string;
   coordinates: GeoCoordinates;
@@ -28,6 +29,7 @@ export interface RecipientInfo {
 
 export interface DropoffLocation {
   addressId?: string;
+  placeId?: string;
   address: string;
   landmark?: string;
   coordinates: GeoCoordinates;

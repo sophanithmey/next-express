@@ -10,6 +10,7 @@ export const coordinatesSchema = z.object({
 
 export const pickupSchema = z.object({
   id: z.string().optional(),
+  placeId: z.string().optional(),
   name: z.string().min(2, 'Pickup location name is required'),
   address: z.string().min(5, 'Pickup address is required'),
   coordinates: coordinatesSchema,
@@ -48,6 +49,7 @@ export const recipientSchema = z.object({
 
 export const dropoffSchema = z.object({
   addressId: z.string().optional(),
+  placeId: z.string().optional(),
   address: z.string().min(5, 'Drop-off address is required'),
   landmark: z.string().optional(),
   coordinates: coordinatesSchema,

@@ -1,292 +1,219 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  GeoCoordinates,
-  PickupLocation,
-} from '@/features/booking/types/booking-types';
-import {
-  formatDetectedLocationAddress,
-  isDetectableLocationInput,
-  isResolvableGoogleMapsUrl,
-  parseGoogleMapsLocationInput,
-} from '@/lib/google-maps-link';
-import { locationApiService } from '@/features/booking/services/location-api-service';
+import { useCallback, useEffect, useState } from 'react';
+import { PickupLocation, GeoCoordinates } from '@/features/booking/types/booking-types';
 import { SavedLocationItem } from '@/components/molecules/location-picker-saved-list';
-import { CreateLocationDraft } from './use-location-create-form';
+import { CreateSavedLocationInput } from '@/features/booking/schemas/location-schema';
+import {
+  PlaceSuggestion,
+  GeocodingServiceError,
+  isValidGeoCoordinates,
+} from '@/features/booking/services/geocoding-service';
+import { useLocationGeocoder } from '@/features/booking/hooks/use-location-geocoder';
+import { useLocationPickerSaved } from '@/features/booking/hooks/use-location-picker-saved';
+import { useLocationLinkResolver } from '@/features/booking/hooks/use-location-link-resolver';
+import { APP_CONFIG } from '@/lib/constants';
 
-const EMPTY_DRAFT: CreateLocationDraft = {
-  name: '',
-  address: '',
-  contact: '',
-  remark: '',
-  houseNumber: '',
-  streetNumber: '',
-};
+export interface QuickLocationChip {
+  name: string;
+  address: string;
+  coords: GeoCoordinates;
+}
 
 interface UseLocationPickerParams {
   isOpen: boolean;
-  initialCoords: GeoCoordinates;
+  initialCoords?: GeoCoordinates;
   selectedAddress: string;
-  defaultContact: string;
   savedLocations: SavedLocationItem[];
+  defaultContact?: string;
   onSelect: (location: PickupLocation) => void;
   onClose: () => void;
+  onCreateLocation?: (
+    input: CreateSavedLocationInput,
+  ) => Promise<SavedLocationItem | 'auth_required'>;
 }
 
 export function useLocationPicker({
   isOpen,
   initialCoords,
   selectedAddress,
-  defaultContact,
   savedLocations,
+  defaultContact = '',
   onSelect,
   onClose,
+  onCreateLocation,
 }: UseLocationPickerParams) {
+  const safeInitial =
+    initialCoords && isValidGeoCoordinates(initialCoords)
+      ? initialCoords
+      : APP_CONFIG.defaultCoordinates;
+
   const [activeTab, setActiveTab] = useState<'map' | 'saved'>('map');
-  const [pinnedCoords, setPinnedCoords] =
-    useState<GeoCoordinates>(initialCoords);
+  const [pinnedCoords, setPinnedCoords] = useState<GeoCoordinates>(safeInitial);
   const [pinAddress, setPinAddress] = useState(selectedAddress || '');
-  const [linkInput, setLinkInput] = useState('');
-  const [suggestions, setSuggestions] = useState<SavedLocationItem[]>([]);
-  const [isLocating, setIsLocating] = useState(false);
-  const [isResolvingLink, setIsResolvingLink] = useState(false);
-  const [detectedStatus, setDetectedStatus] = useState<string | null>(null);
-  const [linkError, setLinkError] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [isPickingForNew, setIsPickingForNew] = useState(false);
-  const [awaitingAuthSave, setAwaitingAuthSave] = useState(false);
-  const [highlightedId, setHighlightedId] = useState<string | undefined>();
-  const [createDraft, setCreateDraft] =
-    useState<CreateLocationDraft>(EMPTY_DRAFT);
-  const prevLocationsRef = useRef(savedLocations);
-  const resolveAbortRef = useRef<AbortController | null>(null);
+  const [selectedName, setSelectedName] = useState('');
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | undefined>(undefined);
 
-  const detectAndPinInput = useCallback(
-    (val: string) => {
-      resolveAbortRef.current?.abort();
-      setLinkError(null);
-      setDetectedStatus(null);
+  const saved = useLocationPickerSaved({
+    isOpen,
+    defaultContact,
+    onSelect,
+    onClose,
+    onCreateLocation,
+  });
 
-      const direct = parseGoogleMapsLocationInput(val);
-      if (direct) {
-        setPinnedCoords(direct.coordinates);
-        setPinAddress(
-          formatDetectedLocationAddress(direct.coordinates, direct.label),
-        );
-        setSuggestions([]);
-        setIsResolvingLink(false);
-        setDetectedStatus(
-          `Pinned ${direct.coordinates.lat.toFixed(5)}, ${direct.coordinates.lng.toFixed(5)} on map`,
-        );
-        return;
-      }
-
-      if (isResolvableGoogleMapsUrl(val)) {
-        setSuggestions([]);
-        setIsResolvingLink(true);
-        const controller = new AbortController();
-        resolveAbortRef.current = controller;
-
-        locationApiService.resolveGoogleMapsLink(val, controller.signal)
-          .then((res) => {
-            if (controller.signal.aborted) return;
-            setPinnedCoords(res.coordinates);
-            setPinAddress(res.address);
-            setDetectedStatus(
-              `Pinned ${res.coordinates.lat.toFixed(5)}, ${res.coordinates.lng.toFixed(5)} from Google Maps`,
-            );
-          })
-          .catch((err: unknown) => {
-            if (controller.signal.aborted) return;
-            setLinkError(
-              err instanceof Error
-                ? err.message
-                : 'Unable to resolve Google Maps link.',
-            );
-          })
-          .finally(() => {
-            if (!controller.signal.aborted) setIsResolvingLink(false);
-          });
-        return;
-      }
-
-      setIsResolvingLink(false);
-      if (val.trim().length >= 2) {
-        const q = val.trim().toLowerCase();
-        setSuggestions(
-          savedLocations
-            .filter((loc) =>
-              [loc.name, loc.address, loc.tag, loc.riderNote]
-                .filter(Boolean)
-                .some((f) => f!.toLowerCase().includes(q)),
-            )
-            .slice(0, 4),
-        );
-        setPinAddress(val);
-      } else {
-        setSuggestions([]);
-        if (val.trim()) setPinAddress(val);
-      }
+  const geocoder = useLocationGeocoder({
+    isOpen,
+    onReverseGeocoded: ({ address, placeId }) => {
+      setPinAddress(address);
+      setSelectedName(address.split(',')[0]?.trim() || '');
+      if (placeId) setSelectedPlaceId(placeId);
     },
-    [savedLocations],
+  });
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const nextCoords =
+      initialCoords && isValidGeoCoordinates(initialCoords)
+        ? initialCoords
+        : APP_CONFIG.defaultCoordinates;
+    setActiveTab('map');
+    setPinnedCoords(nextCoords);
+    setPinAddress(selectedAddress || '');
+    setSelectedName(selectedAddress ? selectedAddress.split(',')[0]?.trim() || '' : '');
+    setSelectedPlaceId(undefined);
+  }, [isOpen, initialCoords, selectedAddress]);
+
+  const applyCoordinatePin = useCallback(
+    async (coords: GeoCoordinates, presetAddress?: string) => {
+      setPinnedCoords(coords);
+      setSelectedPlaceId(undefined);
+      geocoder.clearGeolocationError();
+      if (presetAddress) {
+        setPinAddress(presetAddress);
+        setSelectedName(presetAddress.split(',')[0]?.trim() || '');
+        geocoder.clearGeocodeError();
+        return;
+      }
+      await geocoder.triggerReverseGeocode(coords);
+    },
+    [geocoder],
   );
 
-  useEffect(() => {
-    if (!isOpen) {
-      resolveAbortRef.current?.abort();
-      return;
-    }
-
-    const trimmedAddress = selectedAddress?.trim() || '';
-    setActiveTab('map');
-    setPinnedCoords(initialCoords);
-    setPinAddress(trimmedAddress);
-    setLinkInput(trimmedAddress);
-    setSuggestions([]);
-    setIsResolvingLink(false);
-    setDetectedStatus(null);
-    setLinkError(null);
-    setIsCreating(false);
-    setIsPickingForNew(false);
-    setAwaitingAuthSave(false);
-    setHighlightedId(undefined);
-    setCreateDraft({ ...EMPTY_DRAFT, contact: defaultContact });
-
-    if (trimmedAddress && isDetectableLocationInput(trimmedAddress)) {
-      detectAndPinInput(trimmedAddress);
-    }
-
-    return () => {
-      resolveAbortRef.current?.abort();
-    };
-  }, [
+  const linkResolver = useLocationLinkResolver({
     isOpen,
-    initialCoords.lat,
-    initialCoords.lng,
-    selectedAddress,
-    defaultContact,
-    detectAndPinInput,
-  ]);
+    pinnedCoords,
+    savedLocations,
+    onApplyPin: applyCoordinatePin,
+    onSearchPlaces: geocoder.searchPlaces,
+    onCancelPlaces: geocoder.cancelPendingPlaces,
+  });
 
-  useEffect(() => {
-    if (awaitingAuthSave && savedLocations !== prevLocationsRef.current) {
-      setHighlightedId(savedLocations[0]?.id);
-      setIsCreating(false);
-      setIsPickingForNew(false);
-      setAwaitingAuthSave(false);
-    }
-    prevLocationsRef.current = savedLocations;
-  }, [awaitingAuthSave, savedLocations]);
+  const handleSelectPlace = useCallback(
+    async (prediction: PlaceSuggestion) => {
+      geocoder.cancelPendingPlaces();
+      linkResolver.setSavedSuggestions([]);
+      linkResolver.setLinkInput(prediction.description);
+      linkResolver.setLinkError(null);
+      linkResolver.setDetectedStatus(null);
+      try {
+        const resolved = await geocoder.selectPlaceById(prediction.placeId);
+        if (!resolved) return;
+        setPinnedCoords(resolved.coordinates);
+        setPinAddress(resolved.address);
+        setSelectedName(resolved.name);
+        setSelectedPlaceId(resolved.placeId);
+      } catch (err) {
+        if (err instanceof GeocodingServiceError) linkResolver.setLinkError(err.message);
+      }
+    },
+    [geocoder, linkResolver],
+  );
 
-  const handleLinkChange = (val: string) => {
-    setLinkInput(val);
-    detectAndPinInput(val);
-  };
+  const handleUseCurrentLocation = useCallback(() => {
+    geocoder.requestCurrentLocation(async (coords) => {
+      setPinnedCoords(coords);
+      setSelectedPlaceId(undefined);
+      linkResolver.setSavedSuggestions([]);
+      const ok = await geocoder.triggerReverseGeocode(coords);
+      if (!ok) {
+        const fallback = `Current Location (${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}), Phnom Penh`;
+        setPinAddress((prev) => prev || fallback);
+        setSelectedName('Current Location');
+      }
+    });
+  }, [geocoder, linkResolver]);
 
-  const clearLinkInput = () => {
-    resolveAbortRef.current?.abort();
-    setLinkInput('');
-    setSuggestions([]);
-    setIsResolvingLink(false);
-    setDetectedStatus(null);
-    setLinkError(null);
-  };
-
-  const handleUseCurrentLocation = () => {
-    if (!navigator.geolocation) return;
-    setIsLocating(true);
-    setLinkError(null);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const coords = {
-          lat: Number(pos.coords.latitude.toFixed(5)),
-          lng: Number(pos.coords.longitude.toFixed(5)),
-        };
-        const addr = `Current Location (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}), Phnom Penh`;
-        setPinnedCoords(coords);
-        setPinAddress(addr);
-        setLinkInput('');
-        setDetectedStatus(
-          `Pinned current GPS (${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)})`,
-        );
-        if (isCreating) {
-          setCreateDraft((prev) => ({
-            ...prev,
-            address: prev.address.trim() ? prev.address : addr,
-          }));
-        }
-        setIsLocating(false);
-      },
-      () => setIsLocating(false),
-      { enableHighAccuracy: true, timeout: 8000 },
-    );
-  };
-
-  const handleConfirmPin = () => {
+  const handleConfirmPin = useCallback(() => {
     const finalAddress =
-      pinAddress.trim() ||
-      `Google Pin (${pinnedCoords.lat.toFixed(4)}, ${pinnedCoords.lng.toFixed(4)}), Phnom Penh`;
-
-    if (isPickingForNew) {
-      setCreateDraft((prev) => ({
-        ...prev,
-        address: prev.address.trim() ? prev.address : finalAddress,
-      }));
-      setIsPickingForNew(false);
+      pinAddress.trim() || `${pinnedCoords.lat.toFixed(5)}, ${pinnedCoords.lng.toFixed(5)}, Phnom Penh`;
+    const finalName = selectedName || finalAddress.split(',')[0]?.trim() || 'Pinned Location';
+    if (saved.isPickingForNew) {
+      saved.setCreateDraft((prev) => ({ ...prev, address: finalAddress }));
+      saved.setIsPickingForNew(false);
       setActiveTab('saved');
       return;
     }
-
     onSelect({
-      name: finalAddress.split(',')[0] || 'Google Pinned Location',
+      name: finalName,
       address: finalAddress,
-      coordinates: pinnedCoords,
+      coordinates: { lat: Number(pinnedCoords.lat.toFixed(6)), lng: Number(pinnedCoords.lng.toFixed(6)) },
+      placeId: selectedPlaceId,
     });
     onClose();
-  };
-
-  const handleOpenCreate = (fromPin = false) => {
-    setCreateDraft({
-      ...EMPTY_DRAFT,
-      name: fromPin && pinAddress ? pinAddress.split(',')[0] || '' : '',
-      address: fromPin ? pinAddress : '',
-      contact: defaultContact,
-    });
-    setIsCreating(true);
-    setIsPickingForNew(false);
-    setActiveTab('saved');
-  };
+  }, [onClose, onSelect, pinAddress, pinnedCoords, saved, selectedName, selectedPlaceId]);
 
   return {
     activeTab,
     setActiveTab,
     pinnedCoords,
-    setPinnedCoords,
     pinAddress,
-    setPinAddress,
-    linkInput,
-    setLinkInput,
-    suggestions,
-    setSuggestions,
-    isLocating,
-    isResolvingLink,
-    detectedStatus,
-    setDetectedStatus,
-    linkError,
-    isCreating,
-    setIsCreating,
-    isPickingForNew,
-    setIsPickingForNew,
-    setAwaitingAuthSave,
-    highlightedId,
-    setHighlightedId,
-    createDraft,
-    setCreateDraft,
-    handleLinkChange,
-    clearLinkInput,
+    setPinAddress: (value: string) => {
+      setPinAddress(value);
+      geocoder.clearGeocodeError();
+    },
+    ...linkResolver,
+    ...geocoder,
+    ...saved,
+    handleSelectPlace,
+    handleSelectSavedSuggestion: (loc: SavedLocationItem) => {
+      const next = saved.previewOnMapState(loc);
+      setPinnedCoords(next.coords);
+      setPinAddress(next.address);
+      setSelectedName(next.name);
+      setSelectedPlaceId(next.placeId);
+      linkResolver.setSavedSuggestions([]);
+      linkResolver.setLinkInput('');
+    },
+    handleSelectChip: (chip: QuickLocationChip) => {
+      geocoder.cancelPendingPlaces();
+      linkResolver.setSavedSuggestions([]);
+      setPinnedCoords(chip.coords);
+      setPinAddress(chip.address);
+      setSelectedName(chip.name);
+      setSelectedPlaceId(undefined);
+      geocoder.clearGeocodeError();
+      geocoder.clearGeolocationError();
+    },
+    handleMapCoordinateSelect: (coords: GeoCoordinates) => void applyCoordinatePin(coords),
+    nudgePin: (dLat: number, dLng: number) =>
+      void applyCoordinatePin({
+        lat: Number((pinnedCoords.lat + dLat).toFixed(6)),
+        lng: Number((pinnedCoords.lng + dLng).toFixed(6)),
+      }),
     handleUseCurrentLocation,
     handleConfirmPin,
-    handleOpenCreate,
+    handlePreviewOnMap: (loc: SavedLocationItem) => {
+      const next = saved.previewOnMapState(loc);
+      setPinnedCoords(next.coords);
+      setPinAddress(next.address);
+      setSelectedName(next.name);
+      setSelectedPlaceId(next.placeId);
+      setActiveTab('map');
+    },
+    handleOpenCreate: () => {
+      saved.handleOpenCreate(pinAddress);
+      setActiveTab('saved');
+    },
   };
 }

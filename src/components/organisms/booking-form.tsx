@@ -22,6 +22,10 @@ import { CreateSavedLocationInput } from '@/features/booking/schemas/location-sc
 import { StickyBookingActionBar } from '../molecules/sticky-booking-action-bar';
 import { BookingLayoutMode } from '../molecules/booking-layout-switcher';
 import { getSpeedOptionFees } from '@/features/booking/services/pricing-service';
+import {
+  applyConfirmedDropoffLocation,
+  applyConfirmedPickupLocation,
+} from '@/features/booking/services/booking-location-helper';
 import { useTranslations } from 'next-intl';
 
 interface BookingFormProps {
@@ -193,32 +197,21 @@ export function BookingForm({
         onCreateLocation={onCreateLocation}
         onSelect={(loc) => {
           if (modalMode === 'pickup') {
-            onChangePickup({
-              ...formData.pickup,
-              id: loc.id ?? formData.pickup.id,
-              name: loc.name,
-              address: loc.address,
-              coordinates: loc.coordinates,
-              riderNote: loc.riderNote ?? formData.pickup.riderNote,
-              imageUrl: loc.imageUrl ?? formData.pickup.imageUrl,
-              senderName: loc.senderName || formData.pickup.senderName,
-              senderPhone: loc.senderPhone || formData.pickup.senderPhone,
-            });
+            onChangePickup(applyConfirmedPickupLocation(formData.pickup, loc));
             return;
           }
-          const nextDropoff = {
-            address: loc.address,
-            coordinates: loc.coordinates,
-          };
-          if (formData.dropoffs && formData.dropoffs.length > 0) {
-            onChangeDropoffs?.(
-              formData.dropoffs.map((s, idx) =>
-                idx === activeStopIndex ? { ...s, dropoff: nextDropoff } : s,
-              ),
-            );
+          const { nextDropoffs, primaryDropoffToSync } =
+            applyConfirmedDropoffLocation({
+              dropoffs: formData.dropoffs,
+              fallbackDropoff: formData.dropoff,
+              activeStopIndex,
+              selected: loc,
+            });
+          if (nextDropoffs) {
+            onChangeDropoffs?.(nextDropoffs);
           }
-          if (!formData.dropoffs?.length || activeStopIndex === 0) {
-            onChangeDropoff(nextDropoff);
+          if (primaryDropoffToSync) {
+            onChangeDropoff(primaryDropoffToSync);
           }
         }}
       />

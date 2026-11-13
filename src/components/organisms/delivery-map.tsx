@@ -59,7 +59,9 @@ export function DeliveryMap({
   }, [pickupCoords, routeStops, activeCoords]);
 
   return (
-    <div className='relative overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-2xs'>
+    <div
+      className={`relative overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-2xs ${className}`}
+    >
       {!isLoaded && (
         <div className='absolute inset-0 flex items-center justify-center bg-slate-100 text-xs text-slate-400 animate-pulse z-10'>
           <div className='flex items-center gap-2'>
@@ -73,24 +75,24 @@ export function DeliveryMap({
         key={embedUrl}
         title='Google Maps'
         src={embedUrl}
-        className={`${className} border-0 block w-full`}
+        className='h-full w-full border-0 block'
         loading='lazy'
         allowFullScreen
         referrerPolicy='no-referrer-when-downgrade'
         onLoad={() => setIsLoaded(true)}
       />
 
-      {/* Google Maps Attribution & Link Badge */}
-      <div className='absolute bottom-2 right-2 z-20 flex items-center gap-1.5'>
+      {/* Google Maps Link Badge (top-right avoids overlapping bottom Google attribution) */}
+      <div className='absolute top-2.5 right-2.5 z-20 flex items-center gap-1.5'>
         <a
           href={externalGoogleMapsUrl}
           target='_blank'
           rel='noopener noreferrer'
-          className='flex items-center gap-1 rounded-md bg-white/95 px-2 py-1 text-[10px] font-semibold text-slate-700 shadow-xs border border-slate-200 hover:text-brand-700 hover:bg-white transition backdrop-blur-xs'
+          className='flex items-center gap-1 rounded-lg bg-white/95 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm border border-slate-200/80 hover:text-brand-700 hover:bg-white transition backdrop-blur-xs'
         >
-          <MapPin className='h-3 w-3 text-red-500' />
+          <MapPin className='h-3 w-3 text-red-500 shrink-0' />
           <span>Open in Google Maps</span>
-          <ExternalLink className='h-2.5 w-2.5 text-slate-400' />
+          <ExternalLink className='h-2.5 w-2.5 text-slate-400 shrink-0' />
         </a>
       </div>
     </div>

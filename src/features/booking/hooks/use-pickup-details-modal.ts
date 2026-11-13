@@ -40,12 +40,19 @@ export function usePickupDetailsModal(
         const coordsChanged =
           prev.coordinates?.lat !== pickup.coordinates?.lat ||
           prev.coordinates?.lng !== pickup.coordinates?.lng;
-        if (prev.address === pickup.address && !coordsChanged) return prev;
+        if (
+          prev.address === pickup.address &&
+          prev.placeId === pickup.placeId &&
+          !coordsChanged
+        ) {
+          return prev;
+        }
         return {
           ...prev,
           name: pickup.name,
           address: pickup.address,
           coordinates: pickup.coordinates,
+          placeId: pickup.placeId,
         };
       });
     }
