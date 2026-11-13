@@ -55,7 +55,6 @@ async function ensureRequiredLibraries(
     await Promise.allSettled([
       maps.importLibrary('maps'),
       maps.importLibrary('places'),
-      maps.importLibrary('geocoding'),
       maps.importLibrary('marker'),
     ]);
   }
@@ -126,7 +125,7 @@ export function loadGoogleMapsApi(): Promise<GoogleMapsNamespace> {
     script.defer = true;
     const params = new URLSearchParams({
       key: apiKey,
-      libraries: 'places,marker,geocoding',
+      libraries: 'places,marker',
       v: 'weekly',
       callback: '__wingExpressInitMaps',
     });

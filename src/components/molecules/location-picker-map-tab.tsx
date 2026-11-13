@@ -139,17 +139,10 @@ export function LocationPickerMapTab({
               {pinnedCoords.lat.toFixed(5)}, {pinnedCoords.lng.toFixed(5)}
             </strong>
           </span>
-          {isReverseGeocoding ? (
-            <span className="text-brand-700 text-xs font-semibold flex items-center gap-1">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              <span>{tPicker('gettingAddress')}</span>
-            </span>
-          ) : (
-            <span className="text-brand-700 font-semibold shrink-0 flex items-center gap-1">
-              <MapPin className="h-3 w-3" />
-              <span>Google Maps</span>
-            </span>
-          )}
+          <span className="text-brand-700 font-semibold shrink-0 flex items-center gap-1">
+            <MapPin className="h-3 w-3" />
+            <span>Google Maps</span>
+          </span>
         </div>
         <input
           type="text"

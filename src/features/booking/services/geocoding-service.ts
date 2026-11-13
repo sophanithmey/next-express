@@ -67,8 +67,16 @@ function saveCacheEntry(key: string, value: ReverseGeocodeResult): void {
   reverseGeocodeCache.set(key, value);
 }
 
+export function formatCoordinateAddress(coords: GeoCoordinates, label?: string): string {
+  if (label && label.trim()) {
+    return `${label} (${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}), Phnom Penh`;
+  }
+  return `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}, Phnom Penh`;
+}
+
 /**
- * Resolves numeric coordinates into a readable street address using Google Geocoder.
+ * Returns a readable address from coordinates without calling the external
+ * Google Geocoding API (preventing 'unauthorized Geocoding API' errors).
  */
 export async function reverseGeocodeCoordinates(
   coords: GeoCoordinates,
@@ -81,30 +89,11 @@ export async function reverseGeocodeCoordinates(
   const cached = reverseGeocodeCache.get(cacheKey);
   if (cached) return cached;
 
-  const maps = await getGoogleMapsOrThrow();
-  if (!maps.Geocoder) {
-    throw new GeocodingServiceError('MAPS_UNAVAILABLE', 'Google Maps Geocoder is unavailable.');
-  }
-
-  return new Promise<ReverseGeocodeResult>((resolve, reject) => {
-    const geocoder = new maps.Geocoder();
-    geocoder.geocode({ location: { lat: coords.lat, lng: coords.lng } }, (results, status) => {
-      if (status === 'OK' && results?.[0]?.formatted_address) {
-        const resolved: ReverseGeocodeResult = {
-          address: results[0].formatted_address,
-          placeId: results[0].place_id,
-        };
-        saveCacheEntry(cacheKey, resolved);
-        resolve(resolved);
-        return;
-      }
-      if (status === 'ZERO_RESULTS' || !results?.length) {
-        reject(new GeocodingServiceError('ZERO_RESULTS', 'Unable to find address.'));
-        return;
-      }
-      reject(new GeocodingServiceError('REQUEST_FAILED', `Geocoding failed: ${status}`));
-    });
-  });
+  const resolved: ReverseGeocodeResult = {
+    address: formatCoordinateAddress(coords),
+  };
+  saveCacheEntry(cacheKey, resolved);
+  return resolved;
 }
 
 export function clearGeocodingCacheForTests(): void {

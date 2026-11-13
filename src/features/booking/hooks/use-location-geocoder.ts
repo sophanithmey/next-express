@@ -106,23 +106,12 @@ export function useLocationGeocoder({ isOpen, onReverseGeocoded }: UseLocationGe
   }, []);
 
   const triggerReverseGeocode = useCallback(async (coords: GeoCoordinates): Promise<boolean> => {
-    const reqId = ++geocodeReqIdRef.current;
-    setGeocodeError(null);
-    setIsReverseGeocoding(true);
     try {
       const result = await reverseGeocodeCoordinates(coords);
-      if (reqId !== geocodeReqIdRef.current) return false;
       onReverseGeocodedRef.current(result);
       return true;
-    } catch (err) {
-      if (reqId !== geocodeReqIdRef.current) return false;
-      if (err instanceof GeocodingServiceError && err.code === 'MAPS_UNAVAILABLE') return false;
-      setGeocodeError(
-        err instanceof GeocodingServiceError && err.code === 'ZERO_RESULTS' ? 'not_found' : 'failed',
-      );
+    } catch {
       return false;
-    } finally {
-      if (reqId === geocodeReqIdRef.current) setIsReverseGeocoding(false);
     }
   }, []);
 

@@ -3,6 +3,7 @@
 import React from 'react';
 // import { LandingFooterCtaBanner } from './landing-footer-cta-banner';
 import { LandingFooterBrand } from './landing-footer-brand';
+import { LandingFooterAbout } from './landing-footer-about';
 import { LandingFooterSupport } from './landing-footer-support';
 import { LandingFooterAppDownload } from './landing-footer-app-download';
 import { LandingFooterBottom } from './landing-footer-bottom';
@@ -15,8 +16,9 @@ export function LandingFooter() {
         {/* <LandingFooterCtaBanner /> */}
 
         {/* Footer Service Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-8 items-start">
           <LandingFooterBrand />
+          <LandingFooterAbout />
           <LandingFooterSupport />
           <LandingFooterAppDownload />
         </div>

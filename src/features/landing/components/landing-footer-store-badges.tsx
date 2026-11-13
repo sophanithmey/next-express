@@ -74,7 +74,7 @@ export function LandingFooterStoreBadges({
   const t = useTranslations('Footer');
 
   return (
-    <div className='w-fit max-w-full min-w-0 space-y-2.5'>
+    <div className='w-fit shrink-0 space-y-2'>
       {STORE_BADGES.map((badge) => (
         <a
           key={badge.id}
@@ -82,20 +82,20 @@ export function LandingFooterStoreBadges({
           target='_blank'
           rel='noopener noreferrer'
           aria-label={t(badge.ariaKey)}
-          className='group flex min-h-11 items-center justify-between gap-3.5 rounded-xl bg-wing-dark px-3.5 py-2 text-white shadow-xs transition-all hover:bg-secondary-700 active:scale-95 cursor-pointer'
+          className='group flex min-h-10 items-center justify-between gap-3 rounded-xl bg-slate-900 px-3.5 py-2 text-white shadow-2xs transition-all hover:bg-slate-800 active:scale-95 cursor-pointer shrink-0'
         >
-          <div className='flex items-center gap-2.5 min-w-0'>
+          <div className='flex items-center gap-2.5 shrink-0'>
             {badge.icon}
-            <div className='min-w-0'>
-              <span className='block text-[9px] font-bold uppercase tracking-wider leading-tight text-slate-300'>
+            <div>
+              <span className='block text-[9px] font-semibold uppercase tracking-wider leading-tight text-slate-400 whitespace-nowrap'>
                 {t(badge.eyebrowKey)}
               </span>
-              <span className='mt-0.5 block truncate text-xs font-extrabold leading-tight text-white'>
+              <span className='mt-0.5 block text-xs font-bold leading-tight text-white whitespace-nowrap'>
                 {t(badge.nameKey)}
               </span>
             </div>
           </div>
-          <ArrowUpRight className='h-3.5 w-3.5 shrink-0 text-slate-400 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary-400' />
+          <ArrowUpRight className='h-3.5 w-3.5 shrink-0 text-slate-400 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary-400 ml-1' />
         </a>
       ))}
     </div>

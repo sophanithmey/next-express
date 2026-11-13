@@ -94,7 +94,7 @@ describe('Google Maps Location Picker Suite', () => {
     expect(appendChild).toHaveBeenCalledTimes(1);
     const firstScript = appendChild.mock.calls[0][0];
     expect(firstScript.src).toContain('key=test-browser-key');
-    expect(firstScript.src).toContain('libraries=places%2Cmarker%2Cgeocoding');
+    expect(firstScript.src).toContain('libraries=places%2Cmarker');
     firstScript.onerror?.();
     await expect(firstAttempt).rejects.toMatchObject({ code: 'SCRIPT_LOAD_ERROR' });
 
@@ -103,7 +103,6 @@ describe('Google Maps Location Picker Suite', () => {
     const importLibrary = vi.fn().mockResolvedValue({});
     const mockMaps = {
       Map: vi.fn(),
-      Geocoder: vi.fn(),
       importLibrary,
     } as unknown as GoogleMapsNamespace;
 
@@ -119,45 +118,20 @@ describe('Google Maps Location Picker Suite', () => {
     expect(m2).toBe(mockMaps);
     expect(importLibrary).toHaveBeenCalledWith('maps');
     expect(importLibrary).toHaveBeenCalledWith('places');
-    expect(importLibrary).toHaveBeenCalledWith('geocoding');
     expect(importLibrary).toHaveBeenCalledWith('marker');
   });
 
-  it('reverse geocodes coordinates with caching and rejects invalid or empty results', async () => {
-    const geocodeSpy = vi.fn((_req, cb: (r: Array<{ formatted_address: string; place_id?: string }> | null, s: string) => void) => {
-      cb([{ formatted_address: 'Street 310, BKK1, Phnom Penh', place_id: 'place-bkk1' }], 'OK');
-    });
-    const fakeWin = {
-      google: {
-        maps: {
-          Map: vi.fn(),
-          Geocoder: function MockGeocoder() {
-            return { geocode: geocodeSpy };
-          },
-        },
-      },
-    };
-    globalThis.window = fakeWin as unknown as Window & typeof globalThis;
-    globalThis.document = {} as Document;
-
+  it('formats coordinates safely with caching and rejects invalid coordinates', async () => {
     const first = await reverseGeocodeCoordinates({ lat: 11.5512, lng: 104.9256 });
     const cached = await reverseGeocodeCoordinates({ lat: 11.551201, lng: 104.925602 });
     expect(first).toEqual({
-      address: 'Street 310, BKK1, Phnom Penh',
-      placeId: 'place-bkk1',
+      address: '11.55120, 104.92560, Phnom Penh',
     });
     expect(cached).toEqual(first);
-    expect(geocodeSpy).toHaveBeenCalledTimes(1);
 
     await expect(reverseGeocodeCoordinates({ lat: 0, lng: 0 })).rejects.toMatchObject({
       code: 'INVALID_COORDINATES',
     });
-
-    clearGeocodingCacheForTests();
-    geocodeSpy.mockImplementationOnce((_req, cb) => cb([], 'ZERO_RESULTS'));
-    await expect(
-      reverseGeocodeCoordinates({ lat: 11.59, lng: 104.91 }),
-    ).rejects.toThrow(GeocodingServiceError);
   });
 
   it('searches Google Places Autocomplete and retrieves numeric coordinates by placeId', async () => {

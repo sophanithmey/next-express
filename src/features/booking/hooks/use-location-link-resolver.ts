@@ -10,7 +10,7 @@ interface UseLocationLinkResolverOptions {
   isOpen: boolean;
   pinnedCoords: GeoCoordinates;
   savedLocations: SavedLocationItem[];
-  onApplyPin: (coords: GeoCoordinates, presetAddress?: string) => Promise<void>;
+  onApplyPin: (coords: GeoCoordinates, presetAddress?: string) => void | Promise<void>;
   onSearchPlaces: (query: string, center: GeoCoordinates) => void;
   onCancelPlaces: () => void;
 }

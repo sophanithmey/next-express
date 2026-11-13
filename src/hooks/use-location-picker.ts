@@ -95,7 +95,17 @@ export function useLocationPicker({
         geocoder.clearGeocodeError();
         return;
       }
-      await geocoder.triggerReverseGeocode(coords);
+      setPinAddress((prev) => {
+        if (
+          !prev.trim() ||
+          /^\d+\.\d+,\s*\d+\.\d+/.test(prev) ||
+          prev.startsWith('Pinned Location') ||
+          prev.startsWith('Google Pin')
+        ) {
+          return `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}, Phnom Penh`;
+        }
+        return prev;
+      });
     },
     [geocoder],
   );
@@ -131,16 +141,17 @@ export function useLocationPicker({
   );
 
   const handleUseCurrentLocation = useCallback(() => {
-    geocoder.requestCurrentLocation(async (coords) => {
+    geocoder.requestCurrentLocation((coords) => {
       setPinnedCoords(coords);
       setSelectedPlaceId(undefined);
       linkResolver.setSavedSuggestions([]);
-      const ok = await geocoder.triggerReverseGeocode(coords);
-      if (!ok) {
-        const fallback = `Current Location (${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}), Phnom Penh`;
-        setPinAddress((prev) => prev || fallback);
-        setSelectedName('Current Location');
-      }
+      const fallback = `Current Location (${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}), Phnom Penh`;
+      setPinAddress((prev) =>
+        !prev.trim() || /^\d+\.\d+,\s*\d+\.\d+/.test(prev) || prev.startsWith('Current Location')
+          ? fallback
+          : prev,
+      );
+      setSelectedName('Current Location');
     });
   }, [geocoder, linkResolver]);
 

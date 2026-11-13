@@ -63,7 +63,19 @@ export function BulkDropoffPreviewTable({
                   {stop.phoneNumber || '—'}
                 </td>
                 <td className="py-2 px-3 text-slate-600 truncate max-w-[160px]">
-                  {stop.address || '—'}
+                  <div className="flex items-center gap-1.5 truncate">
+                    {stop.coordinates && (
+                      <span
+                        className="shrink-0 text-[10px] font-bold text-brand-700 bg-brand-50 border border-brand-200 px-1 py-0.5 rounded"
+                        title={`GPS: ${stop.coordinates.lat.toFixed(5)}, ${stop.coordinates.lng.toFixed(5)}`}
+                      >
+                        GPS
+                      </span>
+                    )}
+                    <span className="truncate" title={stop.address}>
+                      {stop.address || '—'}
+                    </span>
+                  </div>
                 </td>
                 <td className="py-2 px-3 font-mono font-semibold text-amber-800">
                   {typeof stop.codAmount === 'number' && stop.codAmount > 0

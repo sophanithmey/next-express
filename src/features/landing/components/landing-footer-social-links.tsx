@@ -18,7 +18,7 @@ export function LandingFooterSocialLinks() {
       href: APP_CONFIG.socialLinks.facebook,
       icon: (
         <svg
-          className='h-4 w-4 fill-white'
+          className='h-3.5 w-3.5 fill-current'
           viewBox='0 0 24 24'
           aria-hidden='true'
         >
@@ -31,7 +31,7 @@ export function LandingFooterSocialLinks() {
       href: APP_CONFIG.socialLinks.telegram,
       icon: (
         <svg
-          className='h-4 w-4 fill-white'
+          className='h-3.5 w-3.5 fill-current'
           viewBox='0 0 24 24'
           aria-hidden='true'
         >
@@ -44,7 +44,7 @@ export function LandingFooterSocialLinks() {
       href: APP_CONFIG.socialLinks.instagram,
       icon: (
         <svg
-          className='h-4 w-4 fill-white'
+          className='h-3.5 w-3.5 fill-current'
           viewBox='0 0 24 24'
           aria-hidden='true'
         >
@@ -57,7 +57,7 @@ export function LandingFooterSocialLinks() {
       href: APP_CONFIG.socialLinks.tiktok,
       icon: (
         <svg
-          className='h-4 w-4 fill-white'
+          className='h-3.5 w-3.5 fill-current'
           viewBox='0 0 24 24'
           aria-hidden='true'
         >
@@ -70,7 +70,7 @@ export function LandingFooterSocialLinks() {
       href: APP_CONFIG.socialLinks.youtube,
       icon: (
         <svg
-          className='h-4 w-4 fill-white'
+          className='h-3.5 w-3.5 fill-current'
           viewBox='0 0 24 24'
           aria-hidden='true'
         >
@@ -81,9 +81,9 @@ export function LandingFooterSocialLinks() {
   ];
 
   return (
-    <div className='space-y-2 pt-2'>
-      <span className='text-[11px] font-bold text-slate-800 tracking-tight block'>
-        {t('followUs')}
+    <div className='flex items-center gap-2.5'>
+      <span className='text-xs font-semibold text-slate-500'>
+        {t('followUs')}:
       </span>
       <div className='flex items-center gap-1.5'>
         {socials.map((item) => (
@@ -93,7 +93,7 @@ export function LandingFooterSocialLinks() {
             target='_blank'
             rel='noopener noreferrer'
             aria-label={t('followAria', { name: item.name })}
-            className='flex h-8 w-8 items-center justify-center rounded-lg bg-[#271E69] text-white shadow-2xs hover:bg-[#382E8A] hover:scale-105 active:scale-95 transition-all cursor-pointer'
+            className='flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-secondary-600 hover:text-white transition-all shadow-2xs hover:scale-105 active:scale-95 cursor-pointer'
           >
             {item.icon}
           </a>

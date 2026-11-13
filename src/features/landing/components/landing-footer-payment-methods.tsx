@@ -7,35 +7,35 @@ export function LandingFooterPaymentMethods() {
   const t = useTranslations('Footer');
 
   return (
-    <div className="space-y-2 pt-2.5 border-t border-slate-100">
-      <span className="text-[11px] font-bold text-slate-800 tracking-tight block">
+    <div className="space-y-2 pt-3 border-t border-slate-200/60">
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
         {t('weAccept')}
       </span>
       <div className="flex flex-wrap items-center gap-1.5">
-        {/* KHQR Badge (from Vireak Buntham) */}
+        {/* KHQR Badge */}
         <div
           title="KHQR (National QR Code Standard)"
-          className="flex h-6.5 w-11 shrink-0 items-center justify-center rounded bg-[#CE0E2D] shadow-2xs overflow-hidden hover:scale-105 transition-transform cursor-pointer p-0.5"
+          className="flex h-6 w-10 shrink-0 items-center justify-center rounded-md bg-[#CE0E2D] shadow-2xs overflow-hidden hover:scale-105 transition-transform cursor-pointer p-0.5"
         >
           <img
             src="/images/payments/khqr.svg"
             alt="KHQR"
-            width={44}
-            height={26}
+            width={40}
+            height={24}
             className="h-full w-full object-contain"
           />
         </div>
 
-        {/* Wing Bank Badge (from Vireak Buntham) */}
+        {/* Wing Bank Badge */}
         <div
           title="Wing Bank Digital Payments"
-          className="flex h-6.5 w-11 shrink-0 items-center justify-center rounded bg-white border border-slate-200/90 shadow-2xs overflow-hidden hover:scale-105 transition-transform cursor-pointer"
+          className="flex h-6 w-10 shrink-0 items-center justify-center rounded-md bg-white border border-slate-200/90 shadow-2xs overflow-hidden hover:scale-105 transition-transform cursor-pointer"
         >
           <img
             src="/images/payments/wing-bank.jpg"
             alt="Wing Bank"
-            width={44}
-            height={26}
+            width={40}
+            height={24}
             className="h-full w-full object-cover"
           />
         </div>
@@ -43,7 +43,7 @@ export function LandingFooterPaymentMethods() {
         {/* VISA Badge */}
         <div
           title="Visa"
-          className="flex h-6.5 w-11 shrink-0 items-center justify-center rounded bg-[#1A1F71] shadow-2xs overflow-hidden hover:scale-105 transition-transform cursor-pointer"
+          className="flex h-6 w-10 shrink-0 items-center justify-center rounded-md bg-[#1A1F71] shadow-2xs overflow-hidden hover:scale-105 transition-transform cursor-pointer"
         >
           <svg viewBox="0 0 52 28" className="h-full w-full" aria-hidden="true">
             <text
@@ -53,7 +53,7 @@ export function LandingFooterPaymentMethods() {
               fontFamily="system-ui, -apple-system, sans-serif"
               fontStyle="italic"
               fontWeight="900"
-              fontSize="13.5"
+              fontSize="13"
               textAnchor="middle"
               letterSpacing="0.8"
             >
@@ -65,7 +65,7 @@ export function LandingFooterPaymentMethods() {
         {/* Mastercard Badge */}
         <div
           title="Mastercard"
-          className="flex h-6.5 w-11 shrink-0 items-center justify-center rounded bg-[#18181B] shadow-2xs overflow-hidden hover:scale-105 transition-transform cursor-pointer"
+          className="flex h-6 w-10 shrink-0 items-center justify-center rounded-md bg-[#18181B] shadow-2xs overflow-hidden hover:scale-105 transition-transform cursor-pointer"
         >
           <svg viewBox="0 0 52 28" className="h-full w-full" aria-hidden="true">
             <circle cx="21" cy="14" r="7.5" fill="#EB001B" />
@@ -76,7 +76,7 @@ export function LandingFooterPaymentMethods() {
         {/* UnionPay Badge */}
         <div
           title="UnionPay"
-          className="flex h-6.5 w-11 shrink-0 items-center justify-center rounded bg-white border border-slate-200/90 shadow-2xs overflow-hidden relative hover:scale-105 transition-transform cursor-pointer"
+          className="flex h-6 w-10 shrink-0 items-center justify-center rounded-md bg-white border border-slate-200/90 shadow-2xs overflow-hidden relative hover:scale-105 transition-transform cursor-pointer"
         >
           <svg viewBox="0 0 52 28" className="h-full w-full" aria-hidden="true">
             <rect x="0" y="0" width="22" height="28" fill="#D81E06" />
@@ -112,7 +112,7 @@ export function LandingFooterPaymentMethods() {
         {/* JCB Badge */}
         <div
           title="JCB"
-          className="flex h-6.5 w-11 shrink-0 items-center justify-center rounded bg-white border border-slate-200/90 shadow-2xs overflow-hidden hover:scale-105 transition-transform cursor-pointer"
+          className="flex h-6 w-10 shrink-0 items-center justify-center rounded-md bg-white border border-slate-200/90 shadow-2xs overflow-hidden hover:scale-105 transition-transform cursor-pointer"
         >
           <svg viewBox="0 0 52 28" className="h-full w-full" aria-hidden="true">
             <g transform="translate(10, 4)">

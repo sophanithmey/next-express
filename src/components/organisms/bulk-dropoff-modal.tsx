@@ -6,6 +6,8 @@ import {
   parseBulkDropoffText,
   convertParsedToDropoffStops,
   downloadSampleCsvTemplate,
+  downloadSampleXlsxTemplate,
+  parseBulkDropoffFile,
   SAMPLE_BULK_CSV,
   ParsedBulkStop,
 } from '@/features/booking/services/bulk-dropoff-parser';
@@ -30,6 +32,7 @@ export function BulkDropoffModal({
   const tCommon = useTranslations('Common');
   const [inputText, setInputText] = useState('');
   const [parsedList, setParsedList] = useState<ParsedBulkStop[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   if (!isOpen) return null;
 
@@ -40,12 +43,17 @@ export function BulkDropoffModal({
 
   const handleLoadSample = () => handleTextChange(SAMPLE_BULK_CSV);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => handleTextChange((ev.target?.result as string) || '');
-    reader.readAsText(file);
+    try {
+      setIsUploading(true);
+      const text = await parseBulkDropoffFile(file);
+      handleTextChange(text);
+    } finally {
+      setIsUploading(false);
+      e.target.value = '';
+    }
   };
 
   const validStops = parsedList.filter((s) => s.isValid);
@@ -95,7 +103,15 @@ export function BulkDropoffModal({
 
         {/* Toolbar: Template Download & Sample Actions */}
         <div className="flex flex-wrap items-center justify-between gap-2 px-6 py-3 border-b border-slate-100 bg-slate-50/40 text-xs">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void downloadSampleXlsxTemplate()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 font-bold text-emerald-800 shadow-2xs transition cursor-pointer"
+            >
+              <Download className="h-3.5 w-3.5 text-emerald-600" />
+              <span>{tBooking('bulkDownloadXlsx')}</span>
+            </button>
             <button
               type="button"
               onClick={downloadSampleCsvTemplate}
@@ -115,8 +131,14 @@ export function BulkDropoffModal({
           </div>
           <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-brand-200 bg-brand-50 hover:bg-brand-100 font-bold text-brand-700 shadow-2xs transition cursor-pointer">
             <UploadCloud className="h-3.5 w-3.5 text-brand-600" />
-            <span>{tBooking('bulkUploadFile')}</span>
-            <input type="file" accept=".csv,.txt" onChange={handleFileUpload} className="hidden" />
+            <span>{isUploading ? 'Reading...' : tBooking('bulkUploadFile')}</span>
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv,.txt"
+              onChange={handleFileUpload}
+              disabled={isUploading}
+              className="hidden"
+            />
           </label>
         </div>
 
@@ -130,7 +152,7 @@ export function BulkDropoffModal({
               <span className="text-[11px] text-slate-400">
                 {tBooking('bulkFormatHint')}{' '}
                 <code className="bg-slate-100 px-1 py-0.5 rounded font-mono">
-                  Name, Phone, Address, COD, Note
+                  Name, Phone, Address (or lat,lng), COD, Note
                 </code>
               </span>
             </div>
@@ -139,7 +161,7 @@ export function BulkDropoffModal({
               rows={4}
               value={inputText}
               onChange={(e) => handleTextChange(e.target.value)}
-              placeholder={`Recipient Name, Recipient Phone, Drop-off Address, COD Amount, Delivery Note\nSokha Chan, 012345678, St 310 BKK1 Phnom Penh, 25, Leave with guard\nDara Vong, 098112233, St 63 Daun Penh Phnom Penh, 18.50, Red gate`}
+              placeholder={`Recipient Name, Recipient Phone, Drop-off Address, COD Amount, Delivery Note\nSokha Chan, 012345678, St 310 BKK1 Phnom Penh, 25, Leave with guard\nDara Vong, 098112233, 11.5564, 104.9282, 18.50, Red gate`}
               className="w-full rounded-xl border border-slate-300 p-3 text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition shadow-2xs"
             />
           </div>

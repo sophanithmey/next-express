@@ -137,7 +137,7 @@ export interface GoogleMapsNamespace {
   Marker?: new (
     options: GoogleClassicMarkerOptions,
   ) => GoogleClassicMarkerInstance;
-  Geocoder: new () => GoogleGeocoder;
+  Geocoder?: new () => GoogleGeocoder;
   importLibrary?: (name: string) => Promise<Record<string, unknown>>;
   marker?: {
     AdvancedMarkerElement?: new (
