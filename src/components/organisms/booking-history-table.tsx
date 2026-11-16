@@ -64,9 +64,9 @@ export function BookingHistoryTable({
   }
 
   return (
-    <div className={cn('space-y-4 transition-opacity', isLoading && 'opacity-60')}>
+    <div className={cn('space-y-3 transition-opacity', isLoading && 'opacity-60')}>
       {/* Mobile Card List (< md) */}
-      <div className="space-y-3 md:hidden">
+      <div className="space-y-2.5 md:hidden">
         {orders.map((order) => (
           <BookingHistoryMobileCard
             key={order.id}
@@ -81,16 +81,16 @@ export function BookingHistoryTable({
       </div>
 
       {/* Desktop Data Table (md+) */}
-      <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-2xs">
+      <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200/90 bg-white shadow-2xs">
         <table className="w-full text-left text-xs text-slate-700">
-          <thead className="border-b border-slate-200 bg-slate-50/90 text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <thead className="border-b border-slate-100 bg-slate-50/70 text-[11px] font-semibold text-slate-500">
             <tr>
-              <th className="px-4 py-3">{tHistory('colTracking')}</th>
-              <th className="px-4 py-3">{tHistory('colRecipient')}</th>
-              <th className="px-4 py-3">{tHistory('colStatus')}</th>
-              <th className="px-4 py-3">{tHistory('colCod')}</th>
-              <th className="px-4 py-3">{tHistory('colFee')}</th>
-              <th className="px-4 py-3 text-right">{tHistory('colActions')}</th>
+              <th className="px-4 py-2.5">{tHistory('colTracking')}</th>
+              <th className="px-4 py-2.5">{tHistory('colRecipient')}</th>
+              <th className="px-4 py-2.5">{tHistory('colStatus')}</th>
+              <th className="px-4 py-2.5">{tHistory('colCod')}</th>
+              <th className="px-4 py-2.5">{tHistory('colFee')}</th>
+              <th className="px-4 py-2.5 text-right">{tHistory('colActions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -109,26 +109,28 @@ export function BookingHistoryTable({
         </table>
       </div>
 
-      {/* Pagination */}
+      {/* Modern Compact Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-2 pt-2 text-xs text-slate-500">
+        <div className="flex items-center justify-between px-2 pt-1 text-xs text-slate-500">
           <span>
             {tHistory('pageOfTotal', { current: currentPage, total: totalPages })}
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <Button
               variant="outline"
               size="sm"
-              disabled={currentPage <= 1}
+              disabled={currentPage <= 1 || isLoading}
               onClick={() => onPageChange(currentPage - 1)}
+              className="h-8 px-2.5 text-xs rounded-lg"
             >
               {tHistory('previousPage')}
             </Button>
             <Button
               variant="outline"
               size="sm"
-              disabled={currentPage >= totalPages}
+              disabled={currentPage >= totalPages || isLoading}
               onClick={() => onPageChange(currentPage + 1)}
+              className="h-8 px-2.5 text-xs rounded-lg"
             >
               {tHistory('nextPage')}
             </Button>

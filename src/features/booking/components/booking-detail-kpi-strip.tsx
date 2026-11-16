@@ -25,7 +25,7 @@ export function BookingDetailKpiStrip({
       {/* 1. Recipient */}
       <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 space-y-1">
         <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          <User className="h-3.5 w-3.5 text-secondary-600" />
+          <User className="h-3.5 w-3.5 text-amber-600" />
           <span>{tDetails('recipientCardLabel')}</span>
         </span>
         <p className="text-sm font-bold text-slate-900 truncate">
@@ -33,7 +33,7 @@ export function BookingDetailKpiStrip({
         </p>
         <a
           href={`tel:${order.recipient.phoneNumber.replace(/\s+/g, '')}`}
-          className="inline-flex items-center gap-1 font-mono text-xs font-semibold text-secondary-700 hover:underline"
+          className="inline-flex items-center gap-1 font-mono text-xs font-semibold text-amber-800 hover:underline"
         >
           <Phone className="h-3 w-3" />
           <span>{formatPhoneNumber(order.recipient.phoneNumber)}</span>
@@ -53,7 +53,7 @@ export function BookingDetailKpiStrip({
             </p>
             <a
               href={`tel:${order.deliverer.phone.replace(/\s+/g, '')}`}
-              className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-slate-600 hover:text-secondary-700"
+              className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-slate-600 hover:text-amber-800"
             >
               <span>{order.deliverer.phone}</span>
               {order.deliverer.plateNumber && (

@@ -17,6 +17,7 @@ import { ConsumerApiError } from '@/server/lib/api-response';
 import { getServerEnv } from '@/server/lib/env';
 import { inMemoryStore } from '@/server/lib/mock-booking-store';
 import { extractUiStatusesFromFilters } from '@/features/booking/services/booking-order-filter';
+import { BookingDatePreset } from '@/features/booking/services/booking-date-filter';
 
 async function submitLiveBooking(
   payload: CreateBookingPayload,
@@ -95,6 +96,7 @@ export const bookingServerService = {
     property?: string;
     search?: string;
     status?: string;
+    datePreset?: BookingDatePreset;
     filter?: ConsumerOrderFilter[];
   }): Promise<PaginatedResponse<BookingOrder>> {
     const env = getServerEnv();
@@ -132,6 +134,7 @@ export const bookingServerService = {
     const result = inMemoryStore.getOrders({
       search: params.search,
       status: params.status,
+      datePreset: params.datePreset,
       statuses: extractUiStatusesFromFilters(params.filter),
       page,
       limit: rpp,
@@ -158,7 +161,12 @@ export const bookingServerService = {
       return { orders: [], total: 0, totalPages: 1, stats: computeDashboardStatistics([]) };
     }
 
-    const bookings = await this.listBookings({ session, page: 1, rpp: 10 }).catch(() => ({
+    const bookings = await this.listBookings({
+      session,
+      page: 1,
+      rpp: 10,
+      datePreset: 'today',
+    }).catch(() => ({
       items: [],
       pagination: { page: 1, limit: 10, total: 0, totalPages: 1 },
     }));

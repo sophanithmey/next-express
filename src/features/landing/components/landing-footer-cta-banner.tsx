@@ -50,7 +50,7 @@ export function LandingFooterCtaBanner() {
           <Link
             href="/booking"
             prefetch={true}
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-secondary-600 px-6 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-secondary-700 hover:shadow-lg active:scale-95 transition-all group"
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-primary-500 hover:bg-primary-400 px-6 text-xs sm:text-sm font-bold text-slate-950 shadow-md hover:shadow-lg active:scale-95 transition-all group"
           >
             <Zap className="h-4 w-4 text-primary-400 group-hover:scale-110 transition-transform" />
             <span>Book a Delivery Now</span>

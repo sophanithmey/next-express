@@ -88,7 +88,7 @@ export function StickyBookingActionBar({
             size="lg"
             onClick={onClick}
             isLoading={isSubmitting}
-            className="flex-1 sm:flex-initial px-6 sm:px-8 py-3.5 text-sm sm:text-base font-bold bg-secondary-600 hover:bg-secondary-700 text-white rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.99] whitespace-nowrap shrink-0"
+            className="flex-1 sm:flex-initial px-6 sm:px-8 py-3.5 text-sm sm:text-base font-bold bg-primary-500 hover:bg-primary-400 text-slate-950 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.99] whitespace-nowrap shrink-0"
             rightIcon={<ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />}
           >
             <span>{t('continueToPayment')}</span>

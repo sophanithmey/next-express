@@ -51,10 +51,10 @@ export function LocationPickerSearchBar({
             onChange={(e) => onLinkChange(e.target.value)}
             placeholder={tPicker('pastePlaceholder')}
             aria-label={tPicker('searchLabel')}
-            className="w-full rounded-xl border border-slate-300 hover:border-slate-400 bg-white pl-8 pr-8 py-2 text-xs font-medium text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 transition-all shadow-2xs"
+            className="w-full rounded-xl border border-slate-300 hover:border-slate-400 bg-white pl-8 pr-8 py-2 text-xs font-medium text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-primary-400/25 focus:border-primary-500 transition-all shadow-2xs"
           />
           {isResolvingLink || isSearchingPlaces ? (
-            <Loader2 className="h-3.5 w-3.5 text-brand-600 animate-spin absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <Loader2 className="h-3.5 w-3.5 text-amber-600 animate-spin absolute left-2.5 top-1/2 -translate-y-1/2" />
           ) : (
             <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
           )}
@@ -76,9 +76,9 @@ export function LocationPickerSearchBar({
           className="flex items-center gap-1 px-2.5 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition whitespace-nowrap cursor-pointer disabled:opacity-50"
         >
           {isLocating ? (
-            <Loader2 className="h-3.5 w-3.5 text-brand-600 animate-spin" />
+            <Loader2 className="h-3.5 w-3.5 text-amber-600 animate-spin" />
           ) : (
-            <LocateFixed className="h-3.5 w-3.5 text-brand-600" />
+            <LocateFixed className="h-3.5 w-3.5 text-amber-700" />
           )}
           <span>{isLocating ? tPicker('locating') : tPicker('currentGps')}</span>
         </button>

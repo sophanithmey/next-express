@@ -99,7 +99,7 @@ export function PaymentOptionCard({
           ? 'border-slate-200 bg-slate-50/70 opacity-60 cursor-not-allowed'
           : 'cursor-pointer',
         !isUnavailable && isSelected
-          ? 'border-secondary-600 bg-secondary-50/40 shadow-2xs ring-1 ring-secondary-600/20'
+          ? 'border-primary-500 bg-primary-50/50 shadow-2xs ring-1 ring-primary-500/30'
           : !isUnavailable
           ? 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/70 bg-white'
           : '',
@@ -120,7 +120,7 @@ export function PaymentOptionCard({
             {option.title}
           </span>
           {option.isDefault && (
-            <span className="text-[10px] font-semibold text-secondary-700 bg-secondary-100/80 px-1.5 py-0.5 rounded-full leading-none">
+            <span className="text-[10px] font-semibold text-primary-900 bg-primary-100/90 px-1.5 py-0.5 rounded-full leading-none">
               {defaultLabel}
             </span>
           )}
@@ -152,7 +152,7 @@ export function PaymentOptionCard({
         className={cn(
           'h-4 w-4 rounded-full border flex items-center justify-center shrink-0 mt-1',
           isSelected
-            ? 'border-secondary-600 bg-secondary-600 text-white'
+            ? 'border-primary-500 bg-primary-500 text-slate-950 font-black'
             : 'border-slate-300 bg-white',
         )}
       >

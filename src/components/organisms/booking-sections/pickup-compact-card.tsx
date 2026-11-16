@@ -28,8 +28,8 @@ export function PickupCompactCard({
     <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-3.5 space-y-2.5">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary-50 border border-secondary-200 shadow-2xs">
-            <HomeIcon className="h-4 w-4 text-secondary-700" />
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-50 border border-amber-200 shadow-2xs">
+            <HomeIcon className="h-4 w-4 text-amber-700" />
           </div>
           <div className="min-w-0">
             <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
@@ -44,7 +44,7 @@ export function PickupCompactCard({
         <button
           type="button"
           onClick={onChangeClick}
-          className="inline-flex items-center gap-1 rounded-lg border border-brand-200 bg-white px-2.5 py-1 text-xs font-bold text-brand-700 hover:bg-brand-50 transition cursor-pointer shadow-2xs shrink-0"
+          className="inline-flex items-center gap-1 rounded-lg border border-primary-300 bg-white px-2.5 py-1 text-xs font-bold text-primary-950 hover:bg-primary-50 transition cursor-pointer shadow-2xs shrink-0"
         >
           <Edit3 className="h-3 w-3" />
           <span>{tPickup('changeButton')}</span>

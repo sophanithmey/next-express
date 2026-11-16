@@ -1,10 +1,13 @@
 import { BookingOrder } from '../types/booking-types';
+import { createMockOrderDate, getTodayDateKey } from '../services/booking-date-filter';
 
 /**
  * Realistic Mock/Demo Bookings for WingExpress Prototype
  * Includes various operational and payment statuses across Phnom Penh
+ * Dynamically generated relative to baseDate so createdAt is always up-to-date every day.
  */
-export const MOCK_BOOKING_DETAILS: Record<string, BookingOrder> = {
+export function createMockBookingDetails(baseDate: Date = new Date()): Record<string, BookingOrder> {
+  return {
   // 1. In Transit Booking (Live dispatch with assigned rider)
   'ord-1001': {
     id: 'ord-1001',
@@ -13,7 +16,7 @@ export const MOCK_BOOKING_DETAILS: Record<string, BookingOrder> = {
     status: 'out_for_delivery',
     paymentStatus: 'paid',
     paymentMethod: 'KHQR (Bakong)',
-    paymentDate: 'Nov 6, 2026 • 08:35 AM',
+    paymentDate: createMockOrderDate('today', '08:35 AM', baseDate),
     pickup: {
       id: 'loc-1',
       name: 'Central Warehouse (Main)',
@@ -45,8 +48,8 @@ export const MOCK_BOOKING_DETAILS: Record<string, BookingOrder> = {
     },
     deliveryFee: 1.95,
     totalSellerCharge: 1.95,
-    createdAt: 'Nov 6, 2026 • 08:30 AM',
-    updatedAt: 'Nov 6, 2026 • 09:20 AM',
+    createdAt: createMockOrderDate('today', '08:30 AM', baseDate),
+    updatedAt: createMockOrderDate('today', '09:20 AM', baseDate),
     deliverer: {
       name: 'Chenda K.',
       phone: '015 334 556',
@@ -107,7 +110,7 @@ export const MOCK_BOOKING_DETAILS: Record<string, BookingOrder> = {
     status: 'assigned',
     paymentStatus: 'paid',
     paymentMethod: 'Wing Wallet',
-    paymentDate: 'Nov 6, 2026 • 07:15 AM',
+    paymentDate: createMockOrderDate('today', '07:15 AM', baseDate),
     pickup: {
       id: 'loc-2',
       name: 'BKK1 Retail Store',
@@ -137,8 +140,8 @@ export const MOCK_BOOKING_DETAILS: Record<string, BookingOrder> = {
     },
     deliveryFee: 1.6,
     totalSellerCharge: 1.6,
-    createdAt: 'Nov 6, 2026 • 07:10 AM',
-    updatedAt: 'Nov 6, 2026 • 07:25 AM',
+    createdAt: createMockOrderDate('today', '07:10 AM', baseDate),
+    updatedAt: createMockOrderDate('today', '07:25 AM', baseDate),
     deliverer: {
       name: 'Rithy S.',
       phone: '016 778 899',
@@ -199,7 +202,7 @@ export const MOCK_BOOKING_DETAILS: Record<string, BookingOrder> = {
     status: 'delivered',
     paymentStatus: 'paid',
     paymentMethod: 'Cash on Pickup',
-    paymentDate: 'Nov 5, 2026 • 02:40 PM',
+    paymentDate: createMockOrderDate('yesterday', '02:40 PM', baseDate),
     pickup: {
       id: 'loc-1',
       name: 'Tuol Kouk Store Hub',
@@ -228,8 +231,8 @@ export const MOCK_BOOKING_DETAILS: Record<string, BookingOrder> = {
     },
     deliveryFee: 2.3,
     totalSellerCharge: 2.3,
-    createdAt: 'Nov 5, 2026 • 01:15 PM',
-    updatedAt: 'Nov 5, 2026 • 03:20 PM',
+    createdAt: createMockOrderDate(-1, '01:15 PM'),
+    updatedAt: createMockOrderDate(-1, '03:20 PM'),
     deliverer: {
       name: 'Vannak M.',
       phone: '097 555 112',
@@ -318,8 +321,8 @@ export const MOCK_BOOKING_DETAILS: Record<string, BookingOrder> = {
     },
     deliveryFee: 1.75,
     totalSellerCharge: 1.75,
-    createdAt: 'Nov 6, 2026 • 09:10 AM',
-    updatedAt: 'Nov 6, 2026 • 09:10 AM',
+    createdAt: createMockOrderDate('today', '09:10 AM', baseDate),
+    updatedAt: createMockOrderDate('today', '09:10 AM', baseDate),
     timeline: [
       {
         status: 'created',
@@ -354,9 +357,9 @@ export const MOCK_BOOKING_DETAILS: Record<string, BookingOrder> = {
     status: 'cancelled',
     paymentStatus: 'refunded',
     paymentMethod: 'KHQR (Refunded)',
-    paymentDate: 'Nov 4, 2026 • 10:15 AM',
+    paymentDate: createMockOrderDate('last_month', '10:15 AM', baseDate),
     cancellationReason: 'Cancelled by seller — Customer requested order modification',
-    cancelledAt: 'Nov 4, 2026 • 10:45 AM',
+    cancelledAt: createMockOrderDate('last_month', '10:45 AM', baseDate),
     pickup: {
       id: 'loc-2',
       name: 'BKK1 Retail Store',
@@ -384,8 +387,8 @@ export const MOCK_BOOKING_DETAILS: Record<string, BookingOrder> = {
     },
     deliveryFee: 1.85,
     totalSellerCharge: 1.85,
-    createdAt: 'Nov 4, 2026 • 10:12 AM',
-    updatedAt: 'Nov 4, 2026 • 10:45 AM',
+    createdAt: createMockOrderDate('last_month', '10:12 AM', baseDate),
+    updatedAt: createMockOrderDate('last_month', '10:45 AM', baseDate),
     timeline: [
       {
         status: 'created',
@@ -411,9 +414,328 @@ export const MOCK_BOOKING_DETAILS: Record<string, BookingOrder> = {
       },
     ],
   },
+
+  // 6. Pending Order A (Searching for driver)
+  'ord-1006': {
+    id: 'ord-1006',
+    trackingNumber: 'EXP-91024511',
+    trackingUrl: 'https://tracking.express.wingbank.com/EXP-91024511',
+    status: 'pending',
+    paymentStatus: 'paid',
+    paymentMethod: 'KHQR (Bakong)',
+    pickup: {
+      id: 'loc-1',
+      name: 'Central Warehouse (Main)',
+      address: 'St 271, Phum 4, Sangkat Boeng Tumpun, Khan Mean Chey, Phnom Penh',
+      coordinates: { lat: 11.5321, lng: 104.9123 },
+      senderName: 'Central Boutique Warehouse',
+      senderPhone: '012 888 999',
+    },
+    dropoff: {
+      address: 'St 310, Sangkat BKK3, Khan Boeung Keng Kang, Phnom Penh',
+      coordinates: { lat: 11.542, lng: 104.921 },
+    },
+    recipient: {
+      name: 'Kosal Heng',
+      phoneNumber: '011 234 567',
+    },
+    parcel: {
+      description: 'Korean skincare gift box',
+      sellerOrderRef: 'LIVE-1082',
+      quantity: 1,
+    },
+    deliveryOption: 'instant',
+    cod: {
+      isCod: true,
+      amount: 32.5,
+    },
+    deliveryFee: 1.75,
+    totalSellerCharge: 1.75,
+    createdAt: createMockOrderDate('today', '09:40 AM', baseDate),
+    updatedAt: createMockOrderDate('today', '09:40 AM', baseDate),
+  },
+
+  // 7. Pending Order B (Searching for driver)
+  'ord-1007': {
+    id: 'ord-1007',
+    trackingNumber: 'EXP-91024512',
+    trackingUrl: 'https://tracking.express.wingbank.com/EXP-91024512',
+    status: 'pending',
+    paymentStatus: 'paid',
+    paymentMethod: 'Wing Wallet',
+    pickup: {
+      id: 'loc-1',
+      name: 'Central Warehouse (Main)',
+      address: 'St 271, Phum 4, Sangkat Boeng Tumpun, Khan Mean Chey, Phnom Penh',
+      coordinates: { lat: 11.5321, lng: 104.9123 },
+      senderName: 'Central Boutique Warehouse',
+      senderPhone: '012 888 999',
+    },
+    dropoff: {
+      address: 'Russian Blvd, Sangkat Teuk Thla, Khan Sen Sok, Phnom Penh',
+      coordinates: { lat: 11.561, lng: 104.881 },
+    },
+    recipient: {
+      name: 'Chanthou Seng',
+      phoneNumber: '015 678 901',
+    },
+    parcel: {
+      description: 'Women fashion handbag & wallet',
+      sellerOrderRef: 'LIVE-1085',
+      quantity: 2,
+    },
+    deliveryOption: 'instant',
+    cod: {
+      isCod: false,
+      amount: 0,
+    },
+    deliveryFee: 2.1,
+    totalSellerCharge: 2.1,
+    createdAt: createMockOrderDate('yesterday', '10:05 AM', baseDate),
+    updatedAt: createMockOrderDate('yesterday', '10:05 AM', baseDate),
+  },
+
+  // 8. Pending Order C (Scheduled pickup)
+  'ord-1008': {
+    id: 'ord-1008',
+    trackingNumber: 'EXP-91024513',
+    trackingUrl: 'https://tracking.express.wingbank.com/EXP-91024513',
+    status: 'pending',
+    paymentStatus: 'paid',
+    paymentMethod: 'KHQR (Bakong)',
+    pickup: {
+      id: 'loc-1',
+      name: 'Central Warehouse (Main)',
+      address: 'St 271, Phum 4, Sangkat Boeng Tumpun, Khan Mean Chey, Phnom Penh',
+      coordinates: { lat: 11.5321, lng: 104.9123 },
+      senderName: 'Central Boutique Warehouse',
+      senderPhone: '012 888 999',
+    },
+    dropoff: {
+      address: 'St 598, Sangkat Phnom Penh Thmei, Khan Sen Sok, Phnom Penh',
+      coordinates: { lat: 11.579, lng: 104.892 },
+    },
+    recipient: {
+      name: 'Sopheak Men',
+      phoneNumber: '089 345 678',
+    },
+    parcel: {
+      description: 'Baby apparel & cotton wear',
+      sellerOrderRef: 'LIVE-1090',
+      quantity: 3,
+    },
+    deliveryOption: 'scheduled',
+    cod: {
+      isCod: true,
+      amount: 55.0,
+    },
+    deliveryFee: 1.25,
+    totalSellerCharge: 1.25,
+    createdAt: createMockOrderDate('this_month', '10:15 AM', baseDate),
+    updatedAt: createMockOrderDate('this_month', '10:15 AM', baseDate),
+  },
+
+  // 9. Accepted Order A (Driver assigned & heading to pickup)
+  'ord-1009': {
+    id: 'ord-1009',
+    trackingNumber: 'EXP-82194014',
+    trackingUrl: 'https://tracking.express.wingbank.com/EXP-82194014',
+    status: 'assigned',
+    paymentStatus: 'paid',
+    paymentMethod: 'KHQR (Bakong)',
+    pickup: {
+      id: 'loc-1',
+      name: 'Central Warehouse (Main)',
+      address: 'St 271, Phum 4, Sangkat Boeng Tumpun, Khan Mean Chey, Phnom Penh',
+      coordinates: { lat: 11.5321, lng: 104.9123 },
+      senderName: 'Central Boutique Warehouse',
+      senderPhone: '012 888 999',
+    },
+    dropoff: {
+      address: 'St 214, Sangkat Boeung Prolit, Khan 7 Makara, Phnom Penh',
+      coordinates: { lat: 11.556, lng: 104.918 },
+    },
+    recipient: {
+      name: 'Dany Kim',
+      phoneNumber: '098 765 432',
+    },
+    deliverer: {
+      name: 'Rithy Seng',
+      phone: '097 555 1234',
+    },
+    parcel: {
+      description: 'Smartwatch & accessories',
+      sellerOrderRef: 'LIVE-1070',
+      quantity: 1,
+    },
+    deliveryOption: 'instant',
+    cod: {
+      isCod: true,
+      amount: 78.0,
+    },
+    deliveryFee: 1.75,
+    totalSellerCharge: 1.75,
+    createdAt: createMockOrderDate('today', '09:15 AM', baseDate),
+    updatedAt: createMockOrderDate('today', '09:25 AM', baseDate),
+  },
+
+  // 10. Accepted Order B (Driver heading to pickup)
+  'ord-1010': {
+    id: 'ord-1010',
+    trackingNumber: 'EXP-82194015',
+    trackingUrl: 'https://tracking.express.wingbank.com/EXP-82194015',
+    status: 'assigned',
+    paymentStatus: 'paid',
+    paymentMethod: 'Credit Card (Visa)',
+    pickup: {
+      id: 'loc-1',
+      name: 'Central Warehouse (Main)',
+      address: 'St 271, Phum 4, Sangkat Boeng Tumpun, Khan Mean Chey, Phnom Penh',
+      coordinates: { lat: 11.5321, lng: 104.9123 },
+      senderName: 'Central Boutique Warehouse',
+      senderPhone: '012 888 999',
+    },
+    dropoff: {
+      address: 'St 371 (Solar), Sangkat Chak Angre Leu, Khan Mean Chey, Phnom Penh',
+      coordinates: { lat: 11.521, lng: 104.929 },
+    },
+    recipient: {
+      name: 'Piseth Ouk',
+      phoneNumber: '070 889 900',
+    },
+    deliverer: {
+      name: 'Vannak Moeun',
+      phone: '088 666 4321',
+    },
+    parcel: {
+      description: 'Sneakers sports shoes (size 42)',
+      sellerOrderRef: 'LIVE-1075',
+      quantity: 1,
+    },
+    deliveryOption: 'instant',
+    cod: {
+      isCod: false,
+      amount: 0,
+    },
+    deliveryFee: 1.95,
+    totalSellerCharge: 1.95,
+    createdAt: createMockOrderDate('yesterday', '09:25 AM', baseDate),
+    updatedAt: createMockOrderDate('yesterday', '09:35 AM', baseDate),
+  },
+
+  // 11. Accepted Order C (Driver assigned)
+  'ord-1011': {
+    id: 'ord-1011',
+    trackingNumber: 'EXP-82194016',
+    trackingUrl: 'https://tracking.express.wingbank.com/EXP-82194016',
+    status: 'assigned',
+    paymentStatus: 'paid',
+    paymentMethod: 'Wing Wallet',
+    pickup: {
+      id: 'loc-1',
+      name: 'Central Warehouse (Main)',
+      address: 'St 271, Phum 4, Sangkat Boeng Tumpun, Khan Mean Chey, Phnom Penh',
+      coordinates: { lat: 11.5321, lng: 104.9123 },
+      senderName: 'Central Boutique Warehouse',
+      senderPhone: '012 888 999',
+    },
+    dropoff: {
+      address: 'St 63, Sangkat Tonle Bassac, Khan Chamkarmon, Phnom Penh',
+      coordinates: { lat: 11.549, lng: 104.931 },
+    },
+    recipient: {
+      name: 'Theary Soun',
+      phoneNumber: '016 443 322',
+    },
+    deliverer: {
+      name: 'Chan Tith',
+      phone: '012 334 455',
+    },
+    parcel: {
+      description: 'Natural dried fruits & honey jar',
+      sellerOrderRef: 'LIVE-1078',
+      quantity: 2,
+    },
+    deliveryOption: 'scheduled',
+    cod: {
+      isCod: true,
+      amount: 24.0,
+    },
+    deliveryFee: 1.25,
+    totalSellerCharge: 1.25,
+    createdAt: createMockOrderDate('last_month', '09:30 AM', baseDate),
+    updatedAt: createMockOrderDate('last_month', '09:40 AM', baseDate),
+  },
 };
+}
+
+let cachedDateKey = '';
+let cachedMockDetails: Record<string, BookingOrder> | null = null;
+
+function getDailyCachedMockDetails(): Record<string, BookingOrder> {
+  const currentKey = getTodayDateKey();
+  if (!cachedMockDetails || cachedDateKey !== currentKey) {
+    cachedDateKey = currentKey;
+    cachedMockDetails = createMockBookingDetails(new Date());
+  }
+  return cachedMockDetails;
+}
+
+/**
+ * Proxy that always serves fresh, up-to-date mock details for the current day.
+ */
+export const MOCK_BOOKING_DETAILS: Record<string, BookingOrder> = new Proxy(
+  {},
+  {
+    get(_target, prop: string | symbol) {
+      const details = getDailyCachedMockDetails();
+      return Reflect.get(details, prop);
+    },
+    ownKeys() {
+      const details = getDailyCachedMockDetails();
+      return Reflect.ownKeys(details);
+    },
+    getOwnPropertyDescriptor(_target, prop) {
+      const details = getDailyCachedMockDetails();
+      return Reflect.getOwnPropertyDescriptor(details, prop);
+    },
+    has(_target, prop) {
+      const details = getDailyCachedMockDetails();
+      return Reflect.has(details, prop);
+    },
+  },
+);
+
+/**
+ * Synchronizes orders by rolling forward mock demo records to current date
+ * while preserving any user-created orders.
+ */
+export function syncOrdersToCurrentDate(
+  orders: BookingOrder[],
+  baseDate: Date = new Date(),
+): BookingOrder[] {
+  const latestMockDetails = createMockBookingDetails(baseDate);
+  const updated = orders.map((order) => {
+    const mock = latestMockDetails[order.id];
+    if (mock) {
+      return {
+        ...order,
+        createdAt: mock.createdAt,
+        updatedAt: mock.updatedAt,
+        paymentDate: mock.paymentDate ?? order.paymentDate,
+        cancelledAt: mock.cancelledAt ?? order.cancelledAt,
+      };
+    }
+    return order;
+  });
+
+  const existingIds = new Set(updated.map((o) => o.id));
+  const missingDefaults = Object.values(latestMockDetails).filter((o) => !existingIds.has(o.id));
+  return [...updated, ...missingDefaults];
+}
 
 export function getMockBookingById(id: string): BookingOrder | null {
-  return MOCK_BOOKING_DETAILS[id] || null;
+  const details = getDailyCachedMockDetails();
+  return details[id] || null;
 }
 

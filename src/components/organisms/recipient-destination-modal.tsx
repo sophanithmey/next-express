@@ -98,8 +98,8 @@ export function RecipientDestinationModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in">
-        <div className="relative w-full max-w-xl sm:max-w-xl lg:max-w-2xl max-h-[92vh] min-h-[520px] flex flex-col rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs animate-in fade-in select-none">
+        <div className="relative w-full max-w-5xl xl:max-w-6xl max-h-[92vh] min-h-[520px] flex flex-col rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 select-text">
           {/* Modal Header */}
           <div className="flex items-center justify-between border-b border-slate-100 px-5 sm:px-6 py-4 bg-slate-50/70">
             <div>
@@ -119,7 +119,7 @@ export function RecipientDestinationModal({
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-2xs transition cursor-pointer"
                 title={tBooking('bulkImportSpreadsheet')}
               >
-                <Layers className="h-3.5 w-3.5 text-brand-600" />
+                <Layers className="h-3.5 w-3.5 text-amber-700" />
                 <span>{tBooking('bulkImport')}</span>
               </button>
               <button

@@ -54,7 +54,7 @@ export default function BookingReviewPage() {
           <div className="flex items-center justify-between">
             <Link
               href="/booking"
-              className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-secondary-700 transition"
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>{tCommon('back')}</span>
@@ -63,7 +63,7 @@ export default function BookingReviewPage() {
             <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400">
               <span>1. {tCommon('details')}</span>
               <span>→</span>
-              <span className="font-bold text-secondary-800 bg-secondary-50 px-2.5 py-1 rounded-lg border border-secondary-200">
+              <span className="font-bold text-slate-950 bg-primary-100/80 px-2.5 py-1 rounded-lg border border-primary-300">
                 2. {tPayment('reviewTitle')}
               </span>
               <span>→</span>

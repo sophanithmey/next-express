@@ -35,8 +35,11 @@ const UI_STATUS_FILTER_VALUES: Record<string, string[]> = {
   pending: ['PENDING'],
   confirmed: ['CONFIRMED'],
   assigned: ['ASSIGNED'],
+  accepted: ['ASSIGNED'],
   out_for_delivery: ['OUT_FOR_DELIVERY'],
+  in_transit: ['OUT_FOR_DELIVERY'],
   delivered: ['DELIVERED'],
+  fulfilled: ['DELIVERED'],
   cancelled: ['CANCELLED'],
 };
 

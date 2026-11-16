@@ -26,7 +26,7 @@ export function FormSection({
 }: FormSectionProps) {
   return (
     <section className="rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-2xs space-y-4">
-      <div className="flex items-start justify-between border-b border-slate-100 pb-3.5 gap-2">
+      <div className="flex items-center justify-between border-b border-slate-100 pb-3 gap-2">
         <div className="flex items-center gap-2.5">
           <div
             className={cn(

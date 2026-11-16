@@ -30,8 +30,8 @@ export function BookingReviewSummary({ formData }: BookingReviewSummaryProps) {
           },
         ];
 
-  const isSameDay = formData.deliveryOption === 'same_day';
-  const isScheduled = formData.deliveryOption === 'scheduled';
+  const isScheduleMode =
+    formData.deliveryOption === 'scheduled' || formData.deliveryOption === 'same_day';
   const scheduleInfo = formData.deliverySchedule;
   const activeShift =
     DELIVERY_SHIFTS.find((s) => s.id === (scheduleInfo?.shift || 'morning')) ||
@@ -39,6 +39,11 @@ export function BookingReviewSummary({ formData }: BookingReviewSummaryProps) {
   const matchedSlot = activeShift.slots.find(
     (slot) => slot.value === scheduleInfo?.timeSlot
   );
+
+  const scheduleDayLabel =
+    scheduleInfo?.date === 'today' || formData.deliveryOption === 'same_day'
+      ? tDelivery('todayShort')
+      : tDelivery('tomorrowShort');
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs space-y-5">
@@ -49,30 +54,21 @@ export function BookingReviewSummary({ formData }: BookingReviewSummaryProps) {
             {tPayment('routeAndOrderTitle')}
           </span>
           <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${
-            isScheduled
+            isScheduleMode
               ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-              : isSameDay
-              ? 'bg-secondary-50 border-secondary-200 text-secondary-900'
               : 'bg-amber-50 border-amber-200 text-amber-900'
           }`}>
-            {isScheduled ? (
+            {isScheduleMode ? (
               <>
                 <Calendar className="h-3 w-3 text-emerald-600" />
                 <span>
-                  {tDelivery('scheduledLabel')}{' '}
-                  {scheduleInfo?.dateLabel?.split('(')[0]?.trim() || tDelivery('tomorrowShort')} •{' '}
-                  {tDelivery(activeShift.nameKey)}
+                  {tDelivery('scheduled')} • {scheduleDayLabel} • {tDelivery(activeShift.nameKey)}
                   {matchedSlot
                     ? ` (${tDelivery(matchedSlot.labelKey)})`
                     : scheduleInfo?.timeSlot
                     ? ` (${scheduleInfo.timeSlot})`
                     : ''}
                 </span>
-              </>
-            ) : isSameDay ? (
-              <>
-                <Clock className="h-3 w-3 text-secondary-600" />
-                <span>{tDelivery('sameDay')}</span>
               </>
             ) : (
               <>
@@ -85,7 +81,7 @@ export function BookingReviewSummary({ formData }: BookingReviewSummaryProps) {
 
         <Link
           href="/booking"
-          className="flex items-center gap-1 text-xs font-semibold text-secondary-600 hover:text-secondary-700 transition"
+          className="flex items-center gap-1 text-xs font-bold text-amber-800 hover:text-amber-900 transition"
         >
           <Edit3 className="h-3 w-3" />
           <span>{tCommon('edit')}</span>

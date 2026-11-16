@@ -21,8 +21,8 @@ export function Switch({ checked, onChange, disabled, id, className }: SwitchPro
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
-        'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-        checked ? 'bg-brand-600' : 'bg-slate-200',
+        'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+        checked ? 'bg-primary-500 ring-1 ring-primary-600/30' : 'bg-slate-200',
         className
       )}
     >

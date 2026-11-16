@@ -187,7 +187,7 @@ export function AppHeaderMobileDrawer({
             href="/booking"
             onClick={onClose}
             prefetch={true}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-secondary-600 hover:bg-secondary-700 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.99]"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-primary-500 hover:bg-primary-400 text-slate-950 text-xs font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.99]"
           >
             <span>{t('bookDelivery')}</span>
             <ArrowRight className="h-4 w-4" />

@@ -59,7 +59,7 @@ export function BookingHorizontalRouteDropoffItem({
       </div>
 
       {/* 2. Circular Route Indicator (B, C, D, etc.) */}
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white font-black text-xs shadow-xs group-hover:scale-105 transition-transform">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-500 text-slate-950 font-black text-xs shadow-xs group-hover:scale-105 transition-transform">
         <span>{routeLabel}</span>
       </div>
 

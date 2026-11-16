@@ -49,11 +49,11 @@ export function BookingSummaryMobile({
           <span className='text-[11px] font-bold uppercase tracking-wider text-slate-400 block'>
             {tBooking('estimatedFee')}
           </span>
-          <span className='text-lg font-bold text-brand-700 font-mono'>
+          <span className='text-lg font-black text-slate-950 font-mono'>
             ${deliveryFee.toFixed(2)}
           </span>
         </div>
-        <div className='flex items-center gap-1 text-xs font-semibold text-brand-600'>
+        <div className='flex items-center gap-1 text-xs font-semibold text-amber-800'>
           <span>{isExpanded ? tCommon('close') : tCommon('details')}</span>
           {isExpanded ? (
             <ChevronUp className='h-4 w-4' />
@@ -68,10 +68,8 @@ export function BookingSummaryMobile({
           <div className='flex justify-between'>
             <span className='text-slate-400'>{tDelivery('speed')}:</span>
             <span className='font-semibold text-slate-800'>
-              {deliveryOption === 'scheduled'
-                ? tDelivery('scheduled')
-                : deliveryOption === 'same_day'
-                ? tDelivery('sameDay')
+              {deliveryOption === 'scheduled' || deliveryOption === 'same_day'
+                ? `${tDelivery('scheduled')} (${deliveryOption === 'same_day' ? tDelivery('today') : tDelivery('tomorrow')})`
                 : tDelivery('instant')}
             </span>
           </div>

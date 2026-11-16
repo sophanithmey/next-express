@@ -132,10 +132,10 @@ export function AppHeader({ user: propUser }: AppHeaderProps) {
             <Link
               href="/booking"
               prefetch={true}
-              className="inline-flex h-8.5 items-center gap-1.5 rounded-full bg-secondary-600 px-4 text-xs font-bold text-white shadow-xs hover:bg-secondary-700 hover:shadow-sm active:scale-95 transition-all shrink-0"
+              className="inline-flex h-8.5 items-center gap-1.5 rounded-full bg-primary-500 hover:bg-primary-400 px-4 text-xs font-bold text-slate-950 shadow-xs hover:shadow-sm active:scale-95 transition-all shrink-0"
             >
               <span>{t('bookDelivery')}</span>
-              <ArrowRight className="h-3.5 w-3.5 text-white" />
+              <ArrowRight className="h-3.5 w-3.5 text-slate-950" />
             </Link>
           </nav>
 
@@ -144,10 +144,10 @@ export function AppHeader({ user: propUser }: AppHeaderProps) {
             <Link
               href="/booking"
               prefetch={true}
-              className="inline-flex h-8.5 items-center gap-1.5 rounded-full bg-secondary-600 px-3.5 text-xs font-bold text-white shadow-2xs hover:bg-secondary-700 active:scale-95 transition-all whitespace-nowrap shrink-0"
+              className="inline-flex h-8.5 items-center gap-1.5 rounded-full bg-primary-500 hover:bg-primary-400 px-3.5 text-xs font-bold text-slate-950 shadow-2xs active:scale-95 transition-all whitespace-nowrap shrink-0"
             >
               <span>{t('bookDelivery')}</span>
-              <ArrowRight className="h-3.5 w-3.5" />
+              <ArrowRight className="h-3.5 w-3.5 text-slate-950" />
             </Link>
 
             <button

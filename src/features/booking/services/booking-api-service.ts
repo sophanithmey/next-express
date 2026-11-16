@@ -6,6 +6,7 @@ import {
   getUserSavedDrafts,
   saveUserBookingDraft,
 } from './booking-draft-service';
+import { BookingDatePreset } from './booking-date-filter';
 import { BookingOrderFilter } from './booking-order-filter';
 import { localDemoBookingStore } from './local-demo-store';
 import {
@@ -22,6 +23,7 @@ export interface ListBookingsParams {
   rpp?: number;
   search?: string;
   status?: string;
+  datePreset?: BookingDatePreset;
   direction?: 'ASC' | 'DESC';
   property?: string;
   filter?: BookingOrderFilter[];

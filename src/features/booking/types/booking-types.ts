@@ -169,6 +169,7 @@ export interface RecipientRecord {
 export interface DashboardStatistics {
   todayBookings: number;
   pendingPickup: number;
+  accepted?: number;
   inTransit: number;
   delivered: number;
   codCollection: number;

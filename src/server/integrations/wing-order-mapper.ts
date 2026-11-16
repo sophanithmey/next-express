@@ -11,6 +11,7 @@ import {
   buildOrderStatusFilter,
   mapConsumerOrderStatus,
 } from '@/features/booking/services/booking-order-filter';
+import { isOrderInDatePreset } from '@/features/booking/services/booking-date-filter';
 import { ConsumerOrderFilter, ConsumerOrderRecord } from './wing-order-types';
 import {
   buildCourierOrderPayload,
@@ -255,7 +256,6 @@ export function mapCourierOrderListResponse(
 export function computeDashboardStatistics(
   orders: BookingOrder[],
 ): DashboardStatistics {
-  const today = new Date().toISOString().slice(0, 10);
   let todayBookings = 0;
   let pendingPickup = 0;
   let inTransit = 0;
@@ -263,7 +263,7 @@ export function computeDashboardStatistics(
   let codCollection = 0;
 
   for (const order of orders) {
-    if (order.createdAt.slice(0, 10) === today && order.status !== 'draft') {
+    if (isOrderInDatePreset(order.createdAt, 'today') && order.status !== 'draft') {
       todayBookings += 1;
     }
     if (order.status === 'pending' || order.status === 'confirmed') pendingPickup += 1;

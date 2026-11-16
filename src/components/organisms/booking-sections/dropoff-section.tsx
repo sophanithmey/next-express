@@ -90,7 +90,7 @@ export function DropoffSection({
       subtitle={
         isMultiDrop
           ? tRecipient('multiSubtitle', { count: currentStops.length })
-          : tRecipient('singleSubtitle')
+          : undefined
       }
       action={
         <div className="flex items-center gap-2 flex-wrap">
@@ -109,7 +109,7 @@ export function DropoffSection({
             </span>
           )}
           {isMultiDrop && (
-            <span className="text-[11px] font-bold text-brand-800 bg-brand-50 px-2 py-1 rounded-md border border-brand-200">
+            <span className="text-[11px] font-bold text-primary-950 bg-primary-100/80 px-2 py-1 rounded-md border border-primary-300">
               {currentStops.length}/{maxStops} {tCommon('stops')}
             </span>
           )}
@@ -117,10 +117,10 @@ export function DropoffSection({
             <button
               type="button"
               onClick={onOptimizeRoute}
-              className="flex items-center gap-1.5 text-xs font-semibold text-secondary-700 hover:text-secondary-900 bg-secondary-50 hover:bg-secondary-100 px-2.5 py-1.5 rounded-lg border border-secondary-200 shadow-2xs transition cursor-pointer"
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-800 hover:text-slate-950 bg-primary-50 hover:bg-primary-100 px-2.5 py-1.5 rounded-lg border border-primary-300 shadow-2xs transition cursor-pointer"
               title={tBooking('optimizeRouteTitle')}
             >
-              <Route className="h-3.5 w-3.5 text-secondary-600" />
+              <Route className="h-3.5 w-3.5 text-amber-700" />
               <span>{tBooking('optimizeRoute')}</span>
             </button>
           )}
@@ -130,7 +130,7 @@ export function DropoffSection({
             className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200 shadow-2xs transition cursor-pointer"
             title={tBooking('bulkImportSpreadsheet')}
           >
-            <Layers className="h-3.5 w-3.5 text-brand-600" />
+            <Layers className="h-3.5 w-3.5 text-amber-700" />
             <span>{tBooking('bulkImport')}</span>
           </button>
         </div>

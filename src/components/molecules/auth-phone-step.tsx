@@ -81,7 +81,7 @@ export function AuthPhoneStep({
         size='lg'
         onClick={onSubmit}
         isLoading={isLoading}
-        className='w-full py-4.5 text-base font-bold bg-secondary-600 hover:bg-secondary-700 text-white rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2'
+        className='w-full py-4.5 text-base font-bold bg-primary-500 hover:bg-primary-400 text-slate-950 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2'
         rightIcon={<ArrowRight className='h-4.5 w-4.5' />}
       >
         {t('continue')}

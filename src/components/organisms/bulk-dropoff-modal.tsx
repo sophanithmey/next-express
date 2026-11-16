@@ -69,12 +69,12 @@ export function BulkDropoffModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in">
-      <div className="relative w-full max-w-xl sm:max-w-2xl lg:max-w-3xl max-h-[92vh] min-h-[540px] flex flex-col rounded-3xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs animate-in fade-in select-none">
+      <div className="relative w-full max-w-5xl xl:max-w-6xl max-h-[92vh] min-h-[540px] flex flex-col rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 select-text">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/80">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white shadow-xs">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-500 text-slate-950 shadow-xs">
               <Layers className="h-5 w-5" />
             </div>
             <div>
@@ -82,7 +82,7 @@ export function BulkDropoffModal({
                 <h3 className="text-base font-extrabold text-slate-900">
                   {tBooking('bulkModalTitle')}
                 </h3>
-                <span className="rounded-full bg-brand-50 border border-brand-200 px-2 py-0.5 text-[10px] font-bold text-brand-700">
+                <span className="rounded-full bg-primary-50 border border-primary-300 px-2 py-0.5 text-[10px] font-bold text-primary-950">
                   {tBooking('bulkBadge')}
                 </span>
               </div>
@@ -129,16 +129,10 @@ export function BulkDropoffModal({
               <span>{tBooking('bulkLoadSample')}</span>
             </button>
           </div>
-          <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-brand-200 bg-brand-50 hover:bg-brand-100 font-bold text-brand-700 shadow-2xs transition cursor-pointer">
-            <UploadCloud className="h-3.5 w-3.5 text-brand-600" />
+          <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary-300 bg-primary-50 hover:bg-primary-100 font-bold text-primary-950 shadow-2xs transition cursor-pointer">
+            <UploadCloud className="h-3.5 w-3.5 text-amber-600" />
             <span>{isUploading ? 'Reading...' : tBooking('bulkUploadFile')}</span>
-            <input
-              type="file"
-              accept=".xlsx,.xls,.csv,.txt"
-              onChange={handleFileUpload}
-              disabled={isUploading}
-              className="hidden"
-            />
+            <input type="file" accept=".xlsx,.xls,.csv,.txt" onChange={handleFileUpload} disabled={isUploading} className="hidden" />
           </label>
         </div>
 
@@ -150,10 +144,7 @@ export function BulkDropoffModal({
                 {tBooking('bulkInputLabel')}
               </label>
               <span className="text-[11px] text-slate-400">
-                {tBooking('bulkFormatHint')}{' '}
-                <code className="bg-slate-100 px-1 py-0.5 rounded font-mono">
-                  Name, Phone, Address (or lat,lng), COD, Note
-                </code>
+                {tBooking('bulkFormatHint')} <code className="bg-slate-100 px-1 py-0.5 rounded font-mono">Name, Phone, Address (or lat,lng), COD, Note</code>
               </span>
             </div>
             <textarea
@@ -174,18 +165,12 @@ export function BulkDropoffModal({
 
           {importTotalCod > MAX_TOTAL_COD_USD && (
             <div className="rounded-xl border border-danger-200 bg-danger-50 px-3.5 py-2.5 text-xs font-medium text-danger-700">
-              {tBooking('bulkMaxCodNotice', {
-                total: importTotalCod.toFixed(2),
-                max: MAX_TOTAL_COD_USD,
-              })}
+              {tBooking('bulkMaxCodNotice', { total: importTotalCod.toFixed(2), max: MAX_TOTAL_COD_USD })}
             </div>
           )}
 
           {/* Parsed Preview Table */}
-          <BulkDropoffPreviewTable
-            parsedList={parsedList}
-            validCount={validStops.length}
-          />
+          <BulkDropoffPreviewTable parsedList={parsedList} validCount={validStops.length} />
         </div>
 
         {/* Footer */}
@@ -193,14 +178,7 @@ export function BulkDropoffModal({
           <Button type="button" variant="ghost" size="sm" onClick={onClose}>
             {tCommon('cancel')}
           </Button>
-          <Button
-            type="button"
-            variant="primary"
-            size="md"
-            onClick={handleImport}
-            disabled={importCount === 0}
-            leftIcon={<Layers className="h-4 w-4" />}
-          >
+          <Button type="button" variant="primary" size="md" onClick={handleImport} disabled={importCount === 0} leftIcon={<Layers className="h-4 w-4" />}>
             {tBooking('bulkImportButton', { count: importCount })}
           </Button>
         </div>

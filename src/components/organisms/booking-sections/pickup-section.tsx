@@ -56,7 +56,6 @@ export function PickupSection({
       iconClassName='bg-secondary-50 text-secondary-700 border border-secondary-200'
       title={tPickup('title')}
       titleClassName='text-secondary-950 font-bold'
-      subtitle={tPickup('subtitle')}
       action={
         isEditMode ? (
           <button
@@ -71,7 +70,7 @@ export function PickupSection({
           <button
             type='button'
             onClick={onOpenMap}
-            className='flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 bg-brand-50 px-2.5 py-1.5 rounded-lg border border-brand-200 transition cursor-pointer'
+            className='flex items-center gap-1.5 text-xs font-bold text-primary-950 hover:text-slate-950 bg-primary-50 hover:bg-primary-100 px-2.5 py-1.5 rounded-lg border border-primary-300 transition cursor-pointer'
           >
             <Map className='h-3.5 w-3.5' />
             <span>

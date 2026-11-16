@@ -3,6 +3,7 @@ export const DEMO_STORAGE_KEYS = {
   locations: 'wingexpress_demo_v1_locations',
   cards: 'wingexpress_demo_v1_cards',
   userDrafts: 'express_seller_user_saved_drafts',
+  seedDate: 'wingexpress_demo_v1_seed_date',
 } as const;
 
 export function isLocalDemoStorageEnabled(): boolean {
@@ -54,4 +55,3 @@ export function removeStoredDemoKey(key: string): void {
     // Ignore storage errors
   }
 }
-

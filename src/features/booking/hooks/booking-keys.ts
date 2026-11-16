@@ -5,6 +5,7 @@ export interface BookingListQueryFilter {
   rpp?: number;
   search?: string;
   status?: string;
+  datePreset?: string;
   filter?: BookingOrderFilter[];
 }
 

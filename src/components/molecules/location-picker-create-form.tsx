@@ -102,13 +102,13 @@ export function LocationPickerCreateForm({
               disabled={isLocating}
               className="inline-flex min-h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer disabled:opacity-60"
             >
-              {isLocating ? <Loader2 className="h-3 w-3 animate-spin text-brand-600" /> : <LocateFixed className="h-3 w-3 text-brand-600" />}
+              {isLocating ? <Loader2 className="h-3 w-3 animate-spin text-amber-600" /> : <LocateFixed className="h-3 w-3 text-amber-700" />}
               <span>{tPicker('useCurrentLocation')}</span>
             </button>
             <button
               type="button"
               onClick={onPickOnMap}
-              className="inline-flex min-h-8 items-center gap-1 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-100 cursor-pointer"
+              className="inline-flex min-h-8 items-center gap-1 rounded-lg border border-primary-300 bg-primary-50 px-2.5 py-1 text-xs font-bold text-primary-950 hover:bg-primary-100 cursor-pointer"
             >
               <MapPin className="h-3 w-3" />
               <span>{tPicker('pickOnMap')}</span>
@@ -153,7 +153,7 @@ export function LocationPickerCreateForm({
         <Button type="button" variant="outline" size="md" onClick={onCancel} disabled={isSubmitting} className="px-4 py-2 text-xs font-semibold border-slate-200 text-slate-700">
           {tCommon('cancel')}
         </Button>
-        <Button type="submit" variant="primary" size="md" disabled={isSubmitting} className="px-4 py-2 text-xs font-bold bg-brand-600 hover:bg-brand-700 text-white shadow-sm flex items-center gap-1.5">
+        <Button type="submit" variant="primary" size="md" disabled={isSubmitting} className="px-4 py-2 text-xs font-bold bg-primary-500 hover:bg-primary-400 text-slate-950 shadow-sm flex items-center gap-1.5">
           {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           <span>{isSubmitting ? tPicker('savingLocation') : tPicker('saveLocation')}</span>
         </Button>

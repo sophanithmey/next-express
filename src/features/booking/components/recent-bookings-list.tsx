@@ -31,7 +31,7 @@ export function RecentBookingsList({
         </div>
         <Link
           href="/bookings"
-          className="text-xs font-semibold text-secondary-700 hover:text-secondary-800 flex items-center gap-1 transition"
+          className="text-xs font-bold text-amber-800 hover:text-amber-900 flex items-center gap-1 transition"
         >
           <span>{t('viewAllShort')}</span>
           <ArrowUpRight className="h-3 w-3" />
@@ -47,7 +47,7 @@ export function RecentBookingsList({
             <div className="flex items-center justify-between">
               <Link
                 href={`/bookings/${order.id}`}
-                className="font-mono font-bold text-slate-900 hover:text-secondary-700 flex items-center gap-1"
+                className="font-mono font-bold text-slate-900 hover:text-slate-950 flex items-center gap-1"
               >
                 <span>{order.id}</span>
                 <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition text-slate-400" />

@@ -7,6 +7,8 @@ export type {
   GoogleLatLngLiteral,
   GoogleMapInstance,
   GoogleMapsNamespace,
+  GooglePolygonInstance,
+  GooglePolygonOptions,
 } from './google-maps-types';
 
 export type GoogleMapsErrorCode =

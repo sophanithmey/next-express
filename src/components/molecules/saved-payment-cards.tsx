@@ -52,7 +52,7 @@ export function SavedPaymentCards({
           <button
             type="button"
             onClick={onRequestAuth}
-            className="shrink-0 rounded-lg bg-secondary-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-secondary-700 transition cursor-pointer"
+            className="shrink-0 rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-primary-400 transition cursor-pointer"
           >
             Sign In
           </button>
@@ -82,7 +82,7 @@ export function SavedPaymentCards({
             type="button"
             onClick={onAddCard}
             disabled={isMutatingCard}
-            className="inline-flex items-center gap-1 rounded-lg bg-secondary-600 px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-secondary-700 disabled:opacity-50 transition cursor-pointer"
+            className="inline-flex items-center gap-1 rounded-lg bg-primary-500 px-2.5 py-1.5 text-[11px] font-bold text-slate-950 hover:bg-primary-400 disabled:opacity-50 transition cursor-pointer"
           >
             {isMutatingCard ? (
               <Loader2 className="h-3 w-3 animate-spin" />
@@ -113,7 +113,7 @@ export function SavedPaymentCards({
                 className={cn(
                   'rounded-lg border bg-white p-2.5 flex flex-wrap items-center justify-between gap-2 transition',
                   isSelected
-                    ? 'border-secondary-600 ring-1 ring-secondary-600/20'
+                    ? 'border-primary-500 ring-1 ring-primary-500/20'
                     : 'border-slate-200',
                 )}
               >
@@ -126,7 +126,7 @@ export function SavedPaymentCards({
                     className={cn(
                       'h-4 w-4 rounded-full border flex items-center justify-center shrink-0',
                       isSelected
-                        ? 'border-secondary-600 bg-secondary-600 text-white'
+                        ? 'border-primary-500 bg-primary-500 text-slate-950'
                         : 'border-slate-300 bg-white',
                     )}
                   >

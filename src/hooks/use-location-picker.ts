@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { PickupLocation, GeoCoordinates } from '@/features/booking/types/booking-types';
 import { SavedLocationItem } from '@/components/molecules/location-picker-saved-list';
 import { CreateSavedLocationInput } from '@/features/booking/schemas/location-schema';
@@ -12,6 +13,7 @@ import {
 import { useLocationGeocoder } from '@/features/booking/hooks/use-location-geocoder';
 import { useLocationPickerSaved } from '@/features/booking/hooks/use-location-picker-saved';
 import { useLocationLinkResolver } from '@/features/booking/hooks/use-location-link-resolver';
+import { isInsidePhnomPenh } from '@/features/booking/services/phnom-penh-region';
 import { APP_CONFIG } from '@/lib/constants';
 
 export interface QuickLocationChip {
@@ -43,8 +45,9 @@ export function useLocationPicker({
   onClose,
   onCreateLocation,
 }: UseLocationPickerParams) {
+  const tPicker = useTranslations('LocationPicker');
   const safeInitial =
-    initialCoords && isValidGeoCoordinates(initialCoords)
+    initialCoords && isValidGeoCoordinates(initialCoords) && isInsidePhnomPenh(initialCoords)
       ? initialCoords
       : APP_CONFIG.defaultCoordinates;
 
@@ -53,6 +56,7 @@ export function useLocationPicker({
   const [pinAddress, setPinAddress] = useState(selectedAddress || '');
   const [selectedName, setSelectedName] = useState('');
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | undefined>(undefined);
+  const [regionError, setRegionError] = useState<string | null>(null);
 
   const saved = useLocationPickerSaved({
     isOpen,
@@ -74,7 +78,7 @@ export function useLocationPicker({
   useEffect(() => {
     if (!isOpen) return;
     const nextCoords =
-      initialCoords && isValidGeoCoordinates(initialCoords)
+      initialCoords && isValidGeoCoordinates(initialCoords) && isInsidePhnomPenh(initialCoords)
         ? initialCoords
         : APP_CONFIG.defaultCoordinates;
     setActiveTab('map');
@@ -82,10 +86,16 @@ export function useLocationPicker({
     setPinAddress(selectedAddress || '');
     setSelectedName(selectedAddress ? selectedAddress.split(',')[0]?.trim() || '' : '');
     setSelectedPlaceId(undefined);
+    setRegionError(null);
   }, [isOpen, initialCoords, selectedAddress]);
 
   const applyCoordinatePin = useCallback(
     async (coords: GeoCoordinates, presetAddress?: string) => {
+      if (!isInsidePhnomPenh(coords)) {
+        setRegionError(tPicker('outOfBoundsError'));
+        return;
+      }
+      setRegionError(null);
       setPinnedCoords(coords);
       setSelectedPlaceId(undefined);
       geocoder.clearGeolocationError();
@@ -107,7 +117,7 @@ export function useLocationPicker({
         return prev;
       });
     },
-    [geocoder],
+    [geocoder, tPicker],
   );
 
   const linkResolver = useLocationLinkResolver({
@@ -129,6 +139,11 @@ export function useLocationPicker({
       try {
         const resolved = await geocoder.selectPlaceById(prediction.placeId);
         if (!resolved) return;
+        if (!isInsidePhnomPenh(resolved.coordinates)) {
+          setRegionError(tPicker('outOfBoundsError'));
+          return;
+        }
+        setRegionError(null);
         setPinnedCoords(resolved.coordinates);
         setPinAddress(resolved.address);
         setSelectedName(resolved.name);
@@ -137,11 +152,16 @@ export function useLocationPicker({
         if (err instanceof GeocodingServiceError) linkResolver.setLinkError(err.message);
       }
     },
-    [geocoder, linkResolver],
+    [geocoder, linkResolver, tPicker],
   );
 
   const handleUseCurrentLocation = useCallback(() => {
     geocoder.requestCurrentLocation((coords) => {
+      if (!isInsidePhnomPenh(coords)) {
+        setRegionError(tPicker('gpsOutsidePhnomPenh'));
+        return;
+      }
+      setRegionError(null);
       setPinnedCoords(coords);
       setSelectedPlaceId(undefined);
       linkResolver.setSavedSuggestions([]);
@@ -153,9 +173,13 @@ export function useLocationPicker({
       );
       setSelectedName('Current Location');
     });
-  }, [geocoder, linkResolver]);
+  }, [geocoder, linkResolver, tPicker]);
 
   const handleConfirmPin = useCallback(() => {
+    if (!isInsidePhnomPenh(pinnedCoords)) {
+      setRegionError(tPicker('outOfBoundsError'));
+      return;
+    }
     const finalAddress =
       pinAddress.trim() || `${pinnedCoords.lat.toFixed(5)}, ${pinnedCoords.lng.toFixed(5)}, Phnom Penh`;
     const finalName = selectedName || finalAddress.split(',')[0]?.trim() || 'Pinned Location';
@@ -172,7 +196,7 @@ export function useLocationPicker({
       placeId: selectedPlaceId,
     });
     onClose();
-  }, [onClose, onSelect, pinAddress, pinnedCoords, saved, selectedName, selectedPlaceId]);
+  }, [onClose, onSelect, pinAddress, pinnedCoords, saved, selectedName, selectedPlaceId, tPicker]);
 
   return {
     activeTab,
@@ -207,11 +231,20 @@ export function useLocationPicker({
       geocoder.clearGeolocationError();
     },
     handleMapCoordinateSelect: (coords: GeoCoordinates) => void applyCoordinatePin(coords),
-    nudgePin: (dLat: number, dLng: number) =>
-      void applyCoordinatePin({
+    handleOutOfBounds: () => setRegionError(tPicker('outOfBoundsError')),
+    regionError,
+    isInsideRegion: isInsidePhnomPenh(pinnedCoords),
+    nudgePin: (dLat: number, dLng: number) => {
+      const next = {
         lat: Number((pinnedCoords.lat + dLat).toFixed(6)),
         lng: Number((pinnedCoords.lng + dLng).toFixed(6)),
-      }),
+      };
+      if (!isInsidePhnomPenh(next)) {
+        setRegionError(tPicker('outOfBoundsError'));
+        return;
+      }
+      void applyCoordinatePin(next);
+    },
     handleUseCurrentLocation,
     handleConfirmPin,
     handlePreviewOnMap: (loc: SavedLocationItem) => {

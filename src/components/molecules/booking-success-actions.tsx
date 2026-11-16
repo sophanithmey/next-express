@@ -56,7 +56,7 @@ export function BookingSuccessActions({
               type="button"
               variant="primary"
               size="md"
-              className="w-full min-h-11 bg-secondary-600 hover:bg-secondary-700 shadow-sm"
+              className="w-full min-h-11 bg-primary-500 hover:bg-primary-400 text-slate-950 font-bold shadow-sm"
               leftIcon={<Plus className="h-4 w-4" />}
             >
               {tPayment('bookAnother')}
@@ -71,7 +71,7 @@ export function BookingSuccessActions({
               type="button"
               variant="outline"
               size="md"
-              className="w-full min-h-11 border-secondary-200 text-secondary-700 hover:bg-secondary-50/70"
+              className="w-full min-h-11 border-slate-200 text-slate-700 hover:bg-slate-50"
               leftIcon={<FileText className="h-4 w-4" />}
             >
               {tPayment('viewBookingDetails')}

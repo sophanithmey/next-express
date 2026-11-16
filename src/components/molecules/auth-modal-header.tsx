@@ -15,11 +15,11 @@ export function AuthModalHeader({ onClose }: AuthModalHeaderProps) {
     <div className="flex items-center justify-between border-b border-slate-100 px-6 sm:px-8 py-4 bg-white">
       <div className="flex items-center gap-3.5">
         {/* Brand Icon Box */}
-        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-secondary-600 text-white shadow-xs ring-4 ring-secondary-50">
-          <Truck className="h-5.5 w-5.5 text-primary-400" />
+        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-500 text-slate-950 shadow-xs ring-4 ring-primary-100">
+          <Truck className="h-5.5 w-5.5 text-slate-950" />
           <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary-500" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary-600" />
           </span>
         </div>
 

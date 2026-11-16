@@ -1,11 +1,6 @@
 import { PaginatedResponse } from '@/types/api-types';
-import {
-  DEMO_STORAGE_KEYS,
-  readStoredDemoArray,
-  removeStoredDemoKey,
-  writeStoredDemoArray,
-} from '@/lib/local-demo-storage';
-import { MOCK_BOOKING_DETAILS } from '../data/mock-booking-detail-data';
+import { DEMO_STORAGE_KEYS, readStoredDemoArray, removeStoredDemoKey, writeStoredDemoArray } from '@/lib/local-demo-storage';
+import { MOCK_BOOKING_DETAILS, syncOrdersToCurrentDate } from '../data/mock-booking-detail-data';
 import {
   BookingFeeQuote,
   BookingFormData,
@@ -15,6 +10,7 @@ import {
 } from '../types/booking-types';
 import { clearBookingDraft } from './booking-draft-service';
 import { BookingOrderFilter, extractUiStatusesFromFilters } from './booking-order-filter';
+import { BookingDatePreset, getTodayDateKey, isOrderInDatePreset } from './booking-date-filter';
 import { calculateBookingFeeQuote } from './pricing-service';
 
 export interface LocalDemoListParams {
@@ -22,6 +18,7 @@ export interface LocalDemoListParams {
   rpp?: number;
   search?: string;
   status?: string;
+  datePreset?: BookingDatePreset;
   filter?: BookingOrderFilter[];
 }
 
@@ -55,9 +52,30 @@ function stripLargeImages(orders: BookingOrder[]): BookingOrder[] {
 }
 
 function getAllOrders(): BookingOrder[] {
-  return readStoredDemoArray<BookingOrder>(DEMO_STORAGE_KEYS.orders, () =>
+  const todayKey = getTodayDateKey();
+  const stored = readStoredDemoArray<BookingOrder>(DEMO_STORAGE_KEYS.orders, () =>
     Object.values(MOCK_BOOKING_DETAILS),
   );
+  const ord1001 = stored.find((o) => o.id === 'ord-1001');
+  const isUpToDate =
+    typeof window !== 'undefined' &&
+    localStorage.getItem(DEMO_STORAGE_KEYS.seedDate) === todayKey &&
+    ord1001 &&
+    isOrderInDatePreset(ord1001.createdAt, 'today');
+
+  if (!isUpToDate) {
+    const refreshed = syncOrdersToCurrentDate(stored);
+    writeStoredDemoArray(DEMO_STORAGE_KEYS.orders, refreshed, stripLargeImages);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(DEMO_STORAGE_KEYS.seedDate, todayKey);
+      } catch {
+        // Ignore quota/access errors
+      }
+    }
+    return refreshed;
+  }
+  return stored;
 }
 
 function matchesSearch(order: BookingOrder, query: string): boolean {
@@ -89,7 +107,24 @@ export const localDemoBookingStore = {
       const allowed = new Set(filterStatuses);
       filtered = filtered.filter((o) => allowed.has(o.status));
     } else if (params.status && params.status !== 'all') {
-      filtered = filtered.filter((o) => o.status === params.status);
+      const normalized =
+        params.status === 'accepted'
+          ? 'assigned'
+          : params.status === 'in_transit'
+          ? 'out_for_delivery'
+          : params.status === 'fulfilled'
+          ? 'delivered'
+          : params.status;
+
+      filtered = filtered.filter((o) =>
+        normalized === 'pending'
+          ? o.status === 'pending' || o.status === 'draft' || o.status === 'confirmed'
+          : o.status === normalized
+      );
+    }
+
+    if (params.datePreset && params.datePreset !== 'all') {
+      filtered = filtered.filter((o) => isOrderInDatePreset(o.createdAt, params.datePreset!));
     }
 
     if (params.search?.trim()) {
@@ -227,5 +262,6 @@ export const localDemoBookingStore = {
     removeStoredDemoKey(DEMO_STORAGE_KEYS.locations);
     removeStoredDemoKey(DEMO_STORAGE_KEYS.cards);
     removeStoredDemoKey(DEMO_STORAGE_KEYS.userDrafts);
+    removeStoredDemoKey(DEMO_STORAGE_KEYS.seedDate);
   },
 };

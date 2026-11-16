@@ -35,18 +35,18 @@ export function AuthenticationModal({
 
   return (
     <div
-      className='fixed inset-0 z-60 flex items-center justify-center p-4'
+      className='fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-5 select-none'
       role='dialog'
       aria-modal='true'
     >
       {/* Consistent Backdrop Overlay */}
       <div
-        className='absolute inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200'
+        className='absolute inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200'
         aria-hidden='true'
       />
 
       {/* Consistent Modal Container */}
-      <div className='relative z-10 w-full max-w-xl flex flex-col rounded-2xl bg-white shadow-2xl border border-slate-200/80 overflow-hidden animate-in fade-in zoom-in-95 duration-150'>
+      <div className='relative z-10 w-full max-w-xl flex flex-col rounded-2xl bg-white shadow-2xl border border-slate-200/80 overflow-hidden animate-in fade-in zoom-in-95 duration-150 select-text'>
         <AuthModalHeader onClose={onClose} />
 
         {/* Modal Dynamic Body */}

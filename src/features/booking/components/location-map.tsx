@@ -11,17 +11,19 @@ interface LocationMapProps {
   coordinates: GeoCoordinates;
   addressLabel?: string;
   onSelectCoordinates: (coords: GeoCoordinates) => void;
+  onOutOfBounds?: (coords: GeoCoordinates) => void;
   className?: string;
 }
 
 /**
  * Interactive Google Map canvas with draggable pin & tap-to-pin,
- * seamlessly falling back to DeliveryMap embed if API key is not configured.
+ * colored Phnom Penh delivery zone polygon overlay, and fallback to DeliveryMap.
  */
 export function LocationMap({
   coordinates,
   addressLabel,
   onSelectCoordinates,
+  onOutOfBounds,
   className = 'h-56 sm:h-64 w-full',
 }: LocationMapProps) {
   const tPicker = useTranslations('LocationPicker');
@@ -29,6 +31,7 @@ export function LocationMap({
     coordinates,
     markerTitle: addressLabel || tPicker('selectedAddress'),
     onSelectCoordinates,
+    onOutOfBounds,
   });
 
   if (status === 'fallback') {
@@ -57,18 +60,28 @@ export function LocationMap({
       )}
 
       {status === 'ready' && (
-        <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1.5">
-          <a
-            href={externalMapUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 rounded-lg bg-white/95 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm border border-slate-200/80 hover:text-brand-700 hover:bg-white transition backdrop-blur-xs"
-          >
-            <MapPin className="h-3 w-3 text-red-500 shrink-0" />
-            <span>Open in Google Maps</span>
-            <ExternalLink className="h-2.5 w-2.5 text-slate-400 shrink-0" />
-          </a>
-        </div>
+        <>
+          <div className="absolute top-2.5 left-2.5 z-20 flex items-center gap-1.5 rounded-lg bg-white/95 px-2.5 py-1.5 text-[11px] font-semibold text-slate-900 shadow-sm border border-primary-300 backdrop-blur-xs select-none">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500" />
+            </span>
+            <span className="text-slate-950 font-bold">{tPicker('phnomPenhZoneBadge')}</span>
+          </div>
+
+          <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1.5">
+            <a
+              href={externalMapUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 rounded-lg bg-white/95 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm border border-slate-200/80 hover:text-slate-950 hover:bg-white transition backdrop-blur-xs"
+            >
+              <MapPin className="h-3 w-3 text-red-500 shrink-0" />
+              <span>Open in Google Maps</span>
+              <ExternalLink className="h-2.5 w-2.5 text-slate-400 shrink-0" />
+            </a>
+          </div>
+        </>
       )}
     </div>
   );

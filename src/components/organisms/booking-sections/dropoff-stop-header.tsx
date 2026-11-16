@@ -65,7 +65,7 @@ export function DropoffStopHeader({
         </div>
 
         {/* Index badge & destination label */}
-        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-600 text-[11px] font-bold text-white font-mono shadow-2xs">
+        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-500 text-[11px] font-black text-slate-950 font-mono shadow-2xs">
           {index + 1}
         </div>
 

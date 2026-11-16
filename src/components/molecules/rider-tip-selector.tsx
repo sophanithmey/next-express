@@ -98,7 +98,7 @@ export function RiderTipSelector({ tipAmount, onChangeTip }: RiderTipSelectorPro
           className={cn(
             'min-h-11 rounded-xl border px-3 py-2 text-xs font-semibold transition-all',
             isNoTipSelected
-              ? 'border-secondary-600 bg-secondary-50 text-secondary-800 ring-1 ring-secondary-600'
+              ? 'border-primary-500 bg-primary-100 text-slate-950 font-bold ring-1 ring-primary-500'
               : 'border-slate-200 bg-slate-50/70 text-slate-600 hover:border-slate-300 hover:bg-slate-100/80'
           )}
         >
@@ -115,8 +115,8 @@ export function RiderTipSelector({ tipAmount, onChangeTip }: RiderTipSelectorPro
               className={cn(
                 'relative min-h-11 rounded-xl border px-3 py-2 text-xs font-bold font-mono transition-all',
                 active
-                  ? 'border-secondary-600 bg-secondary-50 text-secondary-800 ring-1 ring-secondary-600 shadow-2xs'
-                  : 'border-slate-200 bg-white text-slate-700 hover:border-secondary-300 hover:bg-secondary-50/40'
+                  ? 'border-primary-500 bg-primary-100 text-slate-950 ring-1 ring-primary-500 shadow-2xs'
+                  : 'border-slate-200 bg-white text-slate-700 hover:border-primary-300 hover:bg-primary-50/40'
               )}
             >
               {APP_CONFIG.currencySymbol}
@@ -131,8 +131,8 @@ export function RiderTipSelector({ tipAmount, onChangeTip }: RiderTipSelectorPro
           className={cn(
             'min-h-11 rounded-xl border px-3 py-2 text-xs font-semibold transition-all col-span-2 sm:col-span-1',
             isCustomMode
-              ? 'border-secondary-600 bg-secondary-50 text-secondary-800 ring-1 ring-secondary-600'
-              : 'border-slate-200 bg-white text-slate-700 hover:border-secondary-300 hover:bg-secondary-50/40'
+              ? 'border-primary-500 bg-primary-100 text-slate-950 font-bold ring-1 ring-primary-500'
+              : 'border-slate-200 bg-white text-slate-700 hover:border-primary-300 hover:bg-primary-50/40'
           )}
         >
           {tPayment('tipCustom')}
@@ -153,7 +153,7 @@ export function RiderTipSelector({ tipAmount, onChangeTip }: RiderTipSelectorPro
               onChange={(e) => handleCustomChange(e.target.value)}
               placeholder={tPayment('tipPlaceholder')}
               aria-label={tPayment('tipCustom')}
-              className="min-h-11 w-full rounded-xl border border-secondary-300 bg-white pl-8 pr-4 py-2 text-sm font-mono font-bold text-slate-900 placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 focus:border-secondary-600 focus:outline-hidden focus:ring-2 focus:ring-secondary-500/20"
+              className="min-h-11 w-full rounded-xl border border-primary-300 bg-white pl-8 pr-4 py-2 text-sm font-mono font-bold text-slate-900 placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 focus:border-primary-500 focus:outline-hidden focus:ring-2 focus:ring-primary-400/25"
             />
           </div>
           <button

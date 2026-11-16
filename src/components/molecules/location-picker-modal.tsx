@@ -64,18 +64,18 @@ export function LocationPickerModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-150 select-none"
       role="dialog"
       aria-modal="true"
       aria-label={modalTitle}
     >
       <div
-        className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs"
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
         aria-hidden="true"
         onClick={onClose}
       />
-      <div className="relative z-10 w-full max-w-xl sm:max-w-xl lg:max-w-2xl max-h-[92vh] flex flex-col rounded-2xl bg-white shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95">
-        <div className="flex items-center justify-between border-b border-slate-100 p-4 sm:p-5 bg-slate-50/70">
+      <div className="relative z-10 w-full max-w-5xl xl:max-w-6xl h-[90vh] min-h-[640px] max-h-[94vh] flex flex-col rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 select-text">
+        <div className="flex items-center justify-between border-b border-slate-100 p-4 sm:p-5 bg-slate-50/70 shrink-0">
           <div>
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
               <MapPin className="h-4 w-4 text-brand-600" />
@@ -93,7 +93,7 @@ export function LocationPickerModal({
           </button>
         </div>
 
-        <div className="flex border-b border-slate-100 bg-slate-50/50 p-1 text-xs">
+        <div className="flex border-b border-slate-100 bg-slate-50/50 p-1 text-xs shrink-0">
           <button
             type="button"
             onClick={() => picker.setActiveTab('map')}
@@ -125,65 +125,74 @@ export function LocationPickerModal({
           </button>
         </div>
 
-        {picker.activeTab === 'map' && (
-          <LocationPickerMapTab
-            pinnedCoords={picker.pinnedCoords}
-            pinAddress={picker.pinAddress}
-            linkInput={picker.linkInput}
-            placeSuggestions={picker.placeSuggestions}
-            savedSuggestions={picker.savedSuggestions}
-            isLocating={picker.isLocating}
-            isSearchingPlaces={picker.isSearchingPlaces}
-            isReverseGeocoding={picker.isReverseGeocoding}
-            geolocationError={picker.geolocationError}
-            isResolvingLink={picker.isResolvingLink}
-            detectedStatus={picker.detectedStatus}
-            linkError={picker.linkError}
-            isPickingForNewLocation={picker.isPickingForNew}
-            onLinkChange={picker.handleLinkChange}
-            onPinAddressChange={picker.setPinAddress}
-            onClearLinkInput={picker.clearLinkInput}
-            onSelectPlace={picker.handleSelectPlace}
-            onSelectSaved={picker.handleSelectSavedSuggestion}
-            onSelectCoordinates={picker.handleMapCoordinateSelect}
-            onNudge={picker.nudgePin}
-            onQuickChipSelect={picker.handleSelectChip}
-            onUseCurrentLocation={picker.handleUseCurrentLocation}
-            onConfirmPin={picker.handleConfirmPin}
-            onSavePinToLocations={onCreateLocation ? picker.handleOpenCreate : undefined}
-          />
-        )}
+        <div className="flex-1 min-h-0 flex flex-col">
+          {picker.activeTab === 'map' && (
+            <LocationPickerMapTab
+              pinnedCoords={picker.pinnedCoords}
+              pinAddress={picker.pinAddress}
+              linkInput={picker.linkInput}
+              placeSuggestions={picker.placeSuggestions}
+              savedSuggestions={picker.savedSuggestions}
+              isLocating={picker.isLocating}
+              isSearchingPlaces={picker.isSearchingPlaces}
+              isReverseGeocoding={picker.isReverseGeocoding}
+              geolocationError={picker.geolocationError}
+              isResolvingLink={picker.isResolvingLink}
+              detectedStatus={picker.detectedStatus}
+              linkError={picker.linkError}
+              regionError={picker.regionError}
+              isInsideRegion={picker.isInsideRegion}
+              isPickingForNewLocation={picker.isPickingForNew}
+              onLinkChange={picker.handleLinkChange}
+              onPinAddressChange={picker.setPinAddress}
+              onClearLinkInput={picker.clearLinkInput}
+              onSelectPlace={picker.handleSelectPlace}
+              onSelectSaved={picker.handleSelectSavedSuggestion}
+              onSelectCoordinates={picker.handleMapCoordinateSelect}
+              onOutOfBounds={picker.handleOutOfBounds}
+              onNudge={picker.nudgePin}
+              onQuickChipSelect={picker.handleSelectChip}
+              onUseCurrentLocation={picker.handleUseCurrentLocation}
+              onConfirmPin={picker.handleConfirmPin}
+              onSavePinToLocations={onCreateLocation ? picker.handleOpenCreate : undefined}
+            />
+          )}
 
-        {picker.activeTab === 'saved' && !picker.isCreating && (
-          <LocationPickerSavedList
-            locations={savedLocations}
-            selectedAddress={selectedAddress}
-            highlightedLocationId={picker.highlightedId}
-            onSelect={onSelect}
-            onAddNew={onCreateLocation ? picker.handleOpenCreate : undefined}
-            onPreviewOnMap={picker.handlePreviewOnMap}
-            onClose={onClose}
-          />
-        )}
+          {picker.activeTab === 'saved' && !picker.isCreating && (
+            <div className="flex-1 overflow-y-auto min-h-0">
+              <LocationPickerSavedList
+                locations={savedLocations}
+                selectedAddress={selectedAddress}
+                highlightedLocationId={picker.highlightedId}
+                onSelect={onSelect}
+                onAddNew={onCreateLocation ? picker.handleOpenCreate : undefined}
+                onPreviewOnMap={picker.handlePreviewOnMap}
+                onClose={onClose}
+              />
+            </div>
+          )}
 
-        {picker.activeTab === 'saved' && picker.isCreating && (
-          <LocationPickerCreateForm
-            draft={picker.createDraft}
-            coordinates={picker.pinnedCoords}
-            isLocating={picker.isLocating}
-            onDraftChange={picker.setCreateDraft}
-            onUseCurrentLocation={picker.handleUseCurrentLocation}
-            onPickOnMap={() => {
-              picker.setIsPickingForNew(true);
-              picker.setActiveTab('map');
-            }}
-            onCancel={() => {
-              picker.setIsCreating(false);
-              picker.setIsPickingForNew(false);
-            }}
-            onSubmit={picker.handleCreateSubmit}
-          />
-        )}
+          {picker.activeTab === 'saved' && picker.isCreating && (
+            <div className="flex-1 overflow-y-auto min-h-0">
+              <LocationPickerCreateForm
+                draft={picker.createDraft}
+                coordinates={picker.pinnedCoords}
+                isLocating={picker.isLocating}
+                onDraftChange={picker.setCreateDraft}
+                onUseCurrentLocation={picker.handleUseCurrentLocation}
+                onPickOnMap={() => {
+                  picker.setIsPickingForNew(true);
+                  picker.setActiveTab('map');
+                }}
+                onCancel={() => {
+                  picker.setIsCreating(false);
+                  picker.setIsPickingForNew(false);
+                }}
+                onSubmit={picker.handleCreateSubmit}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

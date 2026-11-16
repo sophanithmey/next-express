@@ -65,7 +65,7 @@ export function DeliveryMap({
       {!isLoaded && (
         <div className='absolute inset-0 flex items-center justify-center bg-slate-100 text-xs text-slate-400 animate-pulse z-10'>
           <div className='flex items-center gap-2'>
-            <MapPin className='h-4 w-4 text-brand-600 animate-bounce' />
+            <MapPin className='h-4 w-4 text-amber-600 animate-bounce' />
             <span>Loading Google Map…</span>
           </div>
         </div>
@@ -88,7 +88,7 @@ export function DeliveryMap({
           href={externalGoogleMapsUrl}
           target='_blank'
           rel='noopener noreferrer'
-          className='flex items-center gap-1 rounded-lg bg-white/95 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm border border-slate-200/80 hover:text-brand-700 hover:bg-white transition backdrop-blur-xs'
+          className='flex items-center gap-1 rounded-lg bg-white/95 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm border border-slate-200/80 hover:text-slate-950 hover:bg-white transition backdrop-blur-xs'
         >
           <MapPin className='h-3 w-3 text-red-500 shrink-0' />
           <span>Open in Google Maps</span>

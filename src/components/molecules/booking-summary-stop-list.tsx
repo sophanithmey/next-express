@@ -30,7 +30,7 @@ export function BookingSummaryStopList({
       <Navigation className='h-4 w-4 text-brand-600 mt-0.5 shrink-0' />
       <div className='min-w-0 flex-1'>
         <div className='flex items-center justify-between gap-2'>
-          <span className='text-[11px] font-medium text-slate-400 uppercase tracking-wider'>
+          <span className='text-xs font-semibold text-slate-500'>
             {tRecipient('title')}
           </span>
           {isMultiDrop && dropoffs && (

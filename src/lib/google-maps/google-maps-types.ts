@@ -16,6 +16,16 @@ export interface GoogleMapMouseEvent {
   latLng: GoogleLatLng | null;
 }
 
+export interface GoogleMapRestrictionOptions {
+  latLngBounds: {
+    north: number;
+    south: number;
+    west: number;
+    east: number;
+  };
+  strictBounds?: boolean;
+}
+
 export interface GoogleMapOptions {
   center: GoogleLatLngLiteral;
   zoom: number;
@@ -27,6 +37,7 @@ export interface GoogleMapOptions {
   fullscreenControl?: boolean;
   gestureHandling?: 'cooperative' | 'greedy' | 'none' | 'auto';
   clickableIcons?: boolean;
+  restriction?: GoogleMapRestrictionOptions;
 }
 
 export interface GoogleMapInstance {
@@ -129,6 +140,27 @@ export interface GoogleGeocoder {
   ) => void;
 }
 
+export interface GooglePolygonOptions {
+  paths: GoogleLatLngLiteral[] | GoogleLatLngLiteral[][];
+  strokeColor?: string;
+  strokeOpacity?: number;
+  strokeWeight?: number;
+  fillColor?: string;
+  fillOpacity?: number;
+  clickable?: boolean;
+  map?: GoogleMapInstance | null;
+  zIndex?: number;
+}
+
+export interface GooglePolygonInstance {
+  setMap: (map: GoogleMapInstance | null) => void;
+  setOptions?: (options: Partial<GooglePolygonOptions>) => void;
+  addListener?: (
+    eventName: string,
+    handler: (event: GoogleMapMouseEvent) => void,
+  ) => GoogleMapsEventListener;
+}
+
 export interface GoogleMapsNamespace {
   Map: new (
     container: HTMLElement,
@@ -137,6 +169,9 @@ export interface GoogleMapsNamespace {
   Marker?: new (
     options: GoogleClassicMarkerOptions,
   ) => GoogleClassicMarkerInstance;
+  Polygon?: new (
+    options: GooglePolygonOptions,
+  ) => GooglePolygonInstance;
   Geocoder?: new () => GoogleGeocoder;
   importLibrary?: (name: string) => Promise<Record<string, unknown>>;
   marker?: {

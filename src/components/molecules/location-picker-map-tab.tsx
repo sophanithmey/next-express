@@ -26,6 +26,8 @@ interface LocationPickerMapTabProps {
   isResolvingLink: boolean;
   detectedStatus: string | null;
   linkError: string | null;
+  regionError?: string | null;
+  isInsideRegion?: boolean;
   isPickingForNewLocation?: boolean;
   onLinkChange: (value: string) => void;
   onPinAddressChange: (value: string) => void;
@@ -33,6 +35,7 @@ interface LocationPickerMapTabProps {
   onSelectPlace?: (prediction: PlaceSuggestion) => void;
   onSelectSaved?: (location: SavedLocationItem) => void;
   onSelectCoordinates?: (coords: GeoCoordinates) => void;
+  onOutOfBounds?: (coords: GeoCoordinates) => void;
   onUseCurrentLocation: () => void;
   onNudge: (deltaLat: number, deltaLng: number) => void;
   onQuickChipSelect: (chip: { name: string; address: string; coords: GeoCoordinates }) => void;
@@ -53,6 +56,8 @@ export function LocationPickerMapTab({
   isResolvingLink,
   detectedStatus,
   linkError,
+  regionError,
+  isInsideRegion = true,
   isPickingForNewLocation = false,
   onLinkChange,
   onPinAddressChange,
@@ -60,6 +65,7 @@ export function LocationPickerMapTab({
   onSelectPlace,
   onSelectSaved,
   onSelectCoordinates,
+  onOutOfBounds,
   onUseCurrentLocation,
   onNudge,
   onQuickChipSelect,
@@ -68,19 +74,17 @@ export function LocationPickerMapTab({
 }: LocationPickerMapTabProps) {
   const tPicker = useTranslations('LocationPicker');
 
-  const displayError =
-    linkError ||
-    (geolocationError === 'permission_denied'
-      ? tPicker('permissionDenied')
-      : geolocationError === 'timeout'
-      ? tPicker('locationTimeout')
-      : geolocationError === 'unavailable'
-      ? tPicker('unableRetrieveLocation')
-      : null);
+  const geoErrorMap: Record<GeolocationErrorReason, string> = {
+    permission_denied: tPicker('permissionDenied'),
+    timeout: tPicker('locationTimeout'),
+    unavailable: tPicker('unableRetrieveLocation'),
+  };
+  const displayError = regionError || linkError || (geolocationError ? geoErrorMap[geolocationError] : null);
 
   return (
-    <div className="p-4 space-y-2.5 overflow-y-auto">
-      {/* 1. Search Bar + Current GPS Button */}
+    <div className="flex flex-col h-full min-h-0">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
+        {/* 1. Search Bar + Current GPS Button */}
       <LocationPickerSearchBar
         linkInput={linkInput}
         isLocating={isLocating}
@@ -120,12 +124,13 @@ export function LocationPickerMapTab({
       <LocationPickerQuickChips onSelectChip={onQuickChipSelect} />
 
       {/* 4. Map with Nudge Pin Overlay */}
-      <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+      <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-2xs">
         <LocationMap
           coordinates={pinnedCoords}
           addressLabel={pinAddress}
           onSelectCoordinates={onSelectCoordinates || (() => {})}
-          className="h-56 sm:h-64 w-full"
+          onOutOfBounds={onOutOfBounds}
+          className="h-72 sm:h-96 md:h-[480px] lg:h-[540px] xl:h-[580px] w-full"
         />
         <LocationPickerNudgeOverlay onNudge={onNudge} />
       </div>
@@ -139,9 +144,9 @@ export function LocationPickerMapTab({
               {pinnedCoords.lat.toFixed(5)}, {pinnedCoords.lng.toFixed(5)}
             </strong>
           </span>
-          <span className="text-brand-700 font-semibold shrink-0 flex items-center gap-1">
-            <MapPin className="h-3 w-3" />
-            <span>Google Maps</span>
+          <span className="text-amber-800 font-semibold shrink-0 flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-amber-500 inline-block" />
+            <span>{tPicker('phnomPenhZoneBadge')}</span>
           </span>
         </div>
         <input
@@ -150,11 +155,13 @@ export function LocationPickerMapTab({
           onChange={(e) => onPinAddressChange(e.target.value)}
           placeholder={tPicker('confirmAddressPlaceholder')}
           aria-label={tPicker('selectedAddress')}
-          className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/15"
+          className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20"
         />
       </div>
+    </div>
 
-      {/* 6. Buttons: Save Location & Confirm Pinned Location */}
+    {/* 6. Sticky Bottom Action Bar */}
+    <div className="shrink-0 border-t border-slate-200 bg-white/95 backdrop-blur-xs p-3.5 sm:p-4 shadow-sm">
       <div className="flex flex-col sm:flex-row gap-2">
         {!isPickingForNewLocation && onSavePinToLocations && (
           <Button
@@ -165,7 +172,7 @@ export function LocationPickerMapTab({
             onClick={onSavePinToLocations}
             className="sm:w-auto py-2.5 px-3.5 text-xs font-semibold border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-1.5"
           >
-            <BookmarkPlus className="h-3.5 w-3.5 text-brand-600" />
+            <BookmarkPlus className="h-3.5 w-3.5 text-amber-700" />
             <span>{tPicker('saveLocation')}</span>
           </Button>
         )}
@@ -175,7 +182,7 @@ export function LocationPickerMapTab({
           size="md"
           disabled={isResolvingLink}
           onClick={onConfirmPin}
-          className="flex-1 py-2.5 font-bold text-xs bg-brand-600 hover:bg-brand-700 text-white shadow-sm"
+          className="flex-1 py-2.5 font-bold text-xs bg-primary-500 hover:bg-primary-400 text-slate-950 shadow-sm"
         >
           {isResolvingLink
             ? tPicker('resolvingLink')
@@ -185,5 +192,6 @@ export function LocationPickerMapTab({
         </Button>
       </div>
     </div>
-  );
+  </div>
+);
 }

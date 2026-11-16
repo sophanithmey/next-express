@@ -71,7 +71,7 @@ export function BookingHorizontalRoutePickupItem({
         )}
 
         {hasBankAccount ? (
-          <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-secondary-700">
+          <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-slate-700">
             <Landmark className="h-3 w-3 shrink-0" />
             <span>
               {pickup.settlementAccountName} · {pickup.settlementAccountNumber}
@@ -86,7 +86,7 @@ export function BookingHorizontalRoutePickupItem({
       </div>
 
       {/* Edit Trigger */}
-      <div className="shrink-0 pt-1 text-slate-400 group-hover:text-brand-600 transition">
+      <div className="shrink-0 pt-1 text-slate-400 group-hover:text-amber-800 transition">
         <div className="flex items-center gap-1 text-xs font-semibold">
           <span className="hidden sm:inline">{tCommon('edit')}</span>
           <Pencil className="h-3.5 w-3.5" />

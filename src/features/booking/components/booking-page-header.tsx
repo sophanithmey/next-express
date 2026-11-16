@@ -85,7 +85,7 @@ export function BookingPageHeader({
           <Link
             href="/bookings"
             prefetch={true}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-secondary-700 hover:text-secondary-800 bg-secondary-50 hover:bg-secondary-100 border border-secondary-200 px-3 py-1.5 rounded-xl transition"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-primary-950 hover:text-slate-950 bg-primary-50 hover:bg-primary-100 border border-primary-300 px-3 py-1.5 rounded-xl transition"
           >
             <span>{tNav('myBookings')}</span>
             <ArrowRight className="h-3.5 w-3.5" />

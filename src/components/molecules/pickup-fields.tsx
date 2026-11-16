@@ -72,8 +72,8 @@ export function PickupFields({
       ? tPickup('addWingBankRequiredChip')
       : tPickup('addWingBankChip');
 
-  const wingBankButtonClasses =
-    'border-wing-bank bg-wing-bank text-white hover:bg-wing-bank-hover hover:border-wing-bank-hover font-semibold shadow-2xs';
+  const wingBankActiveClasses =
+    'border-wing-bank bg-wing-bank/10 text-wing-bank-hover font-semibold';
 
   const optionalPills: OptionalFieldPill[] = [
     {
@@ -81,10 +81,10 @@ export function PickupFields({
       label: bankChipLabel,
       icon: <Landmark className="h-3.5 w-3.5 shrink-0" />,
       isOpen: isBankOpen,
-      hasValue: hasBankAccount,
-      idleClasses: wingBankButtonClasses,
-      openClasses: `${wingBankButtonClasses} ring-2 ring-wing-bank/25`,
-      filledClasses: wingBankButtonClasses,
+      hasValue: hasBankAccount || isCod,
+      idleClasses: isCod ? wingBankActiveClasses : undefined,
+      openClasses: `${wingBankActiveClasses} ring-2 ring-wing-bank/25`,
+      filledClasses: wingBankActiveClasses,
       onToggle: handleToggleBank,
     },
     {

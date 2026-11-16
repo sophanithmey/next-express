@@ -17,4 +17,14 @@ describe('delivery-schedule-options', () => {
     expect(findDeliverySlotLabelKey('evening', '07:00 - 08:00 AM')).toBeNull();
     expect(findDeliverySlotLabelKey('morning', '')).toBeNull();
   });
+
+  it('verifies all shift slot collections contain expected daytime hours', () => {
+    const morning = DELIVERY_SHIFTS.find((s) => s.id === 'morning');
+    const afternoon = DELIVERY_SHIFTS.find((s) => s.id === 'afternoon');
+    const evening = DELIVERY_SHIFTS.find((s) => s.id === 'evening');
+
+    expect(morning?.slots.length).toBeGreaterThanOrEqual(4);
+    expect(afternoon?.slots.length).toBeGreaterThanOrEqual(4);
+    expect(evening?.slots.length).toBeGreaterThanOrEqual(4);
+  });
 });

@@ -65,7 +65,7 @@ export function TrackingShareActions({
           'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold shadow-2xs transition cursor-pointer whitespace-nowrap',
           copiedLink
             ? 'bg-success-600 text-white'
-            : 'bg-secondary-600 text-white hover:bg-secondary-700'
+            : 'bg-primary-500 text-slate-950 font-bold hover:bg-primary-400'
         )}
       >
         {copiedLink ? (

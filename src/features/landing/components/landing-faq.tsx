@@ -61,7 +61,7 @@ export function LandingFaq() {
           <a
             href={`tel:${APP_CONFIG.supportPhoneRaw}`}
             title={`Call ${APP_CONFIG.supportPhone} (Daily 06:00 AM - 09:00 PM)`}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-secondary-600 hover:bg-secondary-700 active:scale-95 text-white text-xs sm:text-sm font-semibold px-6 py-2.5 shadow-xs transition shrink-0 cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-primary-500 hover:bg-primary-400 active:scale-95 text-slate-950 text-xs sm:text-sm font-bold px-6 py-2.5 shadow-xs transition shrink-0 cursor-pointer"
           >
             <span>{t('contactUsCta')}</span>
             <ArrowRight className="h-4 w-4" />

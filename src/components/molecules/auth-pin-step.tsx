@@ -46,8 +46,8 @@ export function AuthPinStep({
     <div className='space-y-6 text-center'>
       {/* Header Info */}
       <div className='space-y-2'>
-        <div className='inline-flex items-center gap-1.5 rounded-full bg-secondary-50 border border-secondary-200/80 px-3 py-1 text-xs font-bold text-secondary-800'>
-          <ShieldCheck className='h-3.5 w-3.5 text-secondary-600' />
+        <div className='inline-flex items-center gap-1.5 rounded-full bg-primary-50 border border-primary-300 px-3 py-1 text-xs font-bold text-primary-950'>
+          <ShieldCheck className='h-3.5 w-3.5 text-amber-700' />
           <span>Security Verification</span>
         </div>
         <h3 className='text-2xl font-black text-slate-900 tracking-tight'>
@@ -58,7 +58,7 @@ export function AuthPinStep({
           <button
             type='button'
             onClick={onBack}
-            className='font-bold text-secondary-600 hover:text-secondary-800 underline underline-offset-2 ml-1 cursor-pointer transition'
+            className='font-bold text-amber-800 hover:text-amber-900 underline underline-offset-2 ml-1 cursor-pointer transition'
           >
             {t('changePhone')}
           </button>
@@ -101,7 +101,7 @@ export function AuthPinStep({
         onClick={() => onVerify(pin)}
         isLoading={isLoading}
         disabled={isLoading}
-        className='w-full py-4.5 text-base font-bold bg-secondary-600 hover:bg-secondary-700 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2'
+        className='w-full py-4.5 text-base font-bold bg-primary-500 hover:bg-primary-400 disabled:bg-slate-200 disabled:text-slate-400 text-slate-950 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2'
         leftIcon={<Check className='h-4.5 w-4.5' />}
       >
         {isLoading ? t('verifying') : t('verifyButton')}

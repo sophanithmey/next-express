@@ -2,6 +2,7 @@
 
 import React, { useId } from 'react';
 import { AsYouType } from 'libphonenumber-js/max';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/cn';
 import {
   DEFAULT_CALLING_CODE,
@@ -15,6 +16,7 @@ export interface PhoneInputProps
   label?: string;
   required?: boolean;
   optional?: boolean;
+  optionalText?: string;
   error?: string | boolean;
   helperText?: string;
   sizeVariant?: 'sm' | 'md' | 'lg';
@@ -41,6 +43,7 @@ export const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
       label,
       required,
       optional,
+      optionalText,
       error,
       helperText,
       sizeVariant = 'md',
@@ -57,6 +60,7 @@ export const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
     },
     ref
   ) => {
+    const tCommon = useTranslations('Common');
     const generatedId = useId();
     const inputId = propId || generatedId;
 
@@ -97,7 +101,7 @@ export const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
             </label>
             {optional && (
               <span className="text-[11px] text-slate-400 font-normal">
-                (Optional)
+                ({optionalText ?? tCommon('optional')})
               </span>
             )}
           </div>

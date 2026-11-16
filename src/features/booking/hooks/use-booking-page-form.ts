@@ -88,17 +88,25 @@ export function useBookingPageForm(
   // Live estimated delivery fee (accounting for extra stops and delivery speed)
   const feeQuote = useMemo(() => {
     const additionalStops = Math.max(0, (formData.dropoffs?.length || 1) - 1);
+    const effectiveSpeed: DeliverySpeedOption =
+      formData.deliveryOption === 'scheduled' || formData.deliveryOption === 'same_day'
+        ? formData.deliverySchedule?.date === 'today'
+          ? 'same_day'
+          : 'scheduled'
+        : 'instant';
+
     return calculateMockFee(
       formData.pickup.coordinates,
       formData.dropoff.coordinates,
       additionalStops,
-      formData.deliveryOption || 'instant',
+      effectiveSpeed,
     );
   }, [
     formData.pickup.coordinates,
     formData.dropoff.coordinates,
     formData.dropoffs,
     formData.deliveryOption,
+    formData.deliverySchedule?.date,
   ]);
 
   const recentBookings = useMemo(
@@ -227,17 +235,26 @@ export function useBookingPageForm(
         ...prev,
         deliveryOption,
         deliverySchedule:
-          deliveryOption === 'scheduled' && !prev.deliverySchedule
+          (deliveryOption === 'scheduled' || deliveryOption === 'same_day') && !prev.deliverySchedule
             ? {
-                date: 'tomorrow',
-                dateLabel: 'Tomorrow',
+                date: deliveryOption === 'same_day' ? 'today' : 'tomorrow',
+                dateLabel: deliveryOption === 'same_day' ? 'Today' : 'Tomorrow',
                 shift: 'morning',
                 timeSlot: '',
               }
             : prev.deliverySchedule,
       })),
     onChangeDeliverySchedule: (deliverySchedule: DeliverySchedule) =>
-      setFormData((prev) => ({ ...prev, deliverySchedule })),
+      setFormData((prev) => ({
+        ...prev,
+        deliverySchedule,
+        deliveryOption:
+          prev.deliveryOption === 'instant'
+            ? prev.deliveryOption
+            : deliverySchedule.date === 'today'
+            ? 'same_day'
+            : 'scheduled',
+      })),
     onOptimizeRoute: handleOptimizeRoute,
     onSubmit: handleConfirmClick,
     isSubmitting,

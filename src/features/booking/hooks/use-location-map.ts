@@ -7,6 +7,7 @@ import {
   GoogleMapsErrorCode,
   GoogleMapsLoadError,
   GoogleMapsNamespace,
+  GooglePolygonInstance,
   getGoogleMapsMapId,
   loadGoogleMapsApi,
 } from '@/lib/google-maps/google-maps-loader';
@@ -15,29 +16,42 @@ import {
   createDraggableMarker,
   toNumericCoords,
 } from '@/lib/google-maps/google-maps-marker';
+import {
+  PHNOM_PENH_BOUNDARY,
+  PHNOM_PENH_POLYGON_STYLE,
+  PHNOM_PENH_RESTRICTION_BOUNDS,
+  isInsidePhnomPenh,
+} from '@/features/booking/services/phnom-penh-region';
 
 interface UseLocationMapParams {
   coordinates: GeoCoordinates;
   markerTitle: string;
   onSelectCoordinates: (coords: GeoCoordinates) => void;
+  onOutOfBounds?: (coords: GeoCoordinates) => void;
 }
 
 const DEFAULT_ZOOM = 16;
 
 /**
  * Manages interactive Google Map lifecycle, draggable pin synchronization,
- * click-to-move selection, recentering, and fallback error classification.
+ * click-to-move selection, recentering, Phnom Penh boundary polygon, and fallback error classification.
  */
 export function useLocationMap({
   coordinates,
   markerTitle,
   onSelectCoordinates,
+  onOutOfBounds,
 }: UseLocationMapParams) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<GoogleMapInstance | null>(null);
   const markerRef = useRef<InteractiveMarkerHandle | null>(null);
+  const polygonRef = useRef<GooglePolygonInstance | null>(null);
+  const coordsRef = useRef(coordinates);
+  coordsRef.current = coordinates;
   const onSelectRef = useRef(onSelectCoordinates);
   onSelectRef.current = onSelectCoordinates;
+  const onOutOfBoundsRef = useRef(onOutOfBounds);
+  onOutOfBoundsRef.current = onOutOfBounds;
 
   const [status, setStatus] = useState<'loading' | 'ready' | 'fallback'>('loading');
   const [fallbackCode, setFallbackCode] =
@@ -62,20 +76,44 @@ export function useLocationMap({
           streetViewControl: false,
           fullscreenControl: false,
           gestureHandling: 'greedy',
+          restriction: {
+            latLngBounds: PHNOM_PENH_RESTRICTION_BOUNDS,
+            strictBounds: false,
+          },
         });
         mapRef.current = mapInstance;
+
+        // Render Phnom Penh colored delivery region polygon
+        if (maps.Polygon) {
+          polygonRef.current = new maps.Polygon({
+            paths: PHNOM_PENH_BOUNDARY.map((c) => ({ lat: c.lat, lng: c.lng })),
+            ...PHNOM_PENH_POLYGON_STYLE,
+            map: mapInstance,
+          });
+        }
 
         markerRef.current = createDraggableMarker(
           maps,
           mapInstance,
           coordinates,
           markerTitle,
-          (next) => onSelectRef.current(next),
+          (next) => {
+            if (!isInsidePhnomPenh(next)) {
+              markerRef.current?.setPosition(coordsRef.current);
+              onOutOfBoundsRef.current?.(next);
+              return;
+            }
+            onSelectRef.current(next);
+          },
         );
 
         clickListener = mapInstance.addListener('click', (evt) => {
           const next = toNumericCoords(evt.latLng);
           if (!next) return;
+          if (!isInsidePhnomPenh(next)) {
+            onOutOfBoundsRef.current?.(next);
+            return;
+          }
           markerRef.current?.setPosition(next);
           onSelectRef.current(next);
         });
@@ -95,6 +133,8 @@ export function useLocationMap({
       clickListener?.remove();
       markerRef.current?.cleanup();
       markerRef.current = null;
+      polygonRef.current?.setMap(null);
+      polygonRef.current = null;
       if (mapsNamespace?.event && mapInstance) {
         mapsNamespace.event.clearInstanceListeners(mapInstance);
       }

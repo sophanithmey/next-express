@@ -29,7 +29,7 @@ export function LandingCta() {
           <Link
             href="/booking"
             prefetch={true}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-secondary-600 px-8 py-4 text-sm font-bold text-white shadow-md hover:bg-secondary-700 hover:shadow-lg transition active:scale-[0.99]"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-primary-500 hover:bg-primary-400 px-8 py-4 text-sm font-bold text-slate-950 shadow-md hover:shadow-lg transition active:scale-[0.99]"
           >
             <span>{t('button')}</span>
             <ArrowRight className="h-4 w-4" />

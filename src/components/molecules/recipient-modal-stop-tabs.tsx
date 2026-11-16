@@ -79,9 +79,9 @@ export function RecipientModalStopTabs({
       <button
         type="button"
         onClick={onAddStop}
-        className="inline-flex shrink-0 items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-dashed border-brand-300 whitespace-nowrap transition cursor-pointer"
+        className="inline-flex shrink-0 items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-900 bg-primary-50 hover:bg-primary-100 border border-dashed border-primary-300 whitespace-nowrap transition cursor-pointer"
       >
-        <Plus className="h-3 w-3" />
+        <Plus className="h-3 w-3 text-slate-900" />
         <span>{tRecipient('addStopShort')}</span>
       </button>
     </div>

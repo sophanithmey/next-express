@@ -89,7 +89,7 @@ export function BookingHistoryMobileCard({
             {formatPhoneNumber(order.recipient.phoneNumber)}
           </span>
           {stopsCount > 1 && (
-            <span className="rounded bg-brand-50 border border-brand-200 px-1.5 py-0.5 text-xs font-bold text-brand-800">
+            <span className="rounded bg-primary-50 border border-primary-300 px-1.5 py-0.5 text-xs font-bold text-primary-950">
               {tHistory('stopsBadge', { count: stopsCount })}
             </span>
           )}
@@ -102,7 +102,7 @@ export function BookingHistoryMobileCard({
 
         {order.deliverer && (
           <div className="flex items-center gap-1.5 text-slate-600">
-            <Bike className="h-3.5 w-3.5 shrink-0 text-secondary-600" />
+            <Bike className="h-3.5 w-3.5 shrink-0 text-amber-700" />
             <span className="font-medium">{order.deliverer.name}</span>
           </div>
         )}
@@ -139,7 +139,7 @@ export function BookingHistoryMobileCard({
                 {isCopiedLink ? (
                   <Check className="h-3.5 w-3.5 text-success-600" />
                 ) : (
-                  <Link2 className="h-3.5 w-3.5 text-secondary-600" />
+                  <Link2 className="h-3.5 w-3.5 text-amber-700" />
                 )}
               </button>
               <Link
@@ -154,7 +154,7 @@ export function BookingHistoryMobileCard({
           <button
             type="button"
             onClick={() => onRepeatBooking(order)}
-            className="inline-flex min-h-9 items-center gap-1 rounded-lg bg-brand-50 px-2.5 text-xs font-semibold text-brand-700 hover:bg-brand-100"
+            className="inline-flex min-h-9 items-center gap-1 rounded-lg bg-primary-50 px-2.5 text-xs font-bold text-primary-950 hover:bg-primary-100"
             title="Book Again"
           >
             <Repeat className="h-3.5 w-3.5" />

@@ -62,9 +62,9 @@ export function LiveTrackingSidebar({
         {isCourierAssigned ? (
           <a
             href={`tel:${courierPhone.replace(/\s+/g, '')}`}
-            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-secondary-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-secondary-700 active:scale-95 transition"
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary-500 hover:bg-primary-400 px-4 py-2.5 text-xs font-bold text-slate-950 shadow-xs active:scale-95 transition"
           >
-            <PhoneCall className="h-4 w-4 text-primary-400" />
+            <PhoneCall className="h-4 w-4 text-slate-950" />
             <span>
               {tLive('callCourier')} · {courierPhone}
             </span>
@@ -104,7 +104,7 @@ export function LiveTrackingSidebar({
       {/* Parcel Summary Card */}
       <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-2xs space-y-3 text-xs">
         <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5">
-          <Package className="h-4 w-4 text-secondary-600" />
+          <Package className="h-4 w-4 text-amber-700" />
           <h3 className="font-bold text-slate-900 text-sm">{tLive('parcelCardTitle')}</h3>
         </div>
 
@@ -126,7 +126,7 @@ export function LiveTrackingSidebar({
       {/* Support & Merchant Booking CTA */}
       <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-2xs space-y-3.5">
         <div className="flex items-start gap-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-secondary-600">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-700 border border-amber-200/70">
             <Headphones className="h-4 w-4" />
           </div>
           <div className="min-w-0">
@@ -134,7 +134,7 @@ export function LiveTrackingSidebar({
             <p className="text-[11px] text-slate-500 mt-0.5">{tLive('supportHours')}</p>
             <a
               href={`tel:${APP_CONFIG.supportPhoneRaw}`}
-              className="mt-1 inline-block font-mono text-xs font-black text-secondary-700 hover:underline"
+              className="mt-1 inline-block font-mono text-xs font-black text-amber-800 hover:underline"
             >
               {APP_CONFIG.supportPhone}
             </a>

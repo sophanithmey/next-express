@@ -5,6 +5,7 @@ import {
   mergeOrderFilters,
   parseBookingOrderFilterParam,
 } from '@/features/booking/services/booking-order-filter';
+import { BookingDatePreset } from '@/features/booking/services/booking-date-filter';
 import { CreateBookingPayload } from '@/features/booking/types/booking-types';
 import { bookingServerService } from '@/server/services/booking-server-service';
 import { sessionService } from '@/server/lib/session';
@@ -26,6 +27,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search')?.trim() || undefined;
     const status = searchParams.get('status')?.trim() || undefined;
+    const datePreset = (searchParams.get('datePreset')?.trim() as BookingDatePreset) || undefined;
     const page = parsePositiveInt(searchParams.get('page'), 1);
     const rpp = parsePositiveInt(
       searchParams.get('rpp') ?? searchParams.get('limit'),
@@ -50,6 +52,7 @@ export async function GET(request: Request) {
       property,
       search,
       status,
+      datePreset,
       filter: mergeOrderFilters(filterResult.filters, status),
     });
     return NextResponse.json(data);

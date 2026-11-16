@@ -43,7 +43,7 @@ export function BookingDetailActionsCard({
           variant="primary"
           size="md"
           onClick={onContinuePayment}
-          className="w-full min-h-11 bg-secondary-600 hover:bg-secondary-700 text-white font-bold rounded-xl shadow-sm"
+          className="w-full min-h-11 bg-primary-500 hover:bg-primary-400 text-slate-950 font-bold rounded-xl shadow-sm"
           rightIcon={<ArrowRight className="h-4 w-4" />}
         >
           {tDetails('continuePayment')}
@@ -56,7 +56,7 @@ export function BookingDetailActionsCard({
         size="md"
         onClick={onBookAgain}
         className="w-full min-h-11 justify-center font-semibold rounded-xl"
-        leftIcon={<Repeat className="h-4 w-4 text-brand-600" />}
+        leftIcon={<Repeat className="h-4 w-4 text-amber-700" />}
       >
         {tHistory('bookAgain')}
       </Button>

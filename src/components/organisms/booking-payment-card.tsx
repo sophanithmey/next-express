@@ -120,7 +120,7 @@ export function BookingPaymentCard({
         )}
         <div className="border-t border-slate-100 pt-2 flex justify-between font-bold text-sm text-slate-900">
           <span>{tPayment('totalAmountPayable')}</span>
-          <span className="font-mono text-secondary-800">
+          <span className="font-mono text-slate-950 font-black">
             {APP_CONFIG.currencySymbol}{netPayable.toFixed(2)}
           </span>
         </div>
@@ -168,14 +168,14 @@ export function BookingPaymentCard({
           size="lg"
           onClick={onConfirmPayment}
           isLoading={isPaying}
-          className="w-full py-4 text-base font-bold bg-secondary-600 hover:bg-secondary-700 text-white rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer"
+          className="w-full py-4 text-base font-bold bg-primary-500 hover:bg-primary-400 text-slate-950 rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer"
           rightIcon={<ArrowRight className="h-5 w-5" />}
         >
           {getButtonText()}
         </Button>
 
         <p className="text-center text-[11px] text-slate-400 flex items-center justify-center gap-1">
-          <ShieldCheck className="h-3.5 w-3.5 text-secondary-600 shrink-0" />
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
           <span>
             {isAuthenticated
               ? tPayment('readyToDispatchNote')

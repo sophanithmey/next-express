@@ -33,7 +33,7 @@ export default function RootNotFound() {
               <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-100">
                 <PackageSearch className="h-10 w-10 text-amber-500" strokeWidth={1.8} />
               </div>
-              <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-white shadow-md ring-2 ring-white">
+              <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary-500 text-slate-950 shadow-md ring-2 ring-white">
                 <MapPinOff className="h-4 w-4" />
               </span>
             </div>
@@ -62,7 +62,7 @@ export default function RootNotFound() {
                   variant="primary"
                   size="lg"
                   leftIcon={<Truck className="h-4 w-4" />}
-                  className="w-full shadow-md shadow-brand-600/20 sm:w-auto"
+                  className="w-full shadow-md shadow-primary-500/20 sm:w-auto"
                 >
                   Book New Delivery / កក់ការដឹកជញ្ជូន
                 </Button>

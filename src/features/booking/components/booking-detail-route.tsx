@@ -118,12 +118,12 @@ export function BookingDetailRoute({
           const letter = String.fromCharCode(66 + idx);
           return (
             <div key={stop.id || idx} className="relative space-y-1">
-              <div className="absolute -left-6 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-secondary-600 text-xs font-bold text-white ring-4 ring-white">
+              <div className="absolute -left-6 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary-500 text-xs font-black text-slate-950 ring-4 ring-white">
                 {letter}
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-secondary-700">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-900">
                     {tDetails('dropoffBadge')} {destinationStops.length > 1 ? `(${letter})` : ''}
                   </span>
                   {stop.recipient?.name && (
@@ -154,7 +154,7 @@ export function BookingDetailRoute({
                 {stop.recipient?.phoneNumber && (
                   <a
                     href={`tel:${stop.recipient.phoneNumber.replace(/\s+/g, '')}`}
-                    className="flex items-center gap-1 font-mono text-secondary-700 font-medium hover:underline"
+                    className="flex items-center gap-1 font-mono text-slate-700 font-medium hover:underline"
                   >
                     <Phone className="h-3 w-3" />
                     <span>{formatPhoneNumber(stop.recipient.phoneNumber)}</span>

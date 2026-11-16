@@ -49,7 +49,7 @@ export function LandingAuthenticatedBanner({
           <Link
             href="/booking"
             prefetch={true}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-secondary-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-secondary-700 transition"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary-500 hover:bg-primary-400 px-4 py-2.5 text-xs font-bold text-slate-950 shadow-xs transition"
           >
             <span>{t('bookDelivery')}</span>
             <ArrowRight className="h-4 w-4" />

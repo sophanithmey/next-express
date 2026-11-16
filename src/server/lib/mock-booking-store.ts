@@ -9,10 +9,9 @@ import {
   PickupLocation,
   RecipientRecord,
 } from '@/features/booking/types/booking-types';
-import {
-  calculateBookingFeeQuote,
-  calculateHaversineDistanceKm,
-} from '@/features/booking/services/pricing-service';
+import { calculateBookingFeeQuote, calculateHaversineDistanceKm } from '@/features/booking/services/pricing-service';
+import { BookingDatePreset, getTodayDateKey, isOrderInDatePreset } from '@/features/booking/services/booking-date-filter';
+import { syncOrdersToCurrentDate } from '@/features/booking/data/mock-booking-detail-data';
 import {
   INITIAL_ORDERS,
   INITIAL_RECIPIENTS,
@@ -32,6 +31,15 @@ class InMemoryStore {
   private locations: PickupLocation[] = [...INITIAL_SAVED_LOCATIONS];
   private recipients: RecipientRecord[] = [...INITIAL_RECIPIENTS];
   private orders: BookingOrder[] = [...INITIAL_ORDERS];
+  private lastSyncDayKey = '';
+
+  private ensureOrdersUpToDate() {
+    const todayKey = getTodayDateKey();
+    if (this.lastSyncDayKey !== todayKey) {
+      this.lastSyncDayKey = todayKey;
+      this.orders = syncOrdersToCurrentDate(this.orders);
+    }
+  }
 
   getLocations(): PickupLocation[] {
     return this.locations;
@@ -149,10 +157,12 @@ class InMemoryStore {
   getOrders(params?: {
     search?: string;
     status?: string;
+    datePreset?: BookingDatePreset;
     statuses?: string[];
     page?: number;
     limit?: number;
   }) {
+    this.ensureOrdersUpToDate();
     let filtered = [...this.orders];
 
     if (params?.statuses && params.statuses.length > 0) {
@@ -160,6 +170,10 @@ class InMemoryStore {
       filtered = filtered.filter((o) => allowed.has(o.status));
     } else if (params?.status && params.status !== 'all') {
       filtered = filtered.filter((o) => o.status === params.status);
+    }
+
+    if (params?.datePreset && params.datePreset !== 'all') {
+      filtered = filtered.filter((o) => isOrderInDatePreset(o.createdAt, params.datePreset!));
     }
 
     if (params?.search) {
@@ -183,6 +197,7 @@ class InMemoryStore {
   }
 
   getOrderById(id: string): BookingOrder | null {
+    this.ensureOrdersUpToDate();
     return (
       this.orders.find(
         (o) =>
@@ -208,7 +223,7 @@ class InMemoryStore {
   }
 
   getStatistics(): DashboardStatistics {
-    const today = new Date().toISOString().slice(0, 10);
+    this.ensureOrdersUpToDate();
     let todayBookings = 0;
     let pendingPickup = 0;
     let inTransit = 0;
@@ -216,7 +231,7 @@ class InMemoryStore {
     let codCollection = 0;
 
     for (const order of this.orders) {
-      if (order.createdAt.slice(0, 10) === today) todayBookings += 1;
+      if (isOrderInDatePreset(order.createdAt, 'today')) todayBookings += 1;
       if (order.status === 'pending') pendingPickup += 1;
       if (order.status === 'assigned' || order.status === 'out_for_delivery')
         inTransit += 1;

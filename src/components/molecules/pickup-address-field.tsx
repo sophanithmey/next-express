@@ -34,24 +34,9 @@ export function PickupAddressField({
 
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between gap-2">
-        <Label htmlFor={addressId} required>
-          {tPickup('addressLabel')}
-        </Label>
-        <button
-          type="button"
-          onClick={onUseCurrentLocation}
-          disabled={isLocating}
-          className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1 cursor-pointer transition select-none disabled:opacity-60"
-        >
-          {isLocating ? (
-            <Loader2 className="h-3 w-3 animate-spin text-brand-600" />
-          ) : (
-            <LocateFixed className="h-3 w-3 text-brand-600" />
-          )}
-          <span>{isLocating ? tPickup('locating') : tPickup('useCurrentLocation')}</span>
-        </button>
-      </div>
+      <Label htmlFor={addressId} required>
+        {tPickup('addressLabel')}
+      </Label>
 
       <div className="flex items-center gap-2">
         <div className="flex-1 min-w-0">
@@ -78,20 +63,38 @@ export function PickupAddressField({
                 onOpenMap();
               }
             }}
-            leftIcon={<MapPin className="h-4 w-4 text-brand-600" />}
+            leftIcon={<MapPin className="h-4 w-4 text-secondary-600" />}
             error={Boolean(addressError)}
             sizeVariant="md"
           />
         </div>
-        <button
-          type="button"
-          onClick={onOpenMap}
-          className="h-10 px-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 hover:border-slate-400 text-xs font-semibold text-slate-700 flex items-center gap-1.5 shrink-0 transition-all cursor-pointer shadow-2xs"
-          title={tPickup('pinOnMap')}
-        >
-          <MapPin className="h-4 w-4 text-brand-600" />
-          <span className="hidden sm:inline">{tPickup('pinOnMap')}</span>
-        </button>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            type="button"
+            onClick={onUseCurrentLocation}
+            disabled={isLocating}
+            className="h-10 px-2.5 sm:px-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-xs font-semibold text-slate-700 flex items-center gap-1.5 shrink-0 transition-all cursor-pointer shadow-2xs disabled:opacity-60"
+            title={tPickup('useCurrentLocation')}
+          >
+            {isLocating ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-secondary-600" />
+            ) : (
+              <LocateFixed className="h-3.5 w-3.5 text-secondary-600" />
+            )}
+            <span className="hidden sm:inline">{tPickup('currentShort')}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenMap}
+            className="h-10 px-3 sm:px-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-xs font-semibold text-slate-700 flex items-center gap-1.5 shrink-0 transition-all cursor-pointer shadow-2xs"
+            title={tPickup('pinOnMap')}
+          >
+            <MapPin className="h-3.5 w-3.5 text-secondary-600" />
+            <span className="hidden sm:inline">{tPickup('pinOnMap')}</span>
+          </button>
+        </div>
       </div>
 
       {addressError ? (

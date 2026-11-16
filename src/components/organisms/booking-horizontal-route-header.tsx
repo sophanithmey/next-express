@@ -16,7 +16,7 @@ export function BookingHorizontalRouteHeader({
   return (
     <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-5 py-3.5">
       <div className="flex items-center gap-2">
-        <PackagePlus className="h-4 w-4 text-brand-600" />
+        <PackagePlus className="h-4 w-4 text-amber-600" />
         <span className="text-xs font-black tracking-wider text-slate-800 uppercase">
           {tBooking('routePreview')}
         </span>

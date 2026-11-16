@@ -42,8 +42,8 @@ export function BookingSuccessStepper({
     <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-4">
       {etaLabel && (
         <div className="flex items-center justify-between gap-2 text-xs">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-secondary-50 border border-secondary-200/80 px-2.5 py-1 text-secondary-800 font-semibold">
-            <span className="h-2 w-2 rounded-full bg-secondary-600 animate-pulse" />
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 border border-primary-300 px-2.5 py-1 text-primary-950 font-semibold">
+            <span className="h-2 w-2 rounded-full bg-primary-500 animate-pulse" />
             <span>{etaLabel}</span>
           </div>
           <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />

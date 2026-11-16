@@ -73,7 +73,7 @@ export function BookingDetailView({
           type="button"
           variant="primary"
           onClick={() => openAuthModal()}
-          className="bg-secondary-600 hover:bg-secondary-700 text-white font-bold rounded-xl px-6 py-2.5"
+          className="bg-primary-500 hover:bg-primary-400 text-slate-950 font-bold rounded-xl px-6 py-2.5"
         >
           {tDetails('logInToContinue')}
         </Button>

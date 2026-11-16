@@ -63,9 +63,9 @@ export function RecipientModalStopForm({
         <button
           type="button"
           onClick={onAddStop}
-          className="w-full py-2 px-3 rounded-xl border border-dashed border-brand-200 bg-brand-50/40 hover:bg-brand-50 text-xs font-bold text-brand-700 flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs"
+          className="w-full py-2 px-3 rounded-xl border border-dashed border-primary-300 bg-primary-50/50 hover:bg-primary-100/70 text-xs font-bold text-slate-900 flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <Plus className="h-3.5 w-3.5 text-slate-900" />
           <span>{tBooking('addDestination')}</span>
         </button>
       )}

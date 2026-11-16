@@ -64,13 +64,13 @@ export function StopTrackCopyActions({
           'inline-flex min-h-8 items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition cursor-pointer whitespace-nowrap',
           isLinkCopied
             ? 'border-success-600 bg-success-600 text-white'
-            : 'border-slate-200 bg-white text-slate-700 hover:border-secondary-300 hover:bg-secondary-50/60 hover:text-secondary-700'
+            : 'border-slate-200 bg-white text-slate-700 hover:border-primary-300 hover:bg-primary-50/60 hover:text-primary-950'
         )}
       >
         {isLinkCopied ? (
           <Check className="h-3 w-3 shrink-0" />
         ) : (
-          <Link2 className="h-3 w-3 text-secondary-600 shrink-0" />
+          <Link2 className="h-3 w-3 text-amber-700 shrink-0" />
         )}
         <span>
           {isLinkCopied ? tPayment('linkCopied') : linkLabel || tPayment('copyStopLink')}

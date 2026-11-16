@@ -12,22 +12,24 @@ import { createPrefillFromOrder } from '../services/booking-form-helpers';
 import { saveBookingDraft } from '../services/booking-draft-service';
 import { buildTrackingSharePayload } from '../services/tracking-share-helper';
 import { buildOrderStatusFilter } from '../services/booking-order-filter';
+import { BookingDatePreset, isOrderInDatePreset } from '../services/booking-date-filter';
 import { bookingApiService } from '../services/booking-api-service';
 import { localDemoBookingStore } from '../services/local-demo-store';
 import { bookingKeys } from './booking-keys';
 
 function deriveStatsFromOrders(orders: BookingOrder[]): DashboardStatistics {
-  const today = new Date().toISOString().slice(0, 10);
   let todayBookings = 0;
   let pendingPickup = 0;
+  let accepted = 0;
   let inTransit = 0;
   let delivered = 0;
   let codCollection = 0;
 
   for (const order of orders) {
-    if (order.createdAt.slice(0, 10) === today && order.status !== 'draft') todayBookings += 1;
-    if (order.status === 'pending' || order.status === 'confirmed') pendingPickup += 1;
-    if (order.status === 'assigned' || order.status === 'out_for_delivery') inTransit += 1;
+    if (isOrderInDatePreset(order.createdAt, 'today') && order.status !== 'draft') todayBookings += 1;
+    if (order.status === 'pending' || order.status === 'draft' || order.status === 'confirmed') pendingPickup += 1;
+    if (order.status === 'assigned') accepted += 1;
+    if (order.status === 'out_for_delivery') inTransit += 1;
     if (order.status === 'delivered') delivered += 1;
     if (order.cod.isCod && order.status !== 'cancelled' && order.status !== 'draft') {
       codCollection += order.cod.amount;
@@ -37,6 +39,7 @@ function deriveStatsFromOrders(orders: BookingOrder[]): DashboardStatistics {
   return {
     todayBookings,
     pendingPickup,
+    accepted,
     inTransit,
     delivered,
     codCollection: Math.round(codCollection * 100) / 100,
@@ -48,6 +51,7 @@ interface UseBookingHistoryProps {
   initialTotal: number;
   initialTotalPages: number;
   initialStats?: DashboardStatistics;
+  rpp?: number;
 }
 
 export interface CopiedState {
@@ -64,6 +68,7 @@ export function useBookingHistory({
   initialTotal,
   initialTotalPages,
   initialStats,
+  rpp = 10,
 }: UseBookingHistoryProps) {
   const router = useRouter();
   const locale = useLocale();
@@ -77,6 +82,7 @@ export function useBookingHistory({
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [datePreset, setDatePreset] = useState<BookingDatePreset>('today');
   const [page, setPage] = useState(1);
   const [copiedItem, setCopiedItem] = useState<CopiedState | null>(null);
 
@@ -93,15 +99,16 @@ export function useBookingHistory({
   );
 
   const isDefaultUnfilteredPage =
-    page === 1 && !debouncedSearch && statusFilter === 'all';
+    page === 1 && !debouncedSearch && statusFilter === 'all' && datePreset === 'today';
 
   const bookingsQuery = useQuery({
     queryKey: [
       ...bookingKeys.list({
         page,
-        rpp: 10,
+        rpp,
         search: debouncedSearch || undefined,
         status: statusFilter,
+        datePreset,
         filter: activeFilter,
       }),
       locale,
@@ -111,8 +118,9 @@ export function useBookingHistory({
       bookingApiService.listBookings(
         {
           page,
-          rpp: 10,
+          rpp,
           search: debouncedSearch || undefined,
+          datePreset,
           filter: activeFilter,
           locale,
         },
@@ -124,7 +132,7 @@ export function useBookingHistory({
             items: initialOrders,
             pagination: {
               page: 1,
-              limit: 10,
+              limit: rpp,
               total: initialTotal,
               totalPages: initialTotalPages,
             },
@@ -157,6 +165,11 @@ export function useBookingHistory({
     setPage(1);
   }, []);
 
+  const handleDatePresetChange = useCallback((preset: BookingDatePreset) => {
+    setDatePreset(preset);
+    setPage(1);
+  }, []);
+
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
     setPage(1);
@@ -165,6 +178,7 @@ export function useBookingHistory({
   const handleClearFilters = useCallback(() => {
     setSearch('');
     setStatusFilter('all');
+    setDatePreset('today');
     setPage(1);
   }, []);
 
@@ -233,6 +247,7 @@ export function useBookingHistory({
     totalCount,
     search,
     statusFilter,
+    datePreset,
     page,
     totalPages,
     isLoading,
@@ -242,6 +257,7 @@ export function useBookingHistory({
     copiedItem,
     setPage,
     handleFilterChange,
+    handleDatePresetChange,
     handleSearchChange,
     handleClearFilters,
     handleRefresh: () => void bookingsQuery.refetch(),

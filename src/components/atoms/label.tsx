@@ -1,18 +1,26 @@
+'use client';
+
 import React from 'react';
 import { cn } from '@/lib/cn';
+import { useTranslations } from 'next-intl';
 
 export interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
   required?: boolean;
   optional?: boolean;
+  optionalText?: string;
 }
 
 export function Label({
   className,
   required,
   optional,
+  optionalText,
   children,
   ...props
 }: LabelProps) {
+  const tCommon = useTranslations('Common');
+  const displayText = optionalText ?? tCommon('optional');
+
   return (
     <label
       className={cn(
@@ -30,7 +38,7 @@ export function Label({
         )}
         {optional && (
           <span className="text-[11px] font-normal text-slate-400 ml-1">
-            (Optional)
+            ({displayText})
           </span>
         )}
       </span>
