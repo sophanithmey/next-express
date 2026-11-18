@@ -55,14 +55,21 @@ function resolveMockFlag(
   return fallback;
 }
 
-export function getServerEnv(): ServerEnvConfig {
-  const sessionSecret =
-    process.env.SESSION_SECRET ||
-    'express_seller_secure_jwt_session_encryption_key_32_chars_min!';
+export const DEFAULT_DEV_SESSION_SECRET =
+  'express_seller_secure_jwt_session_encryption_key_32_chars_min!';
 
-  if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+export function getServerEnv(): ServerEnvConfig {
+  const rawSessionSecret = process.env.SESSION_SECRET?.trim();
+  const sessionSecret = rawSessionSecret || DEFAULT_DEV_SESSION_SECRET;
+
+  if (
+    process.env.NODE_ENV === 'production' &&
+    (!rawSessionSecret ||
+      rawSessionSecret === DEFAULT_DEV_SESSION_SECRET ||
+      rawSessionSecret.length < 32)
+  ) {
     console.warn(
-      '[SECURITY WARNING] SESSION_SECRET is not explicitly configured in production. Using fallback secret.',
+      '[SECURITY WARNING] SESSION_SECRET is missing, weak (<32 chars), or using the default placeholder in production.',
     );
   }
 

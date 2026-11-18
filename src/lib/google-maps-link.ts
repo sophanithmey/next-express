@@ -8,6 +8,20 @@ export interface ParsedMapLocation {
 
 const ALLOWED_SHORT_HOSTS = new Set(['maps.app.goo.gl', 'g.page']);
 
+/**
+ * Strict hostname validation for Google Maps domains to prevent SSRF bypasses
+ * such as `google.attacker.com` or `maps.google.internal.local`.
+ * Allows only `google.com`, `google.<ccTLD>`, `google.co.<ccTLD>`,
+ * `google.com.<ccTLD>` (with optional `maps.` prefix), and official short hosts.
+ */
+export function isTrustedGoogleMapsHostname(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/^www\./, '');
+  if (ALLOWED_SHORT_HOSTS.has(host) || host === 'goo.gl') return true;
+  return /^(?:maps\.)?google\.(?:com|[a-z]{2}|co\.[a-z]{2}|com\.[a-z]{2})$/.test(
+    host,
+  );
+}
+
 function isValidCoordinates(lat: number, lng: number): boolean {
   return (
     Number.isFinite(lat) &&
@@ -116,17 +130,19 @@ export function isResolvableGoogleMapsUrl(input: string): boolean {
   const candidate = /^https?:\/\//i.test(input.trim())
     ? input.trim()
     : extractGoogleMapsUrl(input);
-  if (!candidate) return false;
+  if (!candidate || candidate.length > 2048) return false;
 
   try {
     const url = new URL(candidate);
     if (url.protocol !== 'https:' && url.protocol !== 'http:') return false;
+    if (url.username || url.password || url.port) return false;
 
     const host = url.hostname.toLowerCase().replace(/^www\./, '');
     if (ALLOWED_SHORT_HOSTS.has(host)) return true;
     if (host === 'goo.gl' && url.pathname.startsWith('/maps')) return true;
-    if (/^maps\.google\.[a-z.]+$/.test(host)) return true;
-    if (/^google\.[a-z.]+$/.test(host) && url.pathname.includes('/maps')) return true;
+    if (!isTrustedGoogleMapsHostname(host)) return false;
+    if (host.startsWith('maps.google.')) return true;
+    if (host.startsWith('google.') && url.pathname.includes('/maps')) return true;
 
     return false;
   } catch {

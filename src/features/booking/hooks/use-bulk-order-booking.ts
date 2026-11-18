@@ -44,6 +44,7 @@ import {
 } from '@/features/payment/utils/payment-provider-helpers';
 import { PaymentMethodType } from '@/components/organisms/payment-method-selector';
 import { MAX_BULK_ORDERS, MAX_STOPS_PER_BULK_ORDER } from '@/lib/constants';
+import { sanitizePaymentRedirectUrl } from '@/lib/safe-url';
 
 export type BulkPaymentMethod = PaymentMethodType;
 
@@ -159,8 +160,9 @@ export function useBulkOrderBooking({
       ? selectedPayment
       : 'card';
     const redirectUrl = await paymentCardsState.createCard(provider, 'ST_EXPRESS');
-    if (redirectUrl && typeof window !== 'undefined') {
-      window.open(redirectUrl, '_blank', 'noopener,noreferrer');
+    const safeRedirectUrl = sanitizePaymentRedirectUrl(redirectUrl);
+    if (safeRedirectUrl && typeof window !== 'undefined') {
+      window.open(safeRedirectUrl, '_blank', 'noopener,noreferrer');
       toast.info(tPayment('cardRedirectOpened'));
     }
   }, [isAuthenticated, openAuthModal, selectedPayment, paymentCardsState, tPayment]);

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { pinSetupSchema } from '@/features/auth/schemas/auth-schema';
 import { authServerService } from '@/server/services/auth-server-service';
 import {
+  assertSameOriginRequest,
   handleApiRouteError,
   parseRequestBody,
   requireAuthenticatedSession,
@@ -9,6 +10,9 @@ import {
 
 export async function POST(request: Request) {
   try {
+    const csrfError = assertSameOriginRequest(request);
+    if (csrfError) return csrfError;
+
     const auth = await requireAuthenticatedSession('Please sign in to set up your PIN.');
     if ('errorResponse' in auth) return auth.errorResponse;
 

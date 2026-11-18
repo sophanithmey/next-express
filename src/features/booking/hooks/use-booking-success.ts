@@ -12,6 +12,7 @@ import { useAuthState } from '@/features/auth/hooks/use-auth-state';
 import { usePaymentDetail } from '@/features/payment/hooks/use-payment-detail';
 import { bookingApiService } from '../services/booking-api-service';
 import { bookingKeys } from './booking-keys';
+import { sanitizePaymentRedirectUrl } from '@/lib/safe-url';
 
 /**
  * Manages booking confirmation metadata, live order status syncing,
@@ -24,7 +25,7 @@ export function useBookingSuccess() {
   const refCode = searchParams.get('ref') || 'REF-84920';
   const orderIdParam = searchParams.get('orderId') || refCode;
   const tracking = searchParams.get('tracking') || 'EXP-88239012';
-  const paymentRedirectUrl = searchParams.get('paymentUrl');
+  const rawPaymentUrlParam = searchParams.get('paymentUrl');
   const pickup = searchParams.get('pickup') || 'Central Warehouse (Main)';
   const dropoff =
     searchParams.get('dropoff') || 'BKK1, Khan Boeng Keng Kang, Phnom Penh';
@@ -55,6 +56,12 @@ export function useBookingSuccess() {
     retry: false,
     staleTime: 15_000,
   });
+
+  const paymentRedirectUrl =
+    sanitizePaymentRedirectUrl(orderQuery.data?.paymentRedirectUrl) ??
+    sanitizePaymentRedirectUrl(rawPaymentUrlParam, {
+      requireTrustedHost: true,
+    });
 
   const orderStatus =
     cancelledStatusOverride ?? orderQuery.data?.status ?? 'pending';

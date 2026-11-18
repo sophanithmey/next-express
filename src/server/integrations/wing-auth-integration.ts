@@ -86,7 +86,7 @@ export const wingAuthIntegration = {
 
     if (!env.identityRsaPublicKey) {
       throw new ConsumerApiError(
-        'IDENTITY_RSA_PUBLIC_KEY is required on the server to encrypt PINs for Unified /auth/token.',
+        'Server authentication encryption is not configured.',
         500,
         'MISSING_IDENTITY_PUBLIC_KEY',
       );

@@ -28,7 +28,11 @@ export const createSavedLocationSchema = z.object({
 });
 
 export const resolveMapLocationSchema = z.object({
-  input: z.string().trim().min(1, 'Location input is required'),
+  input: z
+    .string()
+    .trim()
+    .min(1, 'Location input is required')
+    .max(2048, 'Location input is too long'),
 });
 
 export type AddressDetailInput = z.infer<typeof addressDetailInputSchema>;

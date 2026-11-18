@@ -28,6 +28,7 @@ import { PromoCode } from '../services/promo-service';
 import { PaymentMethodType } from '@/components/organisms/payment-method-selector';
 import { usePaymentOptions } from '@/features/payment/hooks/use-payment-options';
 import { usePaymentCards } from '@/features/payment/hooks/use-payment-cards';
+import { sanitizePaymentRedirectUrl } from '@/lib/safe-url';
 import {
   isCardPaymentProvider,
   normalizePaymentKind,
@@ -129,8 +130,9 @@ export function useBookingReview() {
       ? selectedPayment
       : 'card';
     const redirectUrl = await paymentCardsState.createCard(provider, 'ST_EXPRESS');
-    if (redirectUrl && typeof window !== 'undefined') {
-      window.open(redirectUrl, '_blank', 'noopener,noreferrer');
+    const safeRedirectUrl = sanitizePaymentRedirectUrl(redirectUrl);
+    if (safeRedirectUrl && typeof window !== 'undefined') {
+      window.open(safeRedirectUrl, '_blank', 'noopener,noreferrer');
       toast.info(tPayment('cardRedirectOpened'));
     }
   }, [isAuthenticated, openAuthModal, selectedPayment, paymentCardsState, tPayment]);

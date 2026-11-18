@@ -1,19 +1,33 @@
 import 'server-only';
 import { cookies } from 'next/headers';
 import { EncryptJWT, jwtDecrypt } from 'jose';
-import { getServerEnv } from './env';
+import { DEFAULT_DEV_SESSION_SECRET, getServerEnv } from './env';
 import { SessionData, UserProfile } from '@/features/auth/types/auth-types';
 import { SESSION_COOKIE_NAME } from '@/lib/constants';
 
 let cachedKey: Uint8Array | null = null;
+let cachedSecretValue: string | null = null;
 
 async function getEncryptionKey(): Promise<Uint8Array> {
-  if (cachedKey) return cachedKey;
   const env = getServerEnv();
+  if (
+    process.env.NODE_ENV === 'production' &&
+    !env.mockAuthApi &&
+    (!process.env.SESSION_SECRET?.trim() ||
+      env.sessionSecret === DEFAULT_DEV_SESSION_SECRET ||
+      env.sessionSecret.length < 32)
+  ) {
+    throw new Error(
+      'A strong SESSION_SECRET (at least 32 characters) is required in production.',
+    );
+  }
+
+  if (cachedKey && cachedSecretValue === env.sessionSecret) return cachedKey;
   const encoder = new TextEncoder();
   const data = encoder.encode(env.sessionSecret);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   cachedKey = new Uint8Array(hashBuffer);
+  cachedSecretValue = env.sessionSecret;
   return cachedKey;
 }
 
@@ -66,7 +80,10 @@ export const sessionService = {
       if (!sessionCookie?.value) return null;
 
       const key = await getEncryptionKey();
-      const { payload } = await jwtDecrypt(sessionCookie.value, key);
+      const { payload } = await jwtDecrypt(sessionCookie.value, key, {
+        keyManagementAlgorithms: ['dir'],
+        contentEncryptionAlgorithms: ['A256GCM'],
+      });
 
       const session = payload as unknown as SessionData;
       if (!session || !session.user || !session.accessToken) {
@@ -74,7 +91,11 @@ export const sessionService = {
       }
 
       if (session.expiresAt && Date.now() > session.expiresAt) {
-        await this.clearSession();
+        try {
+          await this.clearSession();
+        } catch {
+          // Cookie deletion is only permitted in Route Handlers / Server Actions
+        }
         return null;
       }
 

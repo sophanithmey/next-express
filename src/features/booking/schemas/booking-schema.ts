@@ -194,14 +194,14 @@ export type BookingFormSchemaValues = z.infer<typeof bookingFormSchema>;
 
 export const createBookingRequestSchema = bookingFormBaseSchema
   .extend({
-    draftOrderId: z.string().optional(),
-    trackingNumber: z.string().optional(),
-    paymentMethod: z.string().optional(),
-    paymentCardId: z.string().optional(),
-    promoCode: z.string().optional(),
-    discountAmount: z.number().optional(),
-    tipAmount: z.number().optional(),
-    finalFee: z.number().optional(),
+    draftOrderId: z.string().max(128).optional(),
+    trackingNumber: z.string().max(64).optional(),
+    paymentMethod: z.string().max(64).optional(),
+    paymentCardId: z.string().max(128).optional(),
+    promoCode: z.string().trim().max(64).optional(),
+    discountAmount: z.number().min(0).max(500).optional(),
+    tipAmount: z.number().min(0).max(100).optional(),
+    finalFee: z.number().min(0).max(10_000).optional(),
     isDraft: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
@@ -213,14 +213,14 @@ export const createBookingRequestSchema = bookingFormBaseSchema
 export const feeCalculationSchema = z.object({
   pickup: coordinatesSchema,
   dropoff: coordinatesSchema,
-  additionalStopsCount: z.number().int().min(0).optional(),
+  additionalStopsCount: z.number().int().min(0).max(MAX_DROPOFF_STOPS).optional(),
   deliveryOption: z.enum(['instant', 'same_day', 'scheduled']).optional(),
 });
 
 export const bookingPatchSchema = z.discriminatedUnion('action', [
   z.object({
     action: z.literal('cancel'),
-    reason: z.string().optional(),
+    reason: z.string().trim().max(500).optional(),
   }),
   z.object({
     action: z.literal('checkout'),

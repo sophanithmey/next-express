@@ -7,6 +7,7 @@ import { ArrowRight, ExternalLink, FileText, Plus, XCircle } from 'lucide-react'
 import { Button } from '@/components/atoms/button';
 import { CancelOrderModal } from './cancel-order-modal';
 import { CancelHotlineCallout } from './cancel-hotline-callout';
+import { sanitizePaymentRedirectUrl } from '@/lib/safe-url';
 
 interface BookingSuccessActionsProps {
   bookingId?: string;
@@ -38,13 +39,14 @@ export function BookingSuccessActions({
   cancelError,
 }: BookingSuccessActionsProps) {
   const tPayment = useTranslations('Payment');
+  const safePaymentRedirectUrl = sanitizePaymentRedirectUrl(paymentRedirectUrl);
 
   return (
     <>
       <div className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs space-y-3">
-        {paymentRedirectUrl && !isCancelled && (
+        {safePaymentRedirectUrl && !isCancelled && (
           <a
-            href={paymentRedirectUrl}
+            href={safePaymentRedirectUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary-500 px-4 py-2.5 text-xs font-bold text-primary-foreground hover:bg-primary-400 transition shadow-xs"

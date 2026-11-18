@@ -537,8 +537,18 @@ export async function downloadSampleXlsxTemplate(): Promise<void> {
   XLSX.writeFile(wb, 'wingexpress-bulk-order-template.xlsx');
 }
 
+const MAX_BULK_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
+const ALLOWED_BULK_EXTENSIONS = ['.xlsx', '.xls', '.csv', '.txt'];
+
 export async function parseBulkOrderFile(file: File): Promise<string> {
+  if (file.size > MAX_BULK_UPLOAD_BYTES) {
+    throw new Error('File exceeds the 5 MB upload limit.');
+  }
+
   const fileName = file.name.toLowerCase();
+  const hasAllowedExt = ALLOWED_BULK_EXTENSIONS.some((ext) =>
+    fileName.endsWith(ext),
+  );
   const isExcel =
     fileName.endsWith('.xlsx') ||
     fileName.endsWith('.xls') ||
@@ -546,10 +556,18 @@ export async function parseBulkOrderFile(file: File): Promise<string> {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
     file.type === 'application/vnd.ms-excel';
 
+  if (!hasAllowedExt && !isExcel) {
+    throw new Error('Unsupported file format. Please upload .xlsx, .xls, or .csv.');
+  }
+
   if (isExcel) {
     const XLSX = await import('xlsx');
     const buffer = await file.arrayBuffer();
-    const wb = XLSX.read(buffer, { type: 'array' });
+    const wb = XLSX.read(buffer, {
+      type: 'array',
+      cellFormula: false,
+      cellHTML: false,
+    });
     const firstSheetName = wb.SheetNames[0];
     if (!firstSheetName) return '';
     const ws = wb.Sheets[firstSheetName];

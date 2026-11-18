@@ -15,8 +15,16 @@ export async function GET(request: Request) {
     const pageRaw = searchParams.get('page');
     const rppRaw = searchParams.get('rpp');
     const directionRaw = searchParams.get('direction');
-    const page = pageRaw ? parseInt(pageRaw, 10) : undefined;
-    const rpp = rppRaw ? parseInt(rppRaw, 10) : undefined;
+    const parsedPage = pageRaw ? parseInt(pageRaw, 10) : undefined;
+    const parsedRpp = rppRaw ? parseInt(rppRaw, 10) : undefined;
+    const page =
+      parsedPage && Number.isFinite(parsedPage) && parsedPage > 0
+        ? Math.min(parsedPage, 10_000)
+        : undefined;
+    const rpp =
+      parsedRpp && Number.isFinite(parsedRpp) && parsedRpp > 0
+        ? Math.min(parsedRpp, 100)
+        : undefined;
     const direction =
       directionRaw === 'ASC' || directionRaw === 'DESC' ? directionRaw : undefined;
 

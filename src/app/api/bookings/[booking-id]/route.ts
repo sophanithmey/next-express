@@ -3,6 +3,7 @@ import { bookingPatchSchema } from '@/features/booking/schemas/booking-schema';
 import { bookingServerService } from '@/server/services/booking-server-service';
 import { sessionService } from '@/server/lib/session';
 import {
+  assertSameOriginRequest,
   getRequestLanguage,
   handleApiRouteError,
   parseRequestBody,
@@ -37,6 +38,9 @@ export async function PATCH(
   { params }: { params: Promise<{ 'booking-id': string }> },
 ) {
   try {
+    const csrfError = assertSameOriginRequest(request);
+    if (csrfError) return csrfError;
+
     const session = await sessionService.getSession();
     const { 'booking-id': bookingId } = await params;
     if (!bookingId) {
@@ -78,6 +82,9 @@ export async function DELETE(
   { params }: { params: Promise<{ 'booking-id': string }> },
 ) {
   try {
+    const csrfError = assertSameOriginRequest(request);
+    if (csrfError) return csrfError;
+
     const session = await sessionService.getSession();
     const { 'booking-id': bookingId } = await params;
     if (!bookingId) {

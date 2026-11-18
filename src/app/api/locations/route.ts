@@ -3,6 +3,7 @@ import { createSavedLocationSchema } from '@/features/booking/schemas/location-s
 import { locationServerService } from '@/server/services/location-server-service';
 import { sessionService } from '@/server/lib/session';
 import {
+  assertSameOriginRequest,
   getRequestLanguage,
   handleApiRouteError,
   parseRequestBody,
@@ -33,6 +34,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const csrfError = assertSameOriginRequest(request);
+    if (csrfError) return csrfError;
+
     const session = await sessionService.getSession();
     const parsed = await parseRequestBody(
       request,

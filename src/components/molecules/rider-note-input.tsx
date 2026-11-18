@@ -1,9 +1,17 @@
 'use client';
 
 import React, { useRef } from 'react';
+import { toast } from 'sonner';
 import { Input } from '../atoms/input';
 import { Label } from '../atoms/label';
 import { FileText, Camera, X, Image as ImageIcon } from 'lucide-react';
+
+const ALLOWED_IMAGE_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+]);
+const MAX_RIDER_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
 
 interface RiderNoteInputProps {
   id: string;
@@ -30,7 +38,19 @@ export function RiderNoteInput({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Convert file to base64 data URL for instant client preview and payload transfer
+    if (!ALLOWED_IMAGE_MIME_TYPES.has(file.type)) {
+      toast.error('Only JPG, PNG, and WebP images are supported.');
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > MAX_RIDER_IMAGE_BYTES) {
+      toast.error('Image must be 5 MB or smaller.');
+      e.target.value = '';
+      return;
+    }
+
+    // Convert validated raster image to base64 data URL for instant client preview
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') {
@@ -76,7 +96,7 @@ export function RiderNoteInput({
         <input
           type="file"
           ref={fileInputRef}
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           onChange={handleFileChange}
           className="hidden"
           aria-label="Upload photo for rider note"

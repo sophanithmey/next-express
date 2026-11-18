@@ -6,6 +6,7 @@ import { bookingServerService } from '@/server/services/booking-server-service';
 import { bookingDraftServerService } from '@/server/services/booking-draft-server-service';
 import { sessionService } from '@/server/lib/session';
 import {
+  assertSameOriginRequest,
   getRequestLanguage,
   handleApiRouteError,
   parseRequestBody,
@@ -26,6 +27,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const csrfError = assertSameOriginRequest(request);
+    if (csrfError) return csrfError;
+
     const session = await sessionService.getSession();
     const parsed = await parseRequestBody(
       request,
@@ -104,6 +108,9 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const csrfError = assertSameOriginRequest(request);
+    if (csrfError) return csrfError;
+
     const session = await sessionService.getSession();
     const orderId = new URL(request.url).searchParams.get('id')?.trim();
     if (!orderId) {

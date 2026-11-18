@@ -3,6 +3,7 @@ import { updatePaymentCardSettingSchema } from '@/features/payment/schemas/payme
 import { paymentServerService } from '@/server/services/payment-server-service';
 import { sessionService } from '@/server/lib/session';
 import {
+  assertSameOriginRequest,
   getRequestLanguage,
   handleApiRouteError,
   parseRequestBody,
@@ -13,6 +14,9 @@ export async function PATCH(
   { params }: { params: Promise<{ 'card-id': string }> },
 ) {
   try {
+    const csrfError = assertSameOriginRequest(request);
+    if (csrfError) return csrfError;
+
     const session = await sessionService.getSession();
     const cardId = (await params)['card-id']?.trim();
     if (!cardId) {
@@ -48,6 +52,9 @@ export async function DELETE(
   { params }: { params: Promise<{ 'card-id': string }> },
 ) {
   try {
+    const csrfError = assertSameOriginRequest(request);
+    if (csrfError) return csrfError;
+
     const session = await sessionService.getSession();
     const cardId = (await params)['card-id']?.trim();
     if (!cardId) {

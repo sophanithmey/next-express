@@ -35,18 +35,31 @@ const EXPORT_HEADERS = [
   'Drop-off Address', 'Stops', 'COD Amount ($)', 'Delivery Fee ($)', 'Order Ref / Note',
 ];
 
+/**
+ * Neutralizes spreadsheet formula injection (CSV/XLSX) by prefixing a single quote
+ * when a string cell begins with formula trigger characters (=, +, -, @, tab, CR).
+ */
+export function sanitizeSpreadsheetCell(value: string): string {
+  if (/^[=+\-@\t\r]/.test(value)) {
+    return `'${value}`;
+  }
+  return value;
+}
+
 function buildOrderRow(order: BookingOrder): (string | number)[] {
   return [
-    order.trackingNumber,
-    order.createdAt,
-    formatStatusLabel(order.status),
-    order.recipient?.name || '-',
-    order.recipient?.phoneNumber || '-',
-    order.dropoff?.address || '-',
+    sanitizeSpreadsheetCell(order.trackingNumber),
+    sanitizeSpreadsheetCell(order.createdAt),
+    sanitizeSpreadsheetCell(formatStatusLabel(order.status)),
+    sanitizeSpreadsheetCell(order.recipient?.name || '-'),
+    sanitizeSpreadsheetCell(order.recipient?.phoneNumber || '-'),
+    sanitizeSpreadsheetCell(order.dropoff?.address || '-'),
     order.dropoffs?.length || 1,
     order.cod?.isCod ? Number(order.cod.amount.toFixed(2)) : 0,
     Number(order.deliveryFee.toFixed(2)),
-    order.parcel?.description || order.parcel?.sellerOrderRef || '-',
+    sanitizeSpreadsheetCell(
+      order.parcel?.description || order.parcel?.sellerOrderRef || '-',
+    ),
   ];
 }
 

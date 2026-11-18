@@ -5,6 +5,7 @@ import {
   extractGoogleMapsUrl,
   formatDetectedLocationAddress,
   isResolvableGoogleMapsUrl,
+  isTrustedGoogleMapsHostname,
   parseGoogleMapsLocationInput,
 } from '@/lib/google-maps-link';
 import { getServerEnv } from '@/server/lib/env';
@@ -18,19 +19,14 @@ export interface ResolvedMapLocation {
 }
 
 const MAX_REDIRECTS = 6;
+const MAX_MAPS_RESPONSE_BYTES = 512_000;
 
 function isGoogleMapsRedirectHost(urlStr: string): boolean {
   try {
     const url = new URL(urlStr);
     if (url.protocol !== 'https:' && url.protocol !== 'http:') return false;
-    const host = url.hostname.toLowerCase().replace(/^www\./, '');
-    return (
-      host === 'maps.app.goo.gl' ||
-      host === 'goo.gl' ||
-      host === 'g.page' ||
-      /^maps\.google\.[a-z.]+$/.test(host) ||
-      /^google\.[a-z.]+$/.test(host)
-    );
+    if (url.username || url.password || url.port) return false;
+    return isTrustedGoogleMapsHostname(url.hostname);
   } catch {
     return false;
   }
@@ -115,11 +111,20 @@ export const googleMapsIntegration = {
     }
 
     let currentUrl = extractGoogleMapsUrl(input) || input;
+    if (!isGoogleMapsRedirectHost(currentUrl)) {
+      throw new ConsumerApiError(
+        'Please provide a valid Google Maps link or latitude, longitude.',
+        400,
+      );
+    }
+
     for (let hop = 0; hop < MAX_REDIRECTS; hop += 1) {
       const res = await serverAxios.request<string>({
         url: currentUrl,
         method: 'GET',
         maxRedirects: 0,
+        maxContentLength: MAX_MAPS_RESPONSE_BYTES,
+        maxBodyLength: MAX_MAPS_RESPONSE_BYTES,
         validateStatus: (status) => status >= 200 && status < 400,
         timeout: 5000,
         responseType: 'text',
