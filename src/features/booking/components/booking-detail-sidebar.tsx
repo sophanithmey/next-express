@@ -29,6 +29,7 @@ interface BookingDetailSidebarProps {
   stopOneFee: number;
   isPendingPayment: boolean;
   canCancel: boolean;
+  requiresHotlineCancel?: boolean;
   isCancelled: boolean;
   onBookAgain: () => void;
   onContinuePayment?: () => void;
@@ -45,6 +46,7 @@ export function BookingDetailSidebar({
   stopOneFee,
   isPendingPayment,
   canCancel,
+  requiresHotlineCancel = false,
   isCancelled,
   onBookAgain,
   onContinuePayment,
@@ -148,6 +150,8 @@ export function BookingDetailSidebar({
       <BookingDetailActionsCard
         isPendingPayment={isPendingPayment}
         canCancel={canCancel}
+        requiresHotlineCancel={requiresHotlineCancel}
+        trackingNumber={order.trackingNumber || order.id}
         isCancelled={isCancelled}
         isCancelling={isCancelling}
         onBookAgain={onBookAgain}

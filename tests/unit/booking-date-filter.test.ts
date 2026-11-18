@@ -4,8 +4,10 @@ import {
   parseOrderDate,
   createMockOrderDate,
   getTodayDateKey,
+  formatCustomDateRangeLabel,
   DATE_PRESET_OPTIONS,
 } from '@/features/booking/services/booking-date-filter';
+import { deriveDashboardStatsFromOrders } from '@/features/booking/services/booking-statistics-service';
 import { syncOrdersToCurrentDate, createMockBookingDetails } from '@/features/booking/data/mock-booking-detail-data';
 import { BookingOrder } from '@/features/booking/types/booking-types';
 
@@ -118,5 +120,96 @@ describe('Booking Date Filter Service', () => {
 
     expect(ord1001?.createdAt).toContain('Nov 16, 2026');
     expect(customOrder?.createdAt).toBe('Nov 1, 2026 • 02:00 PM');
+  });
+
+  it('filters orders accurately using custom date range (inclusive, single day, open-ended, and inverted)', () => {
+    const nov10 = 'Nov 10, 2026 • 09:00 AM';
+    const nov14 = 'Nov 14, 2026 • 04:15 PM';
+    const nov16 = 'Nov 16, 2026 • 11:30 AM';
+
+    // Exact inclusive range
+    const range = { startDate: '2026-11-10', endDate: '2026-11-14' };
+    expect(isOrderInDatePreset(nov10, 'custom', fixedNow, range)).toBe(true);
+    expect(isOrderInDatePreset(nov14, 'custom', fixedNow, range)).toBe(true);
+    expect(isOrderInDatePreset(nov16, 'custom', fixedNow, range)).toBe(false);
+
+    // Single day
+    const singleDay = { startDate: '2026-11-14', endDate: '2026-11-14' };
+    expect(isOrderInDatePreset(nov14, 'custom', fixedNow, singleDay)).toBe(true);
+    expect(isOrderInDatePreset(nov10, 'custom', fixedNow, singleDay)).toBe(false);
+
+    // Open-ended bounds
+    expect(isOrderInDatePreset(nov16, 'custom', fixedNow, { startDate: '2026-11-14' })).toBe(true);
+    expect(isOrderInDatePreset(nov10, 'custom', fixedNow, { startDate: '2026-11-14' })).toBe(false);
+    expect(isOrderInDatePreset(nov10, 'custom', fixedNow, { endDate: '2026-11-14' })).toBe(true);
+    expect(isOrderInDatePreset(nov16, 'custom', fixedNow, { endDate: '2026-11-14' })).toBe(false);
+
+    // Inverted bounds swapped gracefully
+    const inverted = { startDate: '2026-11-14', endDate: '2026-11-10' };
+    expect(isOrderInDatePreset(nov10, 'custom', fixedNow, inverted)).toBe(true);
+    expect(isOrderInDatePreset(nov14, 'custom', fixedNow, inverted)).toBe(true);
+    expect(isOrderInDatePreset(nov16, 'custom', fixedNow, inverted)).toBe(false);
+
+    // Empty custom range allows all valid orders
+    expect(isOrderInDatePreset(nov10, 'custom', fixedNow, {})).toBe(true);
+  });
+
+  it('formats custom date range labels cleanly', () => {
+    expect(formatCustomDateRangeLabel(undefined, 'en')).toBeNull();
+    expect(formatCustomDateRangeLabel({}, 'en')).toBeNull();
+    expect(
+      formatCustomDateRangeLabel({ startDate: '2026-11-10', endDate: '2026-11-10' }, 'en'),
+    ).toBe('Nov 10');
+    expect(
+      formatCustomDateRangeLabel({ startDate: '2026-11-10', endDate: '2026-11-16' }, 'en'),
+    ).toBe('Nov 10 – Nov 16');
+    expect(
+      formatCustomDateRangeLabel({ startDate: '2026-11-16', endDate: '2026-11-10' }, 'en'),
+    ).toBe('Nov 10 – Nov 16');
+    expect(formatCustomDateRangeLabel({ startDate: '2026-11-10' }, 'en')).toBe('Nov 10+');
+    expect(formatCustomDateRangeLabel({ endDate: '2026-11-16' }, 'en')).toBe('≤ Nov 16');
+  });
+
+  it('derives date-scoped Total COD and 5-stage pipeline statistics excluding cancelled/draft COD', () => {
+    const baseOrder = createMockBookingDetails(fixedNow)['ord-1001'];
+    const orders: BookingOrder[] = [
+      { ...baseOrder, id: 'o1', status: 'pending', cod: { isCod: true, amount: 20 }, createdAt: 'Nov 16, 2026 • 09:00 AM' },
+      { ...baseOrder, id: 'o2', status: 'assigned', cod: { isCod: true, amount: 35.5 }, createdAt: 'Nov 16, 2026 • 10:00 AM' },
+      { ...baseOrder, id: 'o3', status: 'out_for_delivery', cod: { isCod: false, amount: 0 }, createdAt: 'Nov 16, 2026 • 11:00 AM' },
+      { ...baseOrder, id: 'o4', status: 'delivered', cod: { isCod: true, amount: 14.5 }, createdAt: 'Nov 15, 2026 • 08:00 AM' },
+      { ...baseOrder, id: 'o5', status: 'cancelled', cod: { isCod: true, amount: 99 }, createdAt: 'Nov 16, 2026 • 12:00 PM' },
+    ];
+
+    // Full set
+    const allStats = deriveDashboardStatsFromOrders(orders, {
+      datePreset: 'all',
+      referenceDate: fixedNow,
+    });
+    expect(allStats.pendingPickup).toBe(1);
+    expect(allStats.accepted).toBe(1);
+    expect(allStats.inTransit).toBe(1);
+    expect(allStats.delivered).toBe(1);
+    expect(allStats.cancelled).toBe(1);
+    // 20 + 35.5 + 14.5 = 70 (cancelled $99 excluded)
+    expect(allStats.codCollection).toBe(70);
+
+    // Filtered to Nov 16 only via 'today' preset
+    const todayStats = deriveDashboardStatsFromOrders(orders, {
+      datePreset: 'today',
+      referenceDate: fixedNow,
+    });
+    expect(todayStats.delivered).toBe(0);
+    expect(todayStats.cancelled).toBe(1);
+    expect(todayStats.codCollection).toBe(55.5);
+
+    // Filtered to Nov 15 only via custom range
+    const nov15Stats = deriveDashboardStatsFromOrders(orders, {
+      datePreset: 'custom',
+      customRange: { startDate: '2026-11-15', endDate: '2026-11-15' },
+      referenceDate: fixedNow,
+    });
+    expect(nov15Stats.delivered).toBe(1);
+    expect(nov15Stats.pendingPickup).toBe(0);
+    expect(nov15Stats.codCollection).toBe(14.5);
   });
 });

@@ -1,4 +1,4 @@
-import { PickupLocation, RecipientRecord, BookingFeeQuote, GeoCoordinates, DeliverySpeedOption } from '../types/booking-types';
+import { PickupLocation, BookingFeeQuote, GeoCoordinates, DeliverySpeedOption } from '../types/booking-types';
 import { calculateBookingFeeQuote } from '../services/pricing-service';
 
 export const SAMPLE_PHNOM_PENH_LOCATIONS: (PickupLocation & { tag: string })[] = [
@@ -38,33 +38,6 @@ export const SAMPLE_PHNOM_PENH_LOCATIONS: (PickupLocation & { tag: string })[] =
     senderName: 'Sen Sok Logistics',
     senderPhone: '012 333 222',
     tag: 'Airport Zone (Demo)',
-  },
-];
-
-export const SAMPLE_RECIPIENTS: RecipientRecord[] = [
-  {
-    id: 'rec-1',
-    name: 'Sokha Chan',
-    phoneNumber: '012 998 877',
-    lastUsedAt: new Date().toISOString(),
-    lastAddress: 'St 2004, Sangkat Kakab, Khan Por Senchey, Phnom Penh',
-    lastCoordinates: { lat: 11.545, lng: 104.862 },
-  },
-  {
-    id: 'rec-2',
-    name: 'Dara Vong',
-    phoneNumber: '098 112 233',
-    lastUsedAt: new Date().toISOString(),
-    lastAddress: 'St 63, Sangkat Chaktomuk, Khan Daun Penh, Phnom Penh',
-    lastCoordinates: { lat: 11.558, lng: 104.931 },
-  },
-  {
-    id: 'rec-3',
-    name: 'Bopha Pich',
-    phoneNumber: '077 445 566',
-    lastUsedAt: new Date().toISOString(),
-    lastAddress: 'Russian Blvd, Sangkat Teuk Thla, Khan Sen Sok, Phnom Penh',
-    lastCoordinates: { lat: 11.564, lng: 104.881 },
   },
 ];
 

@@ -35,6 +35,7 @@ export function BookingDetailView({
     stopOneFee,
     isCancelled,
     canCancel,
+    requiresHotlineCancel,
     isPendingPayment,
     copiedField,
     handleCopy,
@@ -127,6 +128,7 @@ export function BookingDetailView({
             stopOneFee={stopOneFee}
             isPendingPayment={isPendingPayment}
             canCancel={canCancel}
+            requiresHotlineCancel={requiresHotlineCancel}
             isCancelled={isCancelled}
             onBookAgain={handleBookAgain}
             onContinuePayment={handleContinuePayment}

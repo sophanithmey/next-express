@@ -1,8 +1,47 @@
 import { BookingFormData, DropoffStop, SavedBookingDraft } from '../types/booking-types';
+import { BulkOrderDraft } from './bulk-order-parser';
 
 const PENDING_CHECKOUT_DRAFT_KEY = 'express_seller_pending_booking_draft';
+const BULK_ORDERS_DRAFT_KEY = 'express_seller_bulk_orders_draft';
 const LAST_BOOKED_STOPS_KEY = 'express_seller_last_booked_stops';
 const USER_SAVED_DRAFTS_KEY = 'express_seller_user_saved_drafts';
+
+export interface StoredBulkOrdersDraft {
+  orders: BulkOrderDraft[];
+  selectedPayment?: string;
+  promoCode?: string;
+  tipAmount?: number;
+}
+
+export function saveBulkOrdersDraft(draft: StoredBulkOrdersDraft): void {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(BULK_ORDERS_DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    // Ignore storage quota errors in private browsing
+  }
+}
+
+export function loadBulkOrdersDraft(): StoredBulkOrdersDraft | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(BULK_ORDERS_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as StoredBulkOrdersDraft;
+    return Array.isArray(parsed?.orders) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearBulkOrdersDraft(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.removeItem(BULK_ORDERS_DRAFT_KEY);
+  } catch {
+    // Ignore
+  }
+}
 
 export type { SavedBookingDraft } from '../types/booking-types';
 

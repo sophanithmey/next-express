@@ -88,15 +88,6 @@ export const DEMO_PAYMENT_OPTIONS: PaymentOptionItem[] = [
     isAvailable: true,
   },
   {
-    id: 'wing_pay',
-    providerCode: 'wing_pay',
-    title: 'WingPay Wallet',
-    subtitle: 'Instant settlement from your linked Wing account',
-    subtitleImages: [],
-    isDefault: false,
-    isAvailable: true,
-  },
-  {
     id: 'cash_on_delivery',
     providerCode: 'cash_on_delivery',
     title: 'Cash on Pickup',

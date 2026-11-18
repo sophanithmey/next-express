@@ -6,7 +6,10 @@ import { useTranslations } from 'next-intl';
 import { SearchInput } from '@/components/molecules/search-input';
 import { BookingDatePresetFilter } from './booking-date-preset-filter';
 import { BookingExportMenu } from './booking-export-menu';
-import { BookingDatePreset } from '../services/booking-date-filter';
+import {
+  BookingDatePreset,
+  CustomDateRange,
+} from '../services/booking-date-filter';
 import { BookingOrder } from '../types/booking-types';
 import { cn } from '@/lib/cn';
 
@@ -16,6 +19,7 @@ const STATUS_TAB_KEYS = [
   { id: 'accepted', labelKey: 'tabAccepted' },
   { id: 'in_transit', labelKey: 'tabTransit' },
   { id: 'fulfilled', labelKey: 'tabFulfilled' },
+  { id: 'cancelled', labelKey: 'tabCancelled' },
 ] as const;
 
 export type BookingViewMode = 'compact' | 'table';
@@ -23,6 +27,7 @@ export type BookingViewMode = 'compact' | 'table';
 interface BookingHistoryToolbarProps {
   statusFilter: string;
   datePreset: BookingDatePreset;
+  customDateRange?: CustomDateRange;
   search: string;
   isLoading: boolean;
   isLocalDemoMode: boolean;
@@ -31,6 +36,7 @@ interface BookingHistoryToolbarProps {
   onViewModeChange: (mode: BookingViewMode) => void;
   onFilterChange: (status: string) => void;
   onDatePresetChange: (preset: BookingDatePreset) => void;
+  onCustomDateRangeChange?: (range: CustomDateRange) => void;
   onSearchChange: (value: string) => void;
   onRefresh: () => void;
   onResetDemoData: () => void;
@@ -42,6 +48,7 @@ interface BookingHistoryToolbarProps {
 export function BookingHistoryToolbar({
   statusFilter,
   datePreset,
+  customDateRange,
   search,
   isLoading,
   isLocalDemoMode,
@@ -50,6 +57,7 @@ export function BookingHistoryToolbar({
   onViewModeChange,
   onFilterChange,
   onDatePresetChange,
+  onCustomDateRangeChange,
   onSearchChange,
   onRefresh,
   onResetDemoData,
@@ -95,7 +103,9 @@ export function BookingHistoryToolbar({
           </div>
           <BookingDatePresetFilter
             value={datePreset}
+            customRange={customDateRange}
             onChange={onDatePresetChange}
+            onChangeCustomRange={onCustomDateRangeChange}
             disabled={isLoading}
           />
           {statusFilter !== 'all' && (

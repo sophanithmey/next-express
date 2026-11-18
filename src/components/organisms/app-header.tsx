@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Link, usePathname } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
-import { Truck, Package, LogIn, ArrowRight, Home, Menu, X } from 'lucide-react';
+import { Package, LogIn, ArrowRight, Home, Menu, X } from 'lucide-react';
 import { useAuthState } from '@/features/auth/hooks/use-auth-state';
 import { UserProfile } from '@/features/auth/types/auth-types';
 import { LogoutConfirmModal } from '@/components/molecules/logout-confirm-modal';
@@ -49,15 +50,20 @@ export function AppHeader({ user: propUser }: AppHeaderProps) {
       {/* Floating Apple-style Frosted Glass Island Header */}
       <header className="sticky top-0 z-40 w-full px-3 sm:px-6 pt-2 sm:pt-3 pb-2 transition-all">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between rounded-2xl sm:rounded-full border border-slate-200/80 bg-white/80 backdrop-blur-2xl backdrop-saturate-200 px-3.5 sm:px-5 shadow-[0_8px_30px_rgb(0,0,0,0.06),0_1px_3px_rgb(0,0,0,0.04)] ring-1 ring-black/5">
-          {/* Brand Logo with Wing Blue & Gold Accent */}
+          {/* Brand Logo with Wingmall Icon */}
           <Link href="/" prefetch={true} className="flex items-center gap-2.5 group shrink-0">
-            <div className="flex h-8.5 w-8.5 items-center justify-center rounded-xl bg-secondary-600 text-white shadow-2xs group-hover:scale-105 transition-transform ring-1 ring-secondary-500/20">
-              <Truck className="h-4.5 w-4.5 text-primary-400" />
-            </div>
+            <Image
+              src="/apple-touch-icon.png"
+              alt="Wingmall"
+              width={36}
+              height={36}
+              priority
+              className="h-8.5 w-8.5 rounded-xl object-contain shadow-2xs group-hover:scale-105 transition-transform shrink-0"
+            />
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight block leading-tight">
-                  Wing<span className="text-secondary-600">Express</span>
+                  Wing<span className="text-primary-500">express</span>
                 </span>
               </div>
               <span className="text-[10px] text-slate-400 font-medium tracking-tight hidden sm:block">

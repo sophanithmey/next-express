@@ -2,7 +2,9 @@
 
 import React, { useState } from 'react';
 import { BookingOrder } from '@/features/booking/types/booking-types';
+import { getCancellationEligibility } from '@/features/booking/services/booking-cancellation-policy';
 import { StatusBadge } from './status-badge';
+import { CancelHotlineCallout } from './cancel-hotline-callout';
 import { APP_CONFIG } from '@/lib/constants';
 import { formatPhoneNumber } from '@/lib/phone-number';
 import {
@@ -13,6 +15,7 @@ import {
   Repeat,
   ShieldCheck,
   User,
+  XCircle,
   Zap,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -32,9 +35,12 @@ export function BookingJiraModalSidebar({
 }: BookingJiraModalSidebarProps) {
   const tDetails = useTranslations('BookingDetails');
   const tHistory = useTranslations('BookingHistory');
+  const tPayment = useTranslations('Payment');
   const [isCopied, setIsCopied] = useState(false);
 
-  const canCancel = order.status === 'pending' || order.status === 'draft' || order.status === 'assigned';
+  const cancelEligibility = getCancellationEligibility(order);
+  const canCancel = cancelEligibility === 'can_cancel';
+  const requiresHotlineCancel = cancelEligibility === 'contact_hotline';
   const isCancelled = order.status === 'cancelled';
 
   const handleCopyLink = async () => {
@@ -193,6 +199,23 @@ export function BookingJiraModalSidebar({
             <Repeat className="h-3.5 w-3.5" />
             <span>{tHistory('bookAgain')}</span>
           </button>
+        )}
+
+        {!isCancelled && canCancel && onRequestCancel && (
+          <button
+            type="button"
+            onClick={() => onRequestCancel(order)}
+            className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-danger-200 bg-danger-50/70 hover:bg-danger-100/70 text-danger-700 py-2 text-xs font-bold transition cursor-pointer"
+          >
+            <XCircle className="h-3.5 w-3.5" />
+            <span>{tPayment('cancelOrder')}</span>
+          </button>
+        )}
+
+        {!isCancelled && requiresHotlineCancel && (
+          <CancelHotlineCallout
+            trackingNumber={order.trackingNumber || order.id}
+          />
         )}
       </div>
     </div>

@@ -60,7 +60,7 @@ export function useLiveTracking(initialOrder: BookingOrder, scopedStopId?: strin
     order.status === 'delivered';
 
   const courierName = order.deliverer?.name
-    ? `${order.deliverer.name} • Wing Express`
+    ? `${order.deliverer.name} • Wingexpress`
     : tLive('courierAssigned');
   const courierVehicle = order.deliverer?.plateNumber || tLive('courierVehicle');
   const courierPhone = order.deliverer?.phone || APP_CONFIG.supportPhone;

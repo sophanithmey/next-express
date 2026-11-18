@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { BookingOrder } from '@/features/booking/types/booking-types';
 
-function partitionOrdersBy4Stages(orders: BookingOrder[]) {
+function partitionOrdersBy5Stages(orders: BookingOrder[]) {
   const pending: BookingOrder[] = [];
   const accepted: BookingOrder[] = [];
   const inTransit: BookingOrder[] = [];
   const fulfilled: BookingOrder[] = [];
+  const cancelled: BookingOrder[] = [];
 
   for (const order of orders) {
     if (order.status === 'draft' || order.status === 'pending' || order.status === 'confirmed') {
@@ -16,10 +17,12 @@ function partitionOrdersBy4Stages(orders: BookingOrder[]) {
       inTransit.push(order);
     } else if (order.status === 'delivered') {
       fulfilled.push(order);
+    } else if (order.status === 'cancelled') {
+      cancelled.push(order);
     }
   }
 
-  return { pending, accepted, inTransit, fulfilled };
+  return { pending, accepted, inTransit, fulfilled, cancelled };
 }
 
 function getInitials(name?: string, fallback = 'WN'): string {
@@ -94,10 +97,25 @@ describe('Booking 4-Stage Operational Lifecycle', () => {
       createdAt: '2026-11-16T09:30:00Z',
       updatedAt: '2026-11-16T09:30:00Z',
     },
+    {
+      id: 'ord-5',
+      trackingNumber: 'EXP-1005',
+      trackingUrl: 'https://example.com/EXP-1005',
+      status: 'cancelled',
+      pickup: { id: 'p1', name: 'Hub', address: 'St 271', coordinates: dummyCoord },
+      dropoff: { address: 'Chbar Ampov', coordinates: dummyCoord },
+      recipient: { name: 'Vanna Ly', phoneNumber: '012445566' },
+      parcel: { description: 'Shoes', quantity: 1 },
+      cod: { isCod: true, amount: 30 },
+      deliveryFee: 1.75,
+      totalSellerCharge: 1.75,
+      createdAt: '2026-11-16T10:00:00Z',
+      updatedAt: '2026-11-16T10:00:00Z',
+    },
   ];
 
-  it('partitions orders into exactly 4 GrabExpress-aligned stages', () => {
-    const partitioned = partitionOrdersBy4Stages(sampleOrders);
+  it('partitions orders into 5 operational stages including Cancelled next to Fulfilled', () => {
+    const partitioned = partitionOrdersBy5Stages(sampleOrders);
     expect(partitioned.pending).toHaveLength(1);
     expect(partitioned.pending[0].id).toBe('ord-1');
     expect(partitioned.accepted).toHaveLength(1);
@@ -106,6 +124,8 @@ describe('Booking 4-Stage Operational Lifecycle', () => {
     expect(partitioned.inTransit[0].id).toBe('ord-3');
     expect(partitioned.fulfilled).toHaveLength(1);
     expect(partitioned.fulfilled[0].id).toBe('ord-4');
+    expect(partitioned.cancelled).toHaveLength(1);
+    expect(partitioned.cancelled[0].id).toBe('ord-5');
   });
 
   it('correctly computes initials for user avatars', () => {

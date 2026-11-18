@@ -9,6 +9,7 @@ import { BookingOrder, BookingFormData } from '../types/booking-types';
 import { APP_CONFIG } from '@/lib/constants';
 import { useAuthState } from '@/features/auth/hooks/use-auth-state';
 import { saveBookingDraft } from '../services/booking-draft-service';
+import { getCancellationEligibility } from '../services/booking-cancellation-policy';
 import { usePaymentDetail } from '@/features/payment/hooks/use-payment-detail';
 import { bookingApiService } from '../services/booking-api-service';
 import { bookingKeys } from './booking-keys';
@@ -114,13 +115,9 @@ export function useBookingDetail(
   const extraStops = Math.max(0, destinationStops.length - 1);
   const stopOneFee = Math.max(0, activeOrder.deliveryFee - extraStops * 0.75);
   const isCancelled = activeOrder.status === 'cancelled';
-  const canCancel =
-    !isCancelled &&
-    activeOrder.status !== 'delivered' &&
-    activeOrder.status !== 'out_for_delivery' &&
-    (activeOrder.status === 'pending' ||
-      activeOrder.status === 'assigned' ||
-      activeOrder.status === 'draft');
+  const cancelEligibility = getCancellationEligibility(activeOrder);
+  const canCancel = cancelEligibility === 'can_cancel';
+  const requiresHotlineCancel = cancelEligibility === 'contact_hotline';
 
   const isPendingPayment =
     activeOrder.paymentStatus === 'pending' ||
@@ -207,6 +204,7 @@ export function useBookingDetail(
     stopOneFee,
     isCancelled,
     canCancel,
+    requiresHotlineCancel,
     isPendingPayment,
     copiedField,
     handleCopy,

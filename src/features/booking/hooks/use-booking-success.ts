@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { BookingOrder, DropoffStop } from '../types/booking-types';
 import { loadLastBookedStops } from '../services/booking-draft-service';
+import { getCancellationEligibility } from '../services/booking-cancellation-policy';
 import { useAuthState } from '@/features/auth/hooks/use-auth-state';
 import { usePaymentDetail } from '@/features/payment/hooks/use-payment-detail';
 import { bookingApiService } from '../services/booking-api-service';
@@ -77,8 +78,13 @@ export function useBookingSuccess() {
     },
   });
 
-  // Cancel allowed strictly before rider accepts or order is confirmed
-  const canCancel = orderStatus === 'pending';
+  // Cancel allowed strictly before rider is assigned; otherwise sender contacts hotline
+  const cancelEligibility = getCancellationEligibility({
+    status: orderStatus,
+    deliverer: orderQuery.data?.deliverer,
+  });
+  const canCancel = cancelEligibility === 'can_cancel';
+  const requiresHotlineCancel = cancelEligibility === 'contact_hotline';
   const isCancelled = orderStatus === 'cancelled';
 
   const handleConfirmCancel = useCallback(
@@ -137,6 +143,7 @@ export function useBookingSuccess() {
     deliverySpeed,
     orderStatus,
     canCancel,
+    requiresHotlineCancel,
     isCancelled,
     isCancelModalOpen,
     setIsCancelModalOpen,

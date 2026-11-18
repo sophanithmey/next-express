@@ -12,39 +12,14 @@ import { createPrefillFromOrder } from '../services/booking-form-helpers';
 import { saveBookingDraft } from '../services/booking-draft-service';
 import { buildTrackingSharePayload } from '../services/tracking-share-helper';
 import { buildOrderStatusFilter } from '../services/booking-order-filter';
-import { BookingDatePreset, isOrderInDatePreset } from '../services/booking-date-filter';
+import {
+  BookingDatePreset,
+  CustomDateRange,
+} from '../services/booking-date-filter';
+import { deriveDashboardStatsFromOrders } from '../services/booking-statistics-service';
 import { bookingApiService } from '../services/booking-api-service';
 import { localDemoBookingStore } from '../services/local-demo-store';
 import { bookingKeys } from './booking-keys';
-
-function deriveStatsFromOrders(orders: BookingOrder[]): DashboardStatistics {
-  let todayBookings = 0;
-  let pendingPickup = 0;
-  let accepted = 0;
-  let inTransit = 0;
-  let delivered = 0;
-  let codCollection = 0;
-
-  for (const order of orders) {
-    if (isOrderInDatePreset(order.createdAt, 'today') && order.status !== 'draft') todayBookings += 1;
-    if (order.status === 'pending' || order.status === 'draft' || order.status === 'confirmed') pendingPickup += 1;
-    if (order.status === 'assigned') accepted += 1;
-    if (order.status === 'out_for_delivery') inTransit += 1;
-    if (order.status === 'delivered') delivered += 1;
-    if (order.cod.isCod && order.status !== 'cancelled' && order.status !== 'draft') {
-      codCollection += order.cod.amount;
-    }
-  }
-
-  return {
-    todayBookings,
-    pendingPickup,
-    accepted,
-    inTransit,
-    delivered,
-    codCollection: Math.round(codCollection * 100) / 100,
-  };
-}
 
 interface UseBookingHistoryProps {
   initialOrders: BookingOrder[];
@@ -60,8 +35,8 @@ export interface CopiedState {
 }
 
 /**
- * Manages booking operations filtering, debounced search, pagination, clipboard copy feedback,
- * and quick actions for the booking history dashboard.
+ * Manages booking operations filtering (status, presets, custom date range),
+ * date-scoped dashboard statistics, debounced search, pagination, and quick actions.
  */
 export function useBookingHistory({
   initialOrders,
@@ -83,6 +58,7 @@ export function useBookingHistory({
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [datePreset, setDatePreset] = useState<BookingDatePreset>('today');
+  const [customDateRange, setCustomDateRange] = useState<CustomDateRange>({});
   const [page, setPage] = useState(1);
   const [copiedItem, setCopiedItem] = useState<CopiedState | null>(null);
 
@@ -98,6 +74,11 @@ export function useBookingHistory({
     [statusFilter],
   );
 
+  const activeStartDate =
+    datePreset === 'custom' ? customDateRange.startDate : undefined;
+  const activeEndDate =
+    datePreset === 'custom' ? customDateRange.endDate : undefined;
+
   const isDefaultUnfilteredPage =
     page === 1 && !debouncedSearch && statusFilter === 'all' && datePreset === 'today';
 
@@ -109,6 +90,8 @@ export function useBookingHistory({
         search: debouncedSearch || undefined,
         status: statusFilter,
         datePreset,
+        startDate: activeStartDate,
+        endDate: activeEndDate,
         filter: activeFilter,
       }),
       locale,
@@ -121,6 +104,8 @@ export function useBookingHistory({
           rpp,
           search: debouncedSearch || undefined,
           datePreset,
+          startDate: activeStartDate,
+          endDate: activeEndDate,
           filter: activeFilter,
           locale,
         },
@@ -143,6 +128,40 @@ export function useBookingHistory({
     refetchOnMount: localDemoMode ? 'always' : true,
   });
 
+  // Separate date-scoped query in API mode so dashboard stats reflect date filter
+  // even when a specific status tab or pagination page is active.
+  const dateStatsQuery = useQuery({
+    queryKey: [
+      ...bookingKeys.list({
+        page: 1,
+        rpp: 500,
+        search: debouncedSearch || undefined,
+        datePreset,
+        startDate: activeStartDate,
+        endDate: activeEndDate,
+      }),
+      'date-stats',
+      locale,
+      isAuthenticated ? 'auth' : 'guest',
+    ],
+    queryFn: ({ signal }) =>
+      bookingApiService.listBookings(
+        {
+          page: 1,
+          rpp: 500,
+          search: debouncedSearch || undefined,
+          datePreset,
+          startDate: activeStartDate,
+          endDate: activeEndDate,
+          locale,
+        },
+        signal,
+      ),
+    enabled: !localDemoMode,
+    placeholderData: keepPreviousData,
+    staleTime: 15_000,
+  });
+
   const orders = bookingsQuery.data?.items ?? initialOrders;
   const totalCount = bookingsQuery.data?.pagination?.total ?? orders.length ?? 0;
   const totalPages = bookingsQuery.data?.pagination?.totalPages ?? 1;
@@ -150,15 +169,44 @@ export function useBookingHistory({
 
   const stats = useMemo<DashboardStatistics | undefined>(() => {
     if (localDemoMode && bookingsQuery.data) {
-      return deriveStatsFromOrders(
-        localDemoBookingStore.listOrders({ page: 1, rpp: 1000 }).items,
-      );
+      const dateFilteredOrders = localDemoBookingStore.listOrders({
+        page: 1,
+        rpp: 1000,
+        search: debouncedSearch || undefined,
+        datePreset,
+        startDate: activeStartDate,
+        endDate: activeEndDate,
+      }).items;
+      return deriveDashboardStatsFromOrders(dateFilteredOrders);
     }
-    if (isDefaultUnfilteredPage && bookingsQuery.data?.items) {
-      return deriveStatsFromOrders(bookingsQuery.data.items);
+
+    if (dateStatsQuery.data?.items) {
+      return deriveDashboardStatsFromOrders(dateStatsQuery.data.items, {
+        datePreset,
+        customRange: customDateRange,
+      });
     }
+
+    if (statusFilter === 'all' && bookingsQuery.data?.items) {
+      return deriveDashboardStatsFromOrders(bookingsQuery.data.items, {
+        datePreset,
+        customRange: customDateRange,
+      });
+    }
+
     return initialStats;
-  }, [bookingsQuery.data, initialStats, isDefaultUnfilteredPage, localDemoMode]);
+  }, [
+    localDemoMode,
+    bookingsQuery.data,
+    dateStatsQuery.data,
+    debouncedSearch,
+    datePreset,
+    customDateRange,
+    activeStartDate,
+    activeEndDate,
+    statusFilter,
+    initialStats,
+  ]);
 
   const handleFilterChange = useCallback((nextStatus: string) => {
     setStatusFilter(nextStatus);
@@ -167,6 +215,15 @@ export function useBookingHistory({
 
   const handleDatePresetChange = useCallback((preset: BookingDatePreset) => {
     setDatePreset(preset);
+    if (preset !== 'custom') {
+      setCustomDateRange({});
+    }
+    setPage(1);
+  }, []);
+
+  const handleCustomDateRangeChange = useCallback((range: CustomDateRange) => {
+    setCustomDateRange(range);
+    setDatePreset('custom');
     setPage(1);
   }, []);
 
@@ -179,6 +236,7 @@ export function useBookingHistory({
     setSearch('');
     setStatusFilter('all');
     setDatePreset('today');
+    setCustomDateRange({});
     setPage(1);
   }, []);
 
@@ -189,7 +247,7 @@ export function useBookingHistory({
       toast.success(`${tCommon('copied')}: ${order.trackingNumber}`);
       setTimeout(() => setCopiedItem(null), 2000);
     },
-    [tCommon]
+    [tCommon],
   );
 
   const handleCopyLiveLink = useCallback(
@@ -209,7 +267,7 @@ export function useBookingHistory({
       toast.success(tPayment('linkCopied'));
       setTimeout(() => setCopiedItem(null), 2000);
     },
-    [locale, tPayment]
+    [locale, tPayment],
   );
 
   const handleRepeatBooking = useCallback(
@@ -218,14 +276,14 @@ export function useBookingHistory({
       saveBookingDraft(draft);
       router.push('/booking');
     },
-    [router]
+    [router],
   );
 
   const handleNavigateDetail = useCallback(
     (orderId: string) => {
       router.push(`/bookings/${orderId}`);
     },
-    [router]
+    [router],
   );
 
   const handleResetDemoData = useCallback(async () => {
@@ -233,6 +291,8 @@ export function useBookingHistory({
     setSearch('');
     setDebouncedSearch('');
     setStatusFilter('all');
+    setDatePreset('today');
+    setCustomDateRange({});
     setPage(1);
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: bookingKeys.all }),
@@ -248,6 +308,7 @@ export function useBookingHistory({
     search,
     statusFilter,
     datePreset,
+    customDateRange,
     page,
     totalPages,
     isLoading,
@@ -258,9 +319,13 @@ export function useBookingHistory({
     setPage,
     handleFilterChange,
     handleDatePresetChange,
+    handleCustomDateRangeChange,
     handleSearchChange,
     handleClearFilters,
-    handleRefresh: () => void bookingsQuery.refetch(),
+    handleRefresh: () => {
+      void bookingsQuery.refetch();
+      if (!localDemoMode) void dateStatsQuery.refetch();
+    },
     handleResetDemoData,
     handleCopyTrackingId,
     handleCopyLiveLink,
@@ -268,4 +333,3 @@ export function useBookingHistory({
     handleNavigateDetail,
   };
 }
-

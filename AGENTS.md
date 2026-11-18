@@ -110,7 +110,16 @@ Next.js reserved filenames must follow framework conventions (`page.tsx`, `layou
 
 ## 6. UI/UX Design Rules
 
-The interface must be modern, minimal, premium, and easy to understand.
+
+For all UI-related tasks, follow:
+
+- @.agents/rules/ui-ux-standards.md
+- @.agents/rules/coding-standards.md
+
+Available UI skills:
+
+- ui-implementation: Build new UI.
+- ui-visual-audit: Review and improve existing UI.
 
 ### Visual Style
 

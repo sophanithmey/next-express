@@ -172,6 +172,7 @@ export interface DashboardStatistics {
   accepted?: number;
   inTransit: number;
   delivered: number;
+  cancelled?: number;
   codCollection: number;
 }
 

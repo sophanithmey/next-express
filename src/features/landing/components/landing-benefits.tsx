@@ -2,11 +2,18 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
-import { Send, Banknote, History, Repeat } from 'lucide-react';
+import {
+  Route,
+  Banknote,
+  Navigation,
+  Link2,
+  Camera,
+  Headset,
+} from 'lucide-react';
 
 const BENEFITS = [
   {
-    icon: Send,
+    icon: Route,
     titleKey: 'item1Title',
     descKey: 'item1Desc',
   },
@@ -16,14 +23,24 @@ const BENEFITS = [
     descKey: 'item2Desc',
   },
   {
-    icon: History,
+    icon: Navigation,
     titleKey: 'item3Title',
     descKey: 'item3Desc',
   },
   {
-    icon: Repeat,
+    icon: Link2,
     titleKey: 'item4Title',
     descKey: 'item4Desc',
+  },
+  {
+    icon: Camera,
+    titleKey: 'item5Title',
+    descKey: 'item5Desc',
+  },
+  {
+    icon: Headset,
+    titleKey: 'item6Title',
+    descKey: 'item6Desc',
   },
 ] as const;
 
@@ -44,7 +61,7 @@ export function LandingBenefits() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {BENEFITS.map((item) => {
           const Icon = item.icon;
           return (

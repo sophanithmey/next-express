@@ -8,10 +8,9 @@ import {
   CodInfo,
 } from '@/features/booking/types/booking-types';
 import { FormSection } from '../../molecules/form-section';
-import { Navigation, Layers, Route, AlertCircle } from 'lucide-react';
+import { Navigation, Route, AlertCircle } from 'lucide-react';
 import { DropoffStopItem } from './dropoff-stop-item';
 import { DropoffAddStopButton } from './dropoff-add-stop-button';
-import { BulkDropoffModal } from '../bulk-dropoff-modal';
 import { useDropoffSection } from '@/features/booking/hooks/use-dropoff-section';
 import { calculateTotalStopCod } from '@/features/booking/services/booking-form-helpers';
 import { MAX_TOTAL_COD_USD } from '@/lib/constants';
@@ -52,15 +51,12 @@ export function DropoffSection({
     isMultiDrop,
     maxStops,
     isMaxStopsReached,
-    isBulkModalOpen,
-    setIsBulkModalOpen,
     collapsedStops,
     sortableContainerRef,
     handleToggleCollapse,
     handleUpdateStop,
     handleAddStop,
     handleRemoveStop,
-    handleBulkApply,
     handleMoveUp,
     handleMoveDown,
   } = useDropoffSection({
@@ -124,15 +120,6 @@ export function DropoffSection({
               <span>{tBooking('optimizeRoute')}</span>
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => setIsBulkModalOpen(true)}
-            className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200 shadow-2xs transition cursor-pointer"
-            title={tBooking('bulkImportSpreadsheet')}
-          >
-            <Layers className="h-3.5 w-3.5 text-amber-700" />
-            <span>{tBooking('bulkImport')}</span>
-          </button>
         </div>
       }
     >
@@ -184,12 +171,6 @@ export function DropoffSection({
           maxStops={maxStops}
         />
       </div>
-
-      <BulkDropoffModal
-        isOpen={isBulkModalOpen}
-        onClose={() => setIsBulkModalOpen(false)}
-        onApplyStops={handleBulkApply}
-      />
     </FormSection>
   );
 }

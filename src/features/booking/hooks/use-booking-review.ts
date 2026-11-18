@@ -11,7 +11,6 @@ import { bookingKeys } from './booking-keys';
 import {
   BookingFormData,
   BookingFeeQuote,
-  BookingOrder,
 } from '../types/booking-types';
 import {
   loadBookingDraft,

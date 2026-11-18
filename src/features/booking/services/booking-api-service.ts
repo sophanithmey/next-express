@@ -24,6 +24,8 @@ export interface ListBookingsParams {
   search?: string;
   status?: string;
   datePreset?: BookingDatePreset;
+  startDate?: string;
+  endDate?: string;
   direction?: 'ASC' | 'DESC';
   property?: string;
   filter?: BookingOrderFilter[];

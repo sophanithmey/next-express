@@ -28,6 +28,8 @@ export async function GET(request: Request) {
     const search = searchParams.get('search')?.trim() || undefined;
     const status = searchParams.get('status')?.trim() || undefined;
     const datePreset = (searchParams.get('datePreset')?.trim() as BookingDatePreset) || undefined;
+    const startDate = searchParams.get('startDate')?.trim() || undefined;
+    const endDate = searchParams.get('endDate')?.trim() || undefined;
     const page = parsePositiveInt(searchParams.get('page'), 1);
     const rpp = parsePositiveInt(
       searchParams.get('rpp') ?? searchParams.get('limit'),
@@ -53,6 +55,8 @@ export async function GET(request: Request) {
       search,
       status,
       datePreset,
+      startDate,
+      endDate,
       filter: mergeOrderFilters(filterResult.filters, status),
     });
     return NextResponse.json(data);

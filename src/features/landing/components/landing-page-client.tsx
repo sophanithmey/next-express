@@ -16,11 +16,11 @@ export function LandingPageClient() {
 
   const recentBookings = useMemo(
     () => Object.values(MOCK_BOOKING_DETAILS).slice(0, 3),
-    []
+    [],
   );
 
   return (
-    <div className="space-y-4">
+    <div className='space-y-4'>
       {/* Personalized banner if authenticated */}
       {isAuthenticated && (
         <LandingAuthenticatedBanner
@@ -38,15 +38,14 @@ export function LandingPageClient() {
       {/* Seller Benefits */}
       <LandingBenefits />
 
-      {/* Zero-Hassle 2-Click Access */}
-      <LandingInstantAccess />
-
       {/* Seller FAQ */}
       <LandingFaq />
+
+      {/* Zero-Hassle 2-Click Access */}
+      <LandingInstantAccess />
 
       {/* Primary Bottom Action */}
       <LandingCta />
     </div>
   );
 }
-

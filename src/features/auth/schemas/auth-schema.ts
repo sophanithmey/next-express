@@ -26,10 +26,6 @@ export const verifyPinPayloadSchema = z.object({
   pin: pinSchema.shape.pin,
 });
 
-export const otpRequestSchema = z.object({
-  phoneNumber: phoneSchema.shape.phoneNumber,
-});
-
 export const pinSetupSchema = z.object({
   newPin: pinSchema.shape.pin,
 });

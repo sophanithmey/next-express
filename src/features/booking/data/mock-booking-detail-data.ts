@@ -734,8 +734,3 @@ export function syncOrdersToCurrentDate(
   return [...updated, ...missingDefaults];
 }
 
-export function getMockBookingById(id: string): BookingOrder | null {
-  const details = getDailyCachedMockDetails();
-  return details[id] || null;
-}
-

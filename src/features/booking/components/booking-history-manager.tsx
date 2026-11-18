@@ -10,7 +10,11 @@ import { BookingHistoryJiraBoard } from '@/components/organisms/booking-history-
 import { Button } from '@/components/atoms/button';
 import { BookingOperationsStats } from './booking-operations-stats';
 import { BookingHistoryToolbar, BookingViewMode } from './booking-history-toolbar';
-import { useTranslations } from 'next-intl';
+import {
+  DATE_PRESET_OPTIONS,
+  formatCustomDateRangeLabel,
+} from '../services/booking-date-filter';
+import { useLocale, useTranslations } from 'next-intl';
 
 interface BookingHistoryManagerProps {
   initialOrders: BookingOrder[];
@@ -28,6 +32,7 @@ export function BookingHistoryManager({
   sellerName,
 }: BookingHistoryManagerProps) {
   const tHistory = useTranslations('BookingHistory');
+  const locale = useLocale();
   const [viewMode, setViewMode] = useState<BookingViewMode>('compact');
 
   useEffect(() => {
@@ -57,6 +62,7 @@ export function BookingHistoryManager({
     search,
     statusFilter,
     datePreset,
+    customDateRange,
     page,
     totalPages,
     isLoading,
@@ -67,6 +73,7 @@ export function BookingHistoryManager({
     setPage,
     handleFilterChange,
     handleDatePresetChange,
+    handleCustomDateRangeChange,
     handleSearchChange,
     handleClearFilters,
     handleRefresh,
@@ -82,6 +89,14 @@ export function BookingHistoryManager({
     initialStats,
     rpp: viewMode === 'compact' ? 50 : 10,
   });
+
+  const activeDatePresetOption =
+    DATE_PRESET_OPTIONS.find((opt) => opt.id === datePreset) ||
+    DATE_PRESET_OPTIONS[0];
+  const activeDateLabel =
+    (datePreset === 'custom'
+      ? formatCustomDateRangeLabel(customDateRange, locale)
+      : null) || tHistory(activeDatePresetOption.labelKey);
 
   return (
     <div className="space-y-5">
@@ -129,6 +144,7 @@ export function BookingHistoryManager({
         <BookingOperationsStats
           stats={stats}
           activeFilter={statusFilter}
+          activeDateLabel={activeDateLabel}
           onSelectFilter={handleFilterChange}
         />
       )}
@@ -137,6 +153,7 @@ export function BookingHistoryManager({
       <BookingHistoryToolbar
         statusFilter={statusFilter}
         datePreset={datePreset}
+        customDateRange={customDateRange}
         search={search}
         isLoading={isLoading}
         isLocalDemoMode={isLocalDemoMode}
@@ -145,6 +162,7 @@ export function BookingHistoryManager({
         onViewModeChange={handleViewModeChange}
         onFilterChange={handleFilterChange}
         onDatePresetChange={handleDatePresetChange}
+        onCustomDateRangeChange={handleCustomDateRangeChange}
         onSearchChange={handleSearchChange}
         onRefresh={handleRefresh}
         onResetDemoData={handleResetDemoData}

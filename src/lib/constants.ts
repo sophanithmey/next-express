@@ -1,5 +1,5 @@
 export const APP_CONFIG = {
-  appName: 'WingExpress',
+  appName: 'Wingexpress',
   currency: 'USD',
   currencySymbol: '$',
   supportPhone: '078 311 311',
@@ -9,6 +9,7 @@ export const APP_CONFIG = {
     lng: 104.9282,
   },
   supportTelegram: 'https://t.me/WingMall',
+  wingmallUrl: 'https://www.wingmall.com/en',
   appDownloadUrl: 'https://wingmall.onelink.me/qlVW/wmmc1',
   socialLinks: {
     facebook: 'https://www.facebook.com/WingmallKH?mibextid=LQQJ4d',
@@ -19,14 +20,13 @@ export const APP_CONFIG = {
   },
 };
 
-export const SUPPORT_PHONE = '078 311 311';
-export const SUPPORT_PHONE_RAW = '078311311';
-export const APP_DOWNLOAD_URL = 'https://wingmall.onelink.me/qlVW/wmmc1';
-export const SOCIAL_LINKS = APP_CONFIG.socialLinks;
+export const WINGMALL_URL = APP_CONFIG.wingmallUrl;
 
 export const SESSION_COOKIE_NAME = 'express_seller_session';
 export const MAX_DROPOFF_STOPS = 5;
 export const MAX_TOTAL_COD_USD = 60;
+export const MAX_BULK_ORDERS = 50;
+export const MAX_STOPS_PER_BULK_ORDER = 5;
 
 export const UNIFIED_API_PATHS = {
   IDENTITY: '/identity/v1',
@@ -98,13 +98,6 @@ export const STATUS_COLORS: Record<
     text: 'text-danger-700',
     border: 'border-danger-200',
   },
-};
-
-export const PAYMENT_STATUS_LABELS: Record<string, string> = {
-  pending: 'Payment Pending',
-  paid: 'Paid',
-  failed: 'Payment Failed',
-  refunded: 'Refunded',
 };
 
 export const PAYMENT_STATUS_COLORS: Record<

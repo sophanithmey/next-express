@@ -3,7 +3,16 @@ export type BookingDatePreset =
   | 'today'
   | 'yesterday'
   | 'this_month'
-  | 'last_month';
+  | 'last_month'
+  | 'custom';
+
+export interface CustomDateRange {
+  /** Inclusive start date in YYYY-MM-DD */
+  startDate?: string;
+  /** Inclusive end date in YYYY-MM-DD */
+  endDate?: string;
+}
+
 export type MockDateTarget =
   | 'today'
   | 'yesterday'
@@ -22,6 +31,7 @@ export const DATE_PRESET_OPTIONS: DatePresetOption[] = [
   { id: 'this_month', labelKey: 'dateFilterThisMonth' },
   { id: 'last_month', labelKey: 'dateFilterLastMonth' },
   { id: 'all', labelKey: 'dateFilterAll' },
+  { id: 'custom', labelKey: 'dateFilterCustom' },
 ];
 
 /**
@@ -32,6 +42,50 @@ export function getTodayDateKey(d: Date = new Date()): string {
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+/**
+ * Parses a YYYY-MM-DD input string into local midnight or end-of-day Date.
+ */
+function parseIsoDateBoundary(
+  value: string | undefined,
+  endOfDay: boolean,
+): Date | null {
+  if (!value) return null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  const date = endOfDay
+    ? new Date(year, month, day, 23, 59, 59, 999)
+    : new Date(year, month, day, 0, 0, 0, 0);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/**
+ * Formats a CustomDateRange for display inside filter badges and summary chips.
+ */
+export function formatCustomDateRangeLabel(
+  range?: CustomDateRange,
+  locale = 'en',
+): string | null {
+  if (!range?.startDate && !range?.endDate) return null;
+  const fmt = new Intl.DateTimeFormat(locale === 'km' ? 'km-KH' : 'en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+  const start = parseIsoDateBoundary(range.startDate, false);
+  const end = parseIsoDateBoundary(range.endDate, false);
+
+  if (start && end) {
+    const [a, b] = start <= end ? [start, end] : [end, start];
+    if (a.getTime() === b.getTime()) return fmt.format(a);
+    return `${fmt.format(a)} – ${fmt.format(b)}`;
+  }
+  if (start) return `${fmt.format(start)}+`;
+  if (end) return `≤ ${fmt.format(end)}`;
+  return null;
 }
 
 /**
@@ -48,16 +102,38 @@ export function parseOrderDate(raw: string): Date | null {
 }
 
 /**
- * Checks whether an order timestamp falls within a selected calendar date preset.
+ * Checks whether an order timestamp falls within a selected calendar date preset
+ * or inclusive custom date range (startDate / endDate in YYYY-MM-DD).
  */
 export function isOrderInDatePreset(
   rawDate: string,
   preset: BookingDatePreset,
   referenceDate: Date = new Date(),
+  customRange?: CustomDateRange,
 ): boolean {
   if (!preset || preset === 'all') return true;
   const d = parseOrderDate(rawDate);
   if (!d) return false;
+
+  if (preset === 'custom') {
+    const rawStart = parseIsoDateBoundary(customRange?.startDate, false);
+    const rawEnd = parseIsoDateBoundary(customRange?.endDate, true);
+    if (!rawStart && !rawEnd) return true;
+
+    if (rawStart && rawEnd) {
+      if (rawStart <= rawEnd) {
+        return d >= rawStart && d <= rawEnd;
+      }
+      // Handle inverted inputs gracefully by swapping bounds
+      const swappedStart = parseIsoDateBoundary(customRange?.endDate, false)!;
+      const swappedEnd = parseIsoDateBoundary(customRange?.startDate, true)!;
+      return d >= swappedStart && d <= swappedEnd;
+    }
+
+    if (rawStart) return d >= rawStart;
+    if (rawEnd) return d <= rawEnd;
+    return true;
+  }
 
   const now = referenceDate;
   const todayStart = new Date(

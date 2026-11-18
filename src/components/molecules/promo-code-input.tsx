@@ -17,6 +17,8 @@ interface PromoCodeInputProps {
   discountAmount: number;
   onApplyPromo: (promo: PromoCode, discount: number) => void;
   onRemovePromo: () => void;
+  compact?: boolean;
+  inputId?: string;
 }
 
 const KNOWN_PROMO_CODES = new Set([
@@ -32,6 +34,8 @@ export function PromoCodeInput({
   discountAmount,
   onApplyPromo,
   onRemovePromo,
+  compact = false,
+  inputId = 'promo-input',
 }: PromoCodeInputProps) {
   const t = useTranslations('Payment');
   const [code, setCode] = useState('');
@@ -82,14 +86,20 @@ export function PromoCodeInput({
     const savedAmount = `${APP_CONFIG.currencySymbol}${discountAmount.toFixed(2)}`;
 
     return (
-      <div className="rounded-2xl border border-success-200 bg-success-50/60 p-4 shadow-2xs space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-success-100 flex items-center justify-center text-success-700">
+      <div
+        className={
+          compact
+            ? 'rounded-xl border border-success-200 bg-success-50/60 p-3 space-y-1.5'
+            : 'rounded-2xl border border-success-200 bg-success-50/60 p-4 shadow-2xs space-y-2'
+        }
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="h-8 w-8 shrink-0 rounded-lg bg-success-100 flex items-center justify-center text-success-700">
               <Tag className="h-4 w-4" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="font-mono font-bold text-xs text-success-900 uppercase">
                   {appliedPromo.code}
                 </span>
@@ -97,7 +107,7 @@ export function PromoCodeInput({
                   {labelText}
                 </span>
               </div>
-              <p className="text-[11px] text-success-700 mt-0.5">
+              <p className="text-[11px] text-success-700 mt-0.5 truncate">
                 {descText} • {t('savingAmount', { amount: savedAmount })}
               </p>
             </div>
@@ -106,7 +116,7 @@ export function PromoCodeInput({
           <button
             type="button"
             onClick={onRemovePromo}
-            className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-rose-600 transition p-1.5 rounded-lg hover:bg-white/80 cursor-pointer"
+            className="flex shrink-0 items-center gap-1 text-xs font-semibold text-slate-500 hover:text-rose-600 transition p-1.5 rounded-lg hover:bg-white/80 cursor-pointer"
             title={t('removePromoTitle')}
           >
             <X className="h-4 w-4" />
@@ -117,21 +127,27 @@ export function PromoCodeInput({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-2xs space-y-3">
-      <div className="flex items-center justify-between">
-        <label htmlFor="promo-input" className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-          <Tag className="h-3.5 w-3.5 text-secondary-600" />
+    <div
+      className={
+        compact
+          ? 'rounded-xl border border-slate-200/80 bg-slate-50/50 p-3 space-y-2.5'
+          : 'rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-2xs space-y-3'
+      }
+    >
+      <div className="flex items-center justify-between gap-2">
+        <label htmlFor={inputId} className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+          <Tag className="h-3.5 w-3.5 text-secondary-600 shrink-0" />
           <span>{t('promoCodeLabel')}</span>
         </label>
-        <span className="text-[10px] text-slate-400 font-medium">
+        <span className="text-[10px] text-slate-400 font-medium shrink-0">
           {t('optionalDiscount')}
         </span>
       </div>
 
       <div className="flex gap-2">
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-0">
           <input
-            id="promo-input"
+            id={inputId}
             type="text"
             value={code}
             onChange={(e) => {
@@ -139,14 +155,14 @@ export function PromoCodeInput({
               if (error) setError(null);
             }}
             placeholder={t('promoPlaceholder')}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-xs font-mono font-medium text-slate-900 uppercase placeholder:normal-case placeholder:font-sans placeholder:text-slate-400 focus:bg-white focus:border-secondary-500 focus:outline-hidden focus:ring-2 focus:ring-secondary-500/20 transition"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-mono font-medium text-slate-900 uppercase placeholder:normal-case placeholder:font-sans placeholder:text-slate-400 focus:border-secondary-500 focus:outline-hidden focus:ring-2 focus:ring-secondary-500/20 transition"
           />
         </div>
         <button
           type="button"
           onClick={() => handleApply()}
           disabled={!code.trim()}
-          className="rounded-xl bg-primary-500 px-4 py-2.5 text-xs font-bold text-slate-950 shadow-2xs hover:bg-primary-400 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
+          className="shrink-0 rounded-xl bg-primary-500 px-3.5 py-2 text-xs font-bold text-slate-950 shadow-2xs hover:bg-primary-400 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
         >
           {t('apply')}
         </button>

@@ -3,18 +3,20 @@
 import React from 'react';
 import {
   ArrowRight,
-  Lock,
   PhoneCall,
   Repeat,
   XCircle,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/atoms/button';
+import { CancelHotlineCallout } from '@/components/molecules/cancel-hotline-callout';
 import { APP_CONFIG } from '@/lib/constants';
 
 interface BookingDetailActionsCardProps {
   isPendingPayment: boolean;
   canCancel: boolean;
+  requiresHotlineCancel?: boolean;
+  trackingNumber?: string;
   isCancelled: boolean;
   isCancelling: boolean;
   onBookAgain: () => void;
@@ -25,6 +27,8 @@ interface BookingDetailActionsCardProps {
 export function BookingDetailActionsCard({
   isPendingPayment,
   canCancel,
+  requiresHotlineCancel = false,
+  trackingNumber,
   isCancelled,
   isCancelling,
   onBookAgain,
@@ -61,23 +65,25 @@ export function BookingDetailActionsCard({
         {tHistory('bookAgain')}
       </Button>
 
-      {!isCancelled && (
-        <div className="border-t border-slate-100 pt-2.5">
+      {!isCancelled && (canCancel || requiresHotlineCancel) && (
+        <div className="border-t border-slate-100 pt-2.5 space-y-1.5">
           {canCancel && onRequestCancel ? (
-            <button
-              type="button"
-              onClick={onRequestCancel}
-              disabled={isCancelling}
-              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-danger-200 bg-danger-50/60 px-4 py-2 text-xs font-bold text-danger-600 hover:bg-danger-100/70 transition"
-            >
-              <XCircle className="h-4 w-4 shrink-0" />
-              <span>{tPayment('cancelOrder')}</span>
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={onRequestCancel}
+                disabled={isCancelling}
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-danger-200 bg-danger-50/60 px-4 py-2 text-xs font-bold text-danger-600 hover:bg-danger-100/70 transition cursor-pointer"
+              >
+                <XCircle className="h-4 w-4 shrink-0" />
+                <span>{tPayment('cancelOrder')}</span>
+              </button>
+              <p className="text-[11px] text-center text-slate-400">
+                {tPayment('cancelHint')}
+              </p>
+            </>
           ) : (
-            <div className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-500">
-              <Lock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-              <span>{tPayment('cancelDisabledNote')}</span>
-            </div>
+            <CancelHotlineCallout trackingNumber={trackingNumber} />
           )}
         </div>
       )}
@@ -87,9 +93,10 @@ export function BookingDetailActionsCard({
         className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-slate-100 bg-slate-50/70 hover:bg-slate-100/70 text-slate-600 hover:text-slate-900 text-xs font-semibold transition"
       >
         <PhoneCall className="h-3.5 w-3.5 text-secondary-600" />
-        <span>{tDetails('needHelpSupport')} ({APP_CONFIG.supportPhone})</span>
+        <span>
+          {tDetails('needHelpSupport')} ({APP_CONFIG.supportPhone})
+        </span>
       </a>
     </div>
   );
 }
-

@@ -24,7 +24,8 @@ interface BookingHistoryJiraBoardProps {
 }
 
 /**
- * 4-Stage Compact Kanban Board with expansive Jira issue detail modal.
+ * 5-Stage Compact Kanban Board with expansive Jira issue detail modal:
+ * Pending, Accepted, In Transit, Fulfilled, Cancelled.
  */
 export function BookingHistoryJiraBoard({
   orders,
@@ -39,12 +40,13 @@ export function BookingHistoryJiraBoard({
   const [isDark, setIsDark] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<BookingOrder | null>(null);
 
-  // Partition orders by the 4 core lifecycle statuses
+  // Partition orders by the 5 operational lifecycle statuses
   const columnsData = useMemo(() => {
     const pending: BookingOrder[] = [];
     const accepted: BookingOrder[] = [];
     const inTransit: BookingOrder[] = [];
     const fulfilled: BookingOrder[] = [];
+    const cancelled: BookingOrder[] = [];
 
     for (const order of orders) {
       if (order.status === 'draft' || order.status === 'pending' || order.status === 'confirmed') {
@@ -55,10 +57,12 @@ export function BookingHistoryJiraBoard({
         inTransit.push(order);
       } else if (order.status === 'delivered') {
         fulfilled.push(order);
+      } else if (order.status === 'cancelled') {
+        cancelled.push(order);
       }
     }
 
-    return { pending, accepted, inTransit, fulfilled };
+    return { pending, accepted, inTransit, fulfilled, cancelled };
   }, [orders]);
 
   const handleCardClick = (orderId: string) => {
@@ -120,10 +124,10 @@ export function BookingHistoryJiraBoard({
         </button>
       </div>
 
-      {/* 4 Status Columns: Pending, Accepted, In Transit, Fulfilled */}
+      {/* 5 Status Columns: Pending, Accepted, In Transit, Fulfilled, Cancelled */}
       <div
         className={cn(
-          'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 rounded-2xl p-3 border transition-colors overflow-x-auto',
+          'flex gap-3 rounded-2xl p-3 border transition-colors overflow-x-auto',
           isDark
             ? 'bg-[#0d1117] border-[#21262d]'
             : 'bg-slate-50/70 border-slate-200/80',
@@ -169,6 +173,18 @@ export function BookingHistoryJiraBoard({
           id="fulfilled"
           title={tHistory('colFulfilled')}
           orders={columnsData.fulfilled}
+          copiedItem={copiedItem}
+          onCopyId={onCopyId}
+          onCopyLink={onCopyLink}
+          onNavigateDetail={handleCardClick}
+          isDark={isDark}
+          emptyLabel={tHistory('noOrdersInStage')}
+        />
+
+        <BookingJiraColumn
+          id="cancelled"
+          title={tHistory('colCancelled')}
+          orders={columnsData.cancelled}
           copiedItem={copiedItem}
           onCopyId={onCopyId}
           onCopyLink={onCopyLink}

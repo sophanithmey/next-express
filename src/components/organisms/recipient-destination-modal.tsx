@@ -10,10 +10,9 @@ import {
 import { useRecipientDestinationModal } from '@/features/booking/hooks/use-recipient-destination-modal';
 import { RecipientModalStopForm } from './recipient-modal-stop-form';
 import { RecipientModalStopTabs } from '../molecules/recipient-modal-stop-tabs';
-import { BulkDropoffModal } from './bulk-dropoff-modal';
 import { DeleteStopConfirmModal } from '../molecules/delete-stop-confirm-modal';
 import { Button } from '../atoms/button';
-import { X, Check, Layers, AlertCircle } from 'lucide-react';
+import { X, Check, AlertCircle } from 'lucide-react';
 import { calculateTotalStopCod } from '@/features/booking/services/booking-form-helpers';
 import { MAX_TOTAL_COD_USD } from '@/lib/constants';
 import { useTranslations } from 'next-intl';
@@ -48,7 +47,6 @@ export function RecipientDestinationModal({
   initialStopIndex = 0,
 }: RecipientDestinationModalProps) {
   const tRecipient = useTranslations('Recipient');
-  const tBooking = useTranslations('Booking');
   const tCommon = useTranslations('Common');
   const tValidation = useTranslations('Validation');
 
@@ -57,8 +55,6 @@ export function RecipientDestinationModal({
     setActiveTab,
     stops,
     currentStop,
-    isBulkModalOpen,
-    setIsBulkModalOpen,
     mergedErrors,
     hasStopError,
     pendingDeleteIndex,
@@ -68,7 +64,6 @@ export function RecipientDestinationModal({
     requestRemoveStop,
     confirmRemoveStop,
     cancelRemoveStop,
-    handleApplyBulkStops,
     handleSave,
   } = useRecipientDestinationModal({
     isOpen,
@@ -99,7 +94,7 @@ export function RecipientDestinationModal({
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs animate-in fade-in select-none">
-        <div className="relative w-full max-w-5xl xl:max-w-6xl max-h-[92vh] min-h-[520px] flex flex-col rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 select-text">
+        <div className="relative w-full max-w-5xl xl:max-w-6xl max-h-[92vh] min-h-130 flex flex-col rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 select-text">
           {/* Modal Header */}
           <div className="flex items-center justify-between border-b border-slate-100 px-5 sm:px-6 py-4 bg-slate-50/70">
             <div>
@@ -113,15 +108,6 @@ export function RecipientDestinationModal({
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setIsBulkModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-2xs transition cursor-pointer"
-                title={tBooking('bulkImportSpreadsheet')}
-              >
-                <Layers className="h-3.5 w-3.5 text-amber-700" />
-                <span>{tBooking('bulkImport')}</span>
-              </button>
               <button
                 type="button"
                 onClick={onClose}
@@ -179,13 +165,6 @@ export function RecipientDestinationModal({
           </div>
         </div>
       </div>
-
-      {/* Bulk Dropoff Import Dialog */}
-      <BulkDropoffModal
-        isOpen={isBulkModalOpen}
-        onClose={() => setIsBulkModalOpen(false)}
-        onApplyStops={handleApplyBulkStops}
-      />
 
       {/* Dirty Stop Delete Confirmation Alert */}
       <DeleteStopConfirmModal

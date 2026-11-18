@@ -11,7 +11,7 @@ export function LandingInstantAccess() {
 
   return (
     <section className="py-12 border-t border-slate-200/80">
-      {/* Header matching Why Sellers Choose Wing Express */}
+      {/* Header matching Why Sellers Choose Wingexpress */}
       <div className="text-center max-w-xl mx-auto space-y-2 mb-10">
         <span className="text-[11px] font-bold uppercase tracking-wider text-secondary-700 bg-secondary-50 px-2.5 py-0.5 rounded-full border border-secondary-200">
           {t('badge')}

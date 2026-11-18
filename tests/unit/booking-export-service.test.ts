@@ -1,4 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
 import { BookingOrder } from '@/features/booking/types/booking-types';
 import {
   exportOrdersToCsv,
@@ -75,11 +77,22 @@ const MOCK_ORDERS: BookingOrder[] = [
 ];
 
 describe('Booking Export Service', () => {
+  const createdFiles: string[] = [];
+
   beforeEach(() => {
     // Mock URL.createObjectURL and revokeObjectURL in JSDOM
     if (typeof window !== 'undefined') {
       window.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
       window.URL.revokeObjectURL = vi.fn();
+    }
+  });
+
+  afterEach(() => {
+    while (createdFiles.length > 0) {
+      const file = createdFiles.pop();
+      if (file && fs.existsSync(file)) {
+        fs.unlinkSync(file);
+      }
     }
   });
 
@@ -90,6 +103,7 @@ describe('Booking Export Service', () => {
 
   it('exports orders to XLSX successfully', async () => {
     const filename = await exportOrdersToXlsx(MOCK_ORDERS);
+    createdFiles.push(path.join(process.cwd(), filename));
     expect(filename).toMatch(/^wingexpress-orders-.*\.xlsx$/);
   });
 

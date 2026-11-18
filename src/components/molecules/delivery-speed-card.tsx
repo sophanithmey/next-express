@@ -13,6 +13,7 @@ interface DeliverySpeedCardProps {
   badgeTone?: string;
   iconTone?: string;
   isSelected: boolean;
+  disabled?: boolean;
   onClick: () => void;
 }
 
@@ -28,6 +29,7 @@ export function DeliverySpeedCard({
   badgeTone = 'bg-primary-100 text-primary-900 border-primary-300/70',
   iconTone = 'text-amber-600 bg-amber-50 border-amber-200/80',
   isSelected,
+  disabled = false,
   onClick,
 }: DeliverySpeedCardProps) {
   return (
@@ -36,21 +38,27 @@ export function DeliverySpeedCard({
       type="button"
       role="radio"
       aria-checked={isSelected}
+      aria-disabled={disabled}
+      disabled={disabled}
       onClick={onClick}
       className={cn(
-        'group relative flex items-start justify-between gap-3.5 rounded-2xl border p-3.5 sm:p-4 text-left transition cursor-pointer select-none',
-        isSelected
-          ? 'border-primary-500 bg-primary-50/50 ring-2 ring-primary-500/20 shadow-2xs'
-          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60'
+        'group relative flex items-start justify-between gap-3.5 rounded-2xl border p-3.5 sm:p-4 text-left transition select-none',
+        disabled
+          ? 'border-slate-200 bg-slate-50/80 opacity-65 cursor-not-allowed'
+          : isSelected
+          ? 'border-primary-500 bg-primary-50/50 ring-2 ring-primary-500/20 shadow-2xs cursor-pointer'
+          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60 cursor-pointer',
       )}
     >
       <div className="flex items-start gap-3 min-w-0 flex-1">
         <div
           className={cn(
             'flex h-10 w-10 items-center justify-center rounded-xl border shrink-0 transition-colors mt-0.5',
-            isSelected
+            disabled
+              ? 'border-slate-200 bg-slate-100 text-slate-400'
+              : isSelected
               ? 'border-primary-300 bg-white text-primary-900 shadow-2xs'
-              : iconTone
+              : iconTone,
           )}
         >
           <Icon className="h-5 w-5" />
@@ -65,7 +73,7 @@ export function DeliverySpeedCard({
               <span
                 className={cn(
                   'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold leading-none',
-                  badgeTone
+                  badgeTone,
                 )}
               >
                 {badgeLabel}
@@ -82,12 +90,14 @@ export function DeliverySpeedCard({
       <span
         className={cn(
           'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition mt-0.5',
-          isSelected
+          disabled
+            ? 'border-slate-200 bg-slate-100'
+            : isSelected
             ? 'border-primary-500 bg-primary-500 text-slate-950 shadow-2xs font-black'
-            : 'border-slate-300 bg-white group-hover:border-slate-400'
+            : 'border-slate-300 bg-white group-hover:border-slate-400',
         )}
       >
-        {isSelected && <Check className="h-3 w-3" strokeWidth={3} />}
+        {isSelected && !disabled && <Check className="h-3 w-3" strokeWidth={3} />}
       </span>
     </button>
   );

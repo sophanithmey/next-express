@@ -134,13 +134,6 @@ export function isDropoffStopDirty(stop: DropoffStop): boolean {
 }
 
 /**
- * Returns true if any stop explicitly tracks a per-stop COD amount.
- */
-export function hasPerStopCodValues(stops?: DropoffStop[]): boolean {
-  return Boolean(stops?.some((s) => typeof s.codAmount === 'number' && s.codAmount > 0));
-}
-
-/**
  * Computes order-level CodInfo from per-stop COD amounts when defined, or returns fallbackCod.
  */
 export function syncCodWithDropoffs(

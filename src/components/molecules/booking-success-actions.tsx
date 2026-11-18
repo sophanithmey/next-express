@@ -3,15 +3,17 @@
 import React from 'react';
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
-import { ArrowRight, ExternalLink, FileText, Lock, Plus, XCircle } from 'lucide-react';
+import { ArrowRight, ExternalLink, FileText, Plus, XCircle } from 'lucide-react';
 import { Button } from '@/components/atoms/button';
 import { CancelOrderModal } from './cancel-order-modal';
+import { CancelHotlineCallout } from './cancel-hotline-callout';
 
 interface BookingSuccessActionsProps {
   bookingId?: string;
   tracking: string;
   paymentRedirectUrl?: string | null;
   canCancel: boolean;
+  requiresHotlineCancel?: boolean;
   isCancelled: boolean;
   isCancelModalOpen: boolean;
   onOpenCancelModal: () => void;
@@ -26,6 +28,7 @@ export function BookingSuccessActions({
   tracking,
   paymentRedirectUrl,
   canCancel,
+  requiresHotlineCancel = false,
   isCancelled,
   isCancelModalOpen,
   onOpenCancelModal,
@@ -87,8 +90,8 @@ export function BookingSuccessActions({
           </Link>
         </div>
 
-        {/* Cancel Section — Subtle low-emphasis action so primary CTAs stand out */}
-        {!isCancelled && (
+        {/* Cancel Section — Self-cancel before rider assigned; Hotline callout after rider assigned */}
+        {!isCancelled && (canCancel || requiresHotlineCancel) && (
           <div className="border-t border-slate-100 pt-2.5">
             {canCancel ? (
               <div className="space-y-1 text-center">
@@ -105,10 +108,7 @@ export function BookingSuccessActions({
                 </p>
               </div>
             ) : (
-              <div className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-500">
-                <Lock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                <span>{tPayment('cancelDisabledNote')}</span>
-              </div>
+              <CancelHotlineCallout trackingNumber={tracking} />
             )}
           </div>
         )}

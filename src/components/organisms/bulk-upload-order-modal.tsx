@@ -1,44 +1,48 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DropoffStop } from '@/features/booking/types/booking-types';
 import {
-  parseBulkDropoffText,
-  convertParsedToDropoffStops,
+  BulkOrderDraft,
+  ParsedBulkOrder,
+  parseBulkOrderText,
+  convertOrdersToBulkDrafts,
   downloadSampleCsvTemplate,
   downloadSampleXlsxTemplate,
-  parseBulkDropoffFile,
+  parseBulkOrderFile,
   SAMPLE_BULK_CSV,
-  ParsedBulkStop,
-} from '@/features/booking/services/bulk-dropoff-parser';
+} from '@/features/booking/services/bulk-order-parser';
 import { Button } from '../atoms/button';
-import { BulkDropoffPreviewTable } from '../molecules/bulk-dropoff-preview-table';
-import { MAX_DROPOFF_STOPS, MAX_TOTAL_COD_USD } from '@/lib/constants';
-import { X, Layers, Download, Zap, UploadCloud } from 'lucide-react';
+import { BulkOrderPreviewTable } from '../molecules/bulk-order-preview-table';
+import {
+  MAX_BULK_ORDERS,
+  MAX_STOPS_PER_BULK_ORDER,
+  MAX_TOTAL_COD_USD,
+} from '@/lib/constants';
+import { X, Package, Download, Zap, UploadCloud, Info, AlertCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-interface BulkDropoffModalProps {
+interface BulkUploadOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onApplyStops: (stops: DropoffStop[]) => void;
+  onApplyOrders: (orders: BulkOrderDraft[]) => void;
 }
 
-export function BulkDropoffModal({
+export function BulkUploadOrderModal({
   isOpen,
   onClose,
-  onApplyStops,
-}: BulkDropoffModalProps) {
+  onApplyOrders,
+}: BulkUploadOrderModalProps) {
   const tBooking = useTranslations('Booking');
   const tCommon = useTranslations('Common');
   const [inputText, setInputText] = useState('');
-  const [parsedList, setParsedList] = useState<ParsedBulkStop[]>([]);
+  const [parsedOrders, setParsedOrders] = useState<ParsedBulkOrder[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
   if (!isOpen) return null;
 
   const handleTextChange = (text: string) => {
     setInputText(text);
-    setParsedList(parseBulkDropoffText(text));
+    setParsedOrders(parseBulkOrderText(text));
   };
 
   const handleLoadSample = () => handleTextChange(SAMPLE_BULK_CSV);
@@ -48,7 +52,7 @@ export function BulkDropoffModal({
     if (!file) return;
     try {
       setIsUploading(true);
-      const text = await parseBulkDropoffFile(file);
+      const text = await parseBulkOrderFile(file);
       handleTextChange(text);
     } finally {
       setIsUploading(false);
@@ -56,15 +60,20 @@ export function BulkDropoffModal({
     }
   };
 
-  const validStops = parsedList.filter((s) => s.isValid);
-  const importCount = Math.min(validStops.length, MAX_DROPOFF_STOPS);
-  const importTotalCod = validStops
-    .slice(0, MAX_DROPOFF_STOPS)
-    .reduce((sum, s) => sum + Math.max(0, s.codAmount ?? 0), 0);
+  const importableOrders = parsedOrders
+    .filter((o) => !o.exceedsOrderLimit && o.validStopCount > 0)
+    .slice(0, MAX_BULK_ORDERS);
+  const importOrderCount = importableOrders.length;
+  const totalStopCount = importableOrders.reduce(
+    (sum, o) => sum + o.validStopCount,
+    0,
+  );
+  const codOverLimitOrders = importableOrders.filter((o) => o.isCodOverLimit);
 
   const handleImport = () => {
-    if (importCount === 0) return;
-    onApplyStops(convertParsedToDropoffStops(parsedList));
+    if (importOrderCount === 0) return;
+    const drafts = convertOrdersToBulkDrafts(importableOrders);
+    onApplyOrders(drafts);
     onClose();
   };
 
@@ -75,19 +84,19 @@ export function BulkDropoffModal({
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/80">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-500 text-slate-950 shadow-xs">
-              <Layers className="h-5 w-5" />
+              <Package className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-extrabold text-slate-900">
-                  {tBooking('bulkModalTitle')}
+                  {tBooking('bulkOrderModalTitle')}
                 </h3>
                 <span className="rounded-full bg-primary-50 border border-primary-300 px-2 py-0.5 text-[10px] font-bold text-primary-950">
-                  {tBooking('bulkBadge')}
+                  {tBooking('bulkOrderBadge')}
                 </span>
               </div>
               <p className="text-xs text-slate-500">
-                {tBooking('bulkModalSubtitle')}
+                {tBooking('bulkOrderModalSubtitle')}
               </p>
             </div>
           </div>
@@ -101,7 +110,18 @@ export function BulkDropoffModal({
           </button>
         </div>
 
-        {/* Toolbar: Template Download & Sample Actions */}
+        {/* Capacity hint */}
+        <div className="flex items-center gap-2 px-6 py-2.5 bg-primary-50/60 border-b border-primary-100 text-xs text-primary-950">
+          <Info className="h-3.5 w-3.5 shrink-0 text-amber-700" />
+          <span>
+            {tBooking('bulkOrderCapacityHint', {
+              maxOrders: MAX_BULK_ORDERS,
+              maxStops: MAX_STOPS_PER_BULK_ORDER,
+            })}
+          </span>
+        </div>
+
+        {/* Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-2 px-6 py-3 border-b border-slate-100 bg-slate-50/40 text-xs">
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -130,47 +150,64 @@ export function BulkDropoffModal({
             </button>
           </div>
           <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary-300 bg-primary-50 hover:bg-primary-100 font-bold text-primary-950 shadow-2xs transition cursor-pointer">
-            <UploadCloud className="h-3.5 w-3.5 text-amber-600" />
-            <span>{isUploading ? 'Reading...' : tBooking('bulkUploadFile')}</span>
-            <input type="file" accept=".xlsx,.xls,.csv,.txt" onChange={handleFileUpload} disabled={isUploading} className="hidden" />
+            <UploadCloud className="h-3.5 w-3.5 text-amber-700" />
+            <span>{isUploading ? tCommon('loading') : tBooking('bulkUploadFile')}</span>
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv,.txt"
+              onChange={handleFileUpload}
+              disabled={isUploading}
+              className="hidden"
+            />
           </label>
         </div>
 
-        {/* Modal Scrollable Body */}
+        {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs gap-2 flex-wrap">
-              <label htmlFor="bulk-csv-input" className="font-bold text-slate-800">
+              <label htmlFor="bulk-order-input" className="font-bold text-slate-800">
                 {tBooking('bulkInputLabel')}
               </label>
               <span className="text-[11px] text-slate-400">
-                {tBooking('bulkFormatHint')} <code className="bg-slate-100 px-1 py-0.5 rounded font-mono">Name, Phone, Address (or lat,lng), COD, Note</code>
+                {tBooking('bulkOrderFormatHint')}{' '}
+                <code className="bg-slate-100 px-1 py-0.5 rounded font-mono">
+                  Order #, Name, Phone, Address (or lat,lng), COD, Note
+                </code>
               </span>
             </div>
             <textarea
-              id="bulk-csv-input"
-              rows={4}
+              id="bulk-order-input"
+              rows={5}
               value={inputText}
               onChange={(e) => handleTextChange(e.target.value)}
-              placeholder={`Recipient Name, Recipient Phone, Drop-off Address, COD Amount, Delivery Note\nSokha Chan, 012345678, St 310 BKK1 Phnom Penh, 25, Leave with guard\nDara Vong, 098112233, 11.5564, 104.9282, 18.50, Red gate`}
+              placeholder={`Order #, Recipient Name, Recipient Phone, Drop-off Address, COD Amount, Delivery Note\n1, Sokha Chan, 012345678, St 310 BKK1 Phnom Penh, 25, Leave with guard\n1, Dara Vong, 098112233, "11.5564, 104.9282", 18.50, Red gate\n2, Bopha Pich, 077445566, St 271 Toul Tompoung, 0, Call on arrival`}
               className="w-full rounded-xl border border-slate-300 p-3 text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition shadow-2xs"
             />
           </div>
 
-          {validStops.length > MAX_DROPOFF_STOPS && (
+          {parsedOrders.length > MAX_BULK_ORDERS && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs font-medium text-amber-800">
-              {tBooking('bulkMaxStopsNotice', { max: MAX_DROPOFF_STOPS })}
+              {tBooking('bulkMaxOrdersNotice', {
+                total: parsedOrders.length,
+                max: MAX_BULK_ORDERS,
+              })}
             </div>
           )}
 
-          {importTotalCod > MAX_TOTAL_COD_USD && (
-            <div className="rounded-xl border border-danger-200 bg-danger-50 px-3.5 py-2.5 text-xs font-medium text-danger-700">
-              {tBooking('bulkMaxCodNotice', { total: importTotalCod.toFixed(2), max: MAX_TOTAL_COD_USD })}
+          {codOverLimitOrders.length > 0 && (
+            <div className="flex items-center gap-2 rounded-xl border border-danger-200 bg-danger-50 px-3.5 py-2.5 text-xs font-medium text-danger-700">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>
+                {tBooking('bulkOrderCodNotice', {
+                  count: codOverLimitOrders.length,
+                  max: MAX_TOTAL_COD_USD,
+                })}
+              </span>
             </div>
           )}
 
-          {/* Parsed Preview Table */}
-          <BulkDropoffPreviewTable parsedList={parsedList} validCount={validStops.length} />
+          <BulkOrderPreviewTable orders={parsedOrders} />
         </div>
 
         {/* Footer */}
@@ -178,9 +215,26 @@ export function BulkDropoffModal({
           <Button type="button" variant="ghost" size="sm" onClick={onClose}>
             {tCommon('cancel')}
           </Button>
-          <Button type="button" variant="primary" size="md" onClick={handleImport} disabled={importCount === 0} leftIcon={<Layers className="h-4 w-4" />}>
-            {tBooking('bulkImportButton', { count: importCount })}
-          </Button>
+          <div className="flex items-center gap-3">
+            {importOrderCount > 0 && (
+              <span className="text-xs text-slate-500 hidden sm:inline">
+                {tBooking('bulkOrderImportSummary', {
+                  orders: importOrderCount,
+                  stops: totalStopCount,
+                })}
+              </span>
+            )}
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              onClick={handleImport}
+              disabled={importOrderCount === 0}
+              leftIcon={<Package className="h-4 w-4" />}
+            >
+              {tBooking('bulkOrderImportButton', { count: importOrderCount })}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

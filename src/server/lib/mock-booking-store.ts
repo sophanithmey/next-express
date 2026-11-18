@@ -10,8 +10,10 @@ import {
   RecipientRecord,
 } from '@/features/booking/types/booking-types';
 import { calculateBookingFeeQuote, calculateHaversineDistanceKm } from '@/features/booking/services/pricing-service';
-import { BookingDatePreset, getTodayDateKey, isOrderInDatePreset } from '@/features/booking/services/booking-date-filter';
+import { BookingDatePreset, CustomDateRange, getTodayDateKey, isOrderInDatePreset } from '@/features/booking/services/booking-date-filter';
+import { deriveDashboardStatsFromOrders } from '@/features/booking/services/booking-statistics-service';
 import { syncOrdersToCurrentDate } from '@/features/booking/data/mock-booking-detail-data';
+import { canSenderCancelOrder } from '@/features/booking/services/booking-cancellation-policy';
 import {
   INITIAL_ORDERS,
   INITIAL_RECIPIENTS,
@@ -158,6 +160,8 @@ class InMemoryStore {
     search?: string;
     status?: string;
     datePreset?: BookingDatePreset;
+    startDate?: string;
+    endDate?: string;
     statuses?: string[];
     page?: number;
     limit?: number;
@@ -173,7 +177,12 @@ class InMemoryStore {
     }
 
     if (params?.datePreset && params.datePreset !== 'all') {
-      filtered = filtered.filter((o) => isOrderInDatePreset(o.createdAt, params.datePreset!));
+      filtered = filtered.filter((o) =>
+        isOrderInDatePreset(o.createdAt, params.datePreset!, new Date(), {
+          startDate: params.startDate,
+          endDate: params.endDate,
+        }),
+      );
     }
 
     if (params?.search) {
@@ -209,7 +218,7 @@ class InMemoryStore {
   cancelOrder(id: string, reason?: string): BookingOrder | null {
     const order = this.getOrderById(id);
     if (!order) return null;
-    if (order.status === 'out_for_delivery' || order.status === 'delivered') {
+    if (!canSenderCancelOrder(order)) {
       return null;
     }
     order.status = 'cancelled';
@@ -222,32 +231,15 @@ class InMemoryStore {
     return order;
   }
 
-  getStatistics(): DashboardStatistics {
+  getStatistics(
+    datePreset: BookingDatePreset = 'today',
+    customRange?: CustomDateRange,
+  ): DashboardStatistics {
     this.ensureOrdersUpToDate();
-    let todayBookings = 0;
-    let pendingPickup = 0;
-    let inTransit = 0;
-    let delivered = 0;
-    let codCollection = 0;
-
-    for (const order of this.orders) {
-      if (isOrderInDatePreset(order.createdAt, 'today')) todayBookings += 1;
-      if (order.status === 'pending') pendingPickup += 1;
-      if (order.status === 'assigned' || order.status === 'out_for_delivery')
-        inTransit += 1;
-      if (order.status === 'delivered') delivered += 1;
-      if (order.cod.isCod && order.status !== 'cancelled') {
-        codCollection += order.cod.amount;
-      }
-    }
-
-    return {
-      todayBookings,
-      pendingPickup,
-      inTransit,
-      delivered,
-      codCollection: Math.round(codCollection * 100) / 100,
-    };
+    return deriveDashboardStatsFromOrders(this.orders, {
+      datePreset,
+      customRange,
+    });
   }
 }
 

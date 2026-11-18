@@ -5,10 +5,10 @@ import {
   validateDropoffStops,
 } from '@/features/booking/services/booking-form-helpers';
 import {
-  convertParsedToDropoffStops,
-  parseBulkDropoffText,
+  convertOrdersToBulkDrafts,
+  parseBulkOrderText,
   SAMPLE_BULK_CSV,
-} from '@/features/booking/services/bulk-dropoff-parser';
+} from '@/features/booking/services/bulk-order-parser';
 import { DropoffStop } from '@/features/booking/types/booking-types';
 
 describe('Per-Stop COD Aggregation & CSV Parsing', () => {
@@ -99,23 +99,23 @@ describe('Per-Stop COD Aggregation & CSV Parsing', () => {
   });
 
   it('parses optional COD column in bulk CSV template and preserves notes without COD column', () => {
-    const parsedWithCod = parseBulkDropoffText(SAMPLE_BULK_CSV);
-    expect(parsedWithCod[0].codAmount).toBe(25);
-    expect(parsedWithCod[1].codAmount).toBe(18.5);
-    expect(parsedWithCod[2].codAmount).toBe(0);
-    expect(parsedWithCod[0].note).toBe('Leave with condo security');
+    const parsedWithCod = parseBulkOrderText(SAMPLE_BULK_CSV);
+    const firstOrderStops = parsedWithCod[0].stops;
+    expect(firstOrderStops[0].codAmount).toBe(25);
+    expect(firstOrderStops[1].codAmount).toBe(18.5);
+    expect(firstOrderStops[0].note).toBe('Leave with condo security');
 
-    const dropsWithCod = convertParsedToDropoffStops(parsedWithCod);
-    expect(dropsWithCod[0].codAmount).toBe(25);
-    expect(syncCodWithDropoffs(dropsWithCod, { isCod: false, amount: 0 })).toEqual({
+    const drafts = convertOrdersToBulkDrafts(parsedWithCod);
+    expect(drafts[0].stops[0].codAmount).toBe(25);
+    expect(syncCodWithDropoffs(drafts[0].stops, { isCod: false, amount: 0 })).toEqual({
       isCod: true,
-      amount: 75.5,
+      amount: 43.5,
     });
 
-    const legacyCsv = `Customer A, 012345678, St 123 Phnom Penh, Call gate`;
-    const parsedLegacy = parseBulkDropoffText(legacyCsv);
-    expect(parsedLegacy[0].codAmount).toBeUndefined();
-    expect(parsedLegacy[0].note).toBe('Call gate');
+    const legacyCsv = `1, Customer A, 012345678, St 123 Phnom Penh, Call gate`;
+    const parsedLegacy = parseBulkOrderText(legacyCsv);
+    expect(parsedLegacy[0].stops[0].codAmount).toBeUndefined();
+    expect(parsedLegacy[0].stops[0].note).toBe('Call gate');
   });
 });
 

@@ -29,6 +29,7 @@ function BookingSuccessContent() {
     deliverySpeed,
     orderStatus,
     canCancel,
+    requiresHotlineCancel,
     isCancelled,
     isCancelModalOpen,
     setIsCancelModalOpen,
@@ -144,6 +145,7 @@ function BookingSuccessContent() {
             tracking={tracking}
             paymentRedirectUrl={paymentRedirectUrl}
             canCancel={canCancel}
+            requiresHotlineCancel={requiresHotlineCancel}
             isCancelled={isCancelled}
             isCancelModalOpen={isCancelModalOpen}
             onOpenCancelModal={() => setIsCancelModalOpen(true)}

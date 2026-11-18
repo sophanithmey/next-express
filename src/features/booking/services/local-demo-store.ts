@@ -12,6 +12,10 @@ import { clearBookingDraft } from './booking-draft-service';
 import { BookingOrderFilter, extractUiStatusesFromFilters } from './booking-order-filter';
 import { BookingDatePreset, getTodayDateKey, isOrderInDatePreset } from './booking-date-filter';
 import { calculateBookingFeeQuote } from './pricing-service';
+import {
+  canSenderCancelOrder,
+  getHotlineCancellationErrorMessage,
+} from './booking-cancellation-policy';
 
 export interface LocalDemoListParams {
   page?: number;
@@ -19,6 +23,8 @@ export interface LocalDemoListParams {
   search?: string;
   status?: string;
   datePreset?: BookingDatePreset;
+  startDate?: string;
+  endDate?: string;
   filter?: BookingOrderFilter[];
 }
 
@@ -124,7 +130,12 @@ export const localDemoBookingStore = {
     }
 
     if (params.datePreset && params.datePreset !== 'all') {
-      filtered = filtered.filter((o) => isOrderInDatePreset(o.createdAt, params.datePreset!));
+      filtered = filtered.filter((o) =>
+        isOrderInDatePreset(o.createdAt, params.datePreset!, new Date(), {
+          startDate: params.startDate,
+          endDate: params.endDate,
+        }),
+      );
     }
 
     if (params.search?.trim()) {
@@ -212,8 +223,11 @@ export const localDemoBookingStore = {
     if (index === -1) return null;
 
     const current = orders[index];
-    if (current.status === 'out_for_delivery' || current.status === 'delivered') {
-      throw new Error('Cannot cancel an order that is already out for delivery or delivered.');
+    if (current.status === 'delivered' || current.status === 'cancelled') {
+      throw new Error('This order can no longer be cancelled.');
+    }
+    if (!canSenderCancelOrder(current)) {
+      throw new Error(getHotlineCancellationErrorMessage());
     }
 
     const updated: BookingOrder = {

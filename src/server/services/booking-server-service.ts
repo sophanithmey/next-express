@@ -97,6 +97,8 @@ export const bookingServerService = {
     search?: string;
     status?: string;
     datePreset?: BookingDatePreset;
+    startDate?: string;
+    endDate?: string;
     filter?: ConsumerOrderFilter[];
   }): Promise<PaginatedResponse<BookingOrder>> {
     const env = getServerEnv();
@@ -135,6 +137,8 @@ export const bookingServerService = {
       search: params.search,
       status: params.status,
       datePreset: params.datePreset,
+      startDate: params.startDate,
+      endDate: params.endDate,
       statuses: extractUiStatusesFromFilters(params.filter),
       page,
       limit: rpp,

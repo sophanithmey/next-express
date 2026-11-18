@@ -5,13 +5,23 @@ import { useTranslations } from 'next-intl';
 import { ArrowRight } from 'lucide-react';
 import { APP_CONFIG } from '@/lib/constants';
 
-const FAQ_KEYS = [
+const STANDARD_FAQ_KEYS = [
   { q: 'q1', a: 'a1' },
   { q: 'q2', a: 'a2' },
   { q: 'q3', a: 'a3' },
-  { q: 'q4', a: 'a4' },
-  { q: 'q5', a: 'a5' },
-  { q: 'q6', a: 'a6' },
+] as const;
+
+const PROHIBITED_ITEM_KEYS = [
+  'prohibitedItem1',
+  'prohibitedItem2',
+  'prohibitedItem3',
+  'prohibitedItem4',
+  'prohibitedItem5',
+  'prohibitedItem6',
+  'prohibitedItem7',
+  'prohibitedItem8',
+  'prohibitedItem9',
+  'prohibitedItem10',
 ] as const;
 
 export function LandingFaq() {
@@ -33,9 +43,9 @@ export function LandingFaq() {
           </p>
         </div>
 
-        {/* 3-Column FAQ Grid (2 rows x 3 columns) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 lg:gap-x-12 gap-y-8 sm:gap-y-10 mt-10 sm:mt-12 lg:mt-14">
-          {FAQ_KEYS.map((item) => (
+        {/* 3-Column Row for concise FAQs */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 lg:gap-x-10 gap-y-8 mt-10 sm:mt-12 lg:mt-14">
+          {STANDARD_FAQ_KEYS.map((item) => (
             <div key={item.q} className="space-y-2">
               <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight leading-snug">
                 {t(item.q)}
@@ -45,6 +55,32 @@ export function LandingFaq() {
               </p>
             </div>
           ))}
+        </div>
+
+        {/* Full-Width Prohibited Items FAQ with 2-column scannable list */}
+        <div className="mt-8 sm:mt-10 pt-8 border-t border-slate-200/80 space-y-3">
+          <div className="space-y-2">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight leading-snug">
+              {t('q4')}
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+              {t('a4')}
+            </p>
+          </div>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 pt-1">
+            {PROHIBITED_ITEM_KEYS.map((itemKey) => (
+              <li
+                key={itemKey}
+                className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed"
+              >
+                <span
+                  aria-hidden="true"
+                  className="mt-2 h-1.5 w-1.5 rounded-full bg-rose-500 shrink-0"
+                />
+                <span>{t(itemKey)}</span>
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* Bottom Contact Callout Banner */}
@@ -60,7 +96,7 @@ export function LandingFaq() {
 
           <a
             href={`tel:${APP_CONFIG.supportPhoneRaw}`}
-            title={`Call ${APP_CONFIG.supportPhone} (Daily 06:00 AM - 09:00 PM)`}
+            title={`Call ${APP_CONFIG.supportPhone} (Daily 06:00 AM - 09:30 PM)`}
             className="inline-flex items-center justify-center gap-2 rounded-full bg-primary-500 hover:bg-primary-400 active:scale-95 text-slate-950 text-xs sm:text-sm font-bold px-6 py-2.5 shadow-xs transition shrink-0 cursor-pointer"
           >
             <span>{t('contactUsCta')}</span>

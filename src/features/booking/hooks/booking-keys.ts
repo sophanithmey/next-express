@@ -6,6 +6,8 @@ export interface BookingListQueryFilter {
   search?: string;
   status?: string;
   datePreset?: string;
+  startDate?: string;
+  endDate?: string;
   filter?: BookingOrderFilter[];
 }
 

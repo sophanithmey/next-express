@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GeoCoordinates } from '@/features/booking/types/booking-types';
 import {
-  GeocodingServiceError,
   PlaceSuggestion,
   ResolvedPlaceResult,
   getPlaceDetailsById,

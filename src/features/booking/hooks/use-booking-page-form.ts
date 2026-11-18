@@ -34,6 +34,7 @@ import {
   syncCodWithDropoffs,
 } from '../services/booking-form-helpers';
 import { optimizeStopOrder } from '../services/route-optimizer';
+import { validateDeliveryAvailability } from '../services/operation-hours-service';
 
 export function useBookingPageForm(
   initialLocations: (PickupLocation & {
@@ -172,6 +173,15 @@ export function useBookingPageForm(
     const errorList = Object.values(validationErrors);
     if (errorList.length > 0) {
       toast.error(errorList[0]);
+      return;
+    }
+
+    const operationError = validateDeliveryAvailability(
+      formData.deliveryOption || 'instant',
+      formData.deliverySchedule,
+    );
+    if (operationError) {
+      toast.error(operationError);
       return;
     }
 

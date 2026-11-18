@@ -12,9 +12,14 @@ const MAX_CUSTOM_TIP = 100;
 interface RiderTipSelectorProps {
   tipAmount: number;
   onChangeTip: (amount: number) => void;
+  compact?: boolean;
 }
 
-export function RiderTipSelector({ tipAmount, onChangeTip }: RiderTipSelectorProps) {
+export function RiderTipSelector({
+  tipAmount,
+  onChangeTip,
+  compact = false,
+}: RiderTipSelectorProps) {
   const tPayment = useTranslations('Payment');
   const [isCustomMode, setIsCustomMode] = useState(false);
   const [customInput, setCustomInput] = useState('');
@@ -61,45 +66,57 @@ export function RiderTipSelector({ tipAmount, onChangeTip }: RiderTipSelectorPro
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-2xs space-y-3.5">
+    <div
+      className={cn(
+        compact
+          ? 'rounded-xl border border-slate-200/80 bg-slate-50/50 p-3 space-y-2.5'
+          : 'rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-2xs space-y-3.5',
+      )}
+    >
       {/* Header */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 border border-amber-200/70">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 border border-amber-200/70">
             <HandCoins className="h-4 w-4" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h3 className="text-xs font-bold text-slate-900 leading-tight">
               {tPayment('tipTitle')}
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-[11px] text-slate-500 mt-0.5 truncate">
               {tPayment('tipSubtitle')}
             </p>
           </div>
         </div>
 
         {tipAmount > 0 ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100/80 px-2.5 py-0.5 text-xs font-bold text-amber-800 font-mono">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100/80 px-2.5 py-0.5 text-xs font-bold text-amber-800 font-mono">
             +{APP_CONFIG.currencySymbol}
             {tipAmount.toFixed(2)}
           </span>
         ) : (
-          <span className="text-xs font-medium text-slate-400">
+          <span className="shrink-0 text-[10px] font-medium text-slate-400">
             {tPayment('tipOptional')}
           </span>
         )}
       </div>
 
       {/* Preset Tip Options */}
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+      <div
+        className={cn(
+          'grid gap-1.5 sm:gap-2',
+          compact ? 'grid-cols-3' : 'grid-cols-3 sm:grid-cols-5',
+        )}
+      >
         <button
           type="button"
           onClick={handleSelectNoTip}
           className={cn(
-            'min-h-11 rounded-xl border px-3 py-2 text-xs font-semibold transition-all',
+            'min-h-10 rounded-xl border px-2.5 py-2 text-xs font-semibold transition-all cursor-pointer',
+            !compact && 'min-h-11 px-3',
             isNoTipSelected
               ? 'border-primary-500 bg-primary-100 text-slate-950 font-bold ring-1 ring-primary-500'
-              : 'border-slate-200 bg-slate-50/70 text-slate-600 hover:border-slate-300 hover:bg-slate-100/80'
+              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-100/80'
           )}
         >
           {tPayment('noTip')}
@@ -113,7 +130,8 @@ export function RiderTipSelector({ tipAmount, onChangeTip }: RiderTipSelectorPro
               type="button"
               onClick={() => handleSelectPreset(amount)}
               className={cn(
-                'relative min-h-11 rounded-xl border px-3 py-2 text-xs font-bold font-mono transition-all',
+                'relative min-h-10 rounded-xl border px-2.5 py-2 text-xs font-bold font-mono transition-all cursor-pointer',
+                !compact && 'min-h-11 px-3',
                 active
                   ? 'border-primary-500 bg-primary-100 text-slate-950 ring-1 ring-primary-500 shadow-2xs'
                   : 'border-slate-200 bg-white text-slate-700 hover:border-primary-300 hover:bg-primary-50/40'
@@ -129,7 +147,8 @@ export function RiderTipSelector({ tipAmount, onChangeTip }: RiderTipSelectorPro
           type="button"
           onClick={handleOpenCustom}
           className={cn(
-            'min-h-11 rounded-xl border px-3 py-2 text-xs font-semibold transition-all col-span-2 sm:col-span-1',
+            'min-h-10 rounded-xl border px-2.5 py-2 text-xs font-semibold transition-all cursor-pointer',
+            compact ? 'col-span-2' : 'min-h-11 px-3 col-span-2 sm:col-span-1',
             isCustomMode
               ? 'border-primary-500 bg-primary-100 text-slate-950 font-bold ring-1 ring-primary-500'
               : 'border-slate-200 bg-white text-slate-700 hover:border-primary-300 hover:bg-primary-50/40'
