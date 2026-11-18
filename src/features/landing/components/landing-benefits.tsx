@@ -10,34 +10,42 @@ import {
   Camera,
   Headset,
 } from 'lucide-react';
+import { LandingSectionHeader } from './landing-section-header';
+import { LandingBenefitCard } from './landing-benefit-card';
 
 const BENEFITS = [
   {
+    index: '01',
     icon: Route,
     titleKey: 'item1Title',
     descKey: 'item1Desc',
   },
   {
+    index: '02',
     icon: Banknote,
     titleKey: 'item2Title',
     descKey: 'item2Desc',
   },
   {
+    index: '03',
     icon: Navigation,
     titleKey: 'item3Title',
     descKey: 'item3Desc',
   },
   {
+    index: '04',
     icon: Link2,
     titleKey: 'item4Title',
     descKey: 'item4Desc',
   },
   {
+    index: '05',
     icon: Camera,
     titleKey: 'item5Title',
     descKey: 'item5Desc',
   },
   {
+    index: '06',
     icon: Headset,
     titleKey: 'item6Title',
     descKey: 'item6Desc',
@@ -48,39 +56,27 @@ export function LandingBenefits() {
   const t = useTranslations('Home.benefits');
 
   return (
-    <section className="py-12 border-t border-slate-200/80">
-      <div className="text-center max-w-xl mx-auto space-y-2 mb-10">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full border border-brand-200">
-          {t('badge')}
-        </span>
-        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-snug">
-          {t('title')}
-        </h2>
-        <p className="text-xs sm:text-sm text-slate-500">
-          {t('subtitle')}
-        </p>
-      </div>
+    <section
+      aria-labelledby="why-sellers-heading"
+      className="py-12 sm:py-16 border-t border-slate-200/80"
+    >
+      <LandingSectionHeader
+        id="why-sellers-heading"
+        badge={t('badge')}
+        title={t('title')}
+        subtitle={t('subtitle')}
+      />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {BENEFITS.map((item) => {
-          const Icon = item.icon;
-          return (
-            <div
-              key={item.titleKey}
-              className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs hover:shadow-xs transition space-y-2.5"
-            >
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-brand-600 border border-slate-100">
-                <Icon className="h-4 w-4" />
-              </div>
-              <h3 className="text-sm font-bold text-slate-900 tracking-tight leading-snug">
-                {t(item.titleKey)}
-              </h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                {t(item.descKey)}
-              </p>
-            </div>
-          );
-        })}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        {BENEFITS.map((item) => (
+          <LandingBenefitCard
+            key={item.titleKey}
+            index={item.index}
+            icon={item.icon}
+            title={t(item.titleKey)}
+            description={t(item.descKey)}
+          />
+        ))}
       </div>
     </section>
   );
