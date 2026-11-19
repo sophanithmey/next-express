@@ -2,6 +2,11 @@ import React from 'react';
 import { LegalPageLayout } from '@/features/legal/components/legal-page-layout';
 import { ABOUT_US_DATA } from '@/features/legal/data/about-us-content';
 import { buildPageSeoMetadata } from '@/lib/seo';
+import { routing } from '@/i18n/routing';
+
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
 
 export function generateMetadata() {
   return buildPageSeoMetadata({

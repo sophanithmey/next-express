@@ -45,11 +45,24 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Isolate dev cache from production build output to prevent `yarn build` from corrupting a running `yarn dev` server
   distDir: process.env.NODE_ENV === 'development' ? '.next-dev' : '.next',
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 31536000,
+  },
   async headers() {
     return [
       {
         source: '/(.*)',
         headers: SECURITY_HEADERS,
+      },
+      {
+        source: '/images/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
       },
       {
         source: '/api/(.*)',

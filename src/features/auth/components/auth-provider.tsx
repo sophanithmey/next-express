@@ -1,9 +1,17 @@
 'use client';
 
 import React, { createContext } from 'react';
-import { AuthenticationModal } from '@/components/organisms/authentication-modal';
+import dynamic from 'next/dynamic';
 import { useAuthProvider } from '../hooks/use-auth-provider';
 import { AuthContextValue, UserProfile } from '../types/auth-types';
+
+const AuthenticationModal = dynamic(
+  () =>
+    import('@/components/organisms/authentication-modal').then(
+      (mod) => mod.AuthenticationModal,
+    ),
+  { ssr: false },
+);
 
 export type { AuthContextValue };
 
@@ -28,11 +36,13 @@ export function AuthProvider({
   return (
     <AuthContext.Provider value={contextValue}>
       {children}
-      <AuthenticationModal
-        isOpen={isAuthModalOpen}
-        onClose={closeAuthModal}
-        onSuccess={handleModalSuccess}
-      />
+      {isAuthModalOpen && (
+        <AuthenticationModal
+          isOpen={isAuthModalOpen}
+          onClose={closeAuthModal}
+          onSuccess={handleModalSuccess}
+        />
+      )}
     </AuthContext.Provider>
   );
 }

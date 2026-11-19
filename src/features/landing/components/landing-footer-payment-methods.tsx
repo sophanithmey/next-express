@@ -1,6 +1,5 @@
-'use client';
-
 import React from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 
 export function LandingFooterPaymentMethods() {
@@ -17,7 +16,7 @@ export function LandingFooterPaymentMethods() {
           title="KHQR (National QR Code Standard)"
           className="flex h-6 w-10 shrink-0 items-center justify-center rounded-md bg-[#CE0E2D] shadow-2xs overflow-hidden hover:scale-105 transition-transform cursor-pointer p-0.5"
         >
-          <img
+          <Image
             src="/images/payments/khqr.svg"
             alt="KHQR"
             width={40}
@@ -31,7 +30,7 @@ export function LandingFooterPaymentMethods() {
           title="Wing Bank Digital Payments"
           className="flex h-6 w-10 shrink-0 items-center justify-center rounded-md bg-white border border-slate-200/90 shadow-2xs overflow-hidden hover:scale-105 transition-transform cursor-pointer"
         >
-          <img
+          <Image
             src="/images/payments/wing-bank.jpg"
             alt="Wing Bank"
             width={40}

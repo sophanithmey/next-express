@@ -136,9 +136,9 @@ export function BookingHorizontalRoutePreview({
                   type="button"
                   onClick={onOptimizeRoute}
                   title={tBooking('optimizeRouteTitle')}
-                  className="inline-flex items-center gap-1 rounded-lg border border-primary-300 bg-primary-50 px-2 py-0.5 text-[11px] font-bold text-primary-950 hover:bg-primary-100 transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/90 bg-white hover:bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:text-slate-950 shadow-2xs transition cursor-pointer"
                 >
-                  <Route className="h-3 w-3 text-amber-700" />
+                  <Route className="h-3 w-3 text-secondary-600" />
                   <span>{tBooking('optimizeRoute')}</span>
                 </button>
               )}

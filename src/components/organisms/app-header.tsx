@@ -2,15 +2,30 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { Link, usePathname } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import { Package, LogIn, ArrowRight, Home, Menu, X } from 'lucide-react';
 import { useAuthState } from '@/features/auth/hooks/use-auth-state';
 import { UserProfile } from '@/features/auth/types/auth-types';
-import { LogoutConfirmModal } from '@/components/molecules/logout-confirm-modal';
 import { LanguageSwitcher } from '@/components/molecules/language-switcher';
-import { AppHeaderMobileDrawer } from '@/components/molecules/app-header-mobile-drawer';
 import { AppHeaderUserMenu } from '@/components/molecules/app-header-user-menu';
+
+const LogoutConfirmModal = dynamic(
+  () =>
+    import('@/components/molecules/logout-confirm-modal').then(
+      (m) => m.LogoutConfirmModal,
+    ),
+  { ssr: false },
+);
+
+const AppHeaderMobileDrawer = dynamic(
+  () =>
+    import('@/components/molecules/app-header-mobile-drawer').then(
+      (m) => m.AppHeaderMobileDrawer,
+    ),
+  { ssr: false },
+);
 
 interface AppHeaderProps {
   user?: UserProfile | null;
@@ -31,7 +46,12 @@ export function AppHeader({ user: propUser }: AppHeaderProps) {
   const user = contextUser || propUser;
   const isAuthenticated = authContextIsAuth || Boolean(user);
 
-  if (pathname === '/login' || pathname === '/verify-pin') {
+  const isMaintenancePage =
+    pathname === '/maintenance' ||
+    pathname.endsWith('/maintenance') ||
+    pathname.includes('/maintenance');
+
+  if (pathname === '/login' || pathname === '/verify-pin' || isMaintenancePage) {
     return null;
   }
 
@@ -170,22 +190,26 @@ export function AppHeader({ user: propUser }: AppHeaderProps) {
       </header>
 
       {/* Mobile Drawer Navigation with Apple-style Frosted Glass */}
-      <AppHeaderMobileDrawer
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-        isAuthenticated={isAuthenticated}
-        user={user}
-        onOpenAuthModal={openAuthModal}
-        onOpenLogoutModal={() => setShowLogoutModal(true)}
-      />
+      {isMobileMenuOpen && (
+        <AppHeaderMobileDrawer
+          isOpen={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
+          isAuthenticated={isAuthenticated}
+          user={user}
+          onOpenAuthModal={openAuthModal}
+          onOpenLogoutModal={() => setShowLogoutModal(true)}
+        />
+      )}
 
       {/* Logout Confirmation Dialog Modal */}
-      <LogoutConfirmModal
-        isOpen={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
-        onConfirm={handleConfirmLogout}
-        isLoading={isLoggingOut}
-      />
+      {showLogoutModal && (
+        <LogoutConfirmModal
+          isOpen={showLogoutModal}
+          onClose={() => setShowLogoutModal(false)}
+          onConfirm={handleConfirmLogout}
+          isLoading={isLoggingOut}
+        />
+      )}
     </>
   );
 }

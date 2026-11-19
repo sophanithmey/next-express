@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 
 @theme {
@@ -121,12 +120,12 @@
   --color-accent: #f2f3f7;
   --color-border: #ebedef;
 
-  /* Typography */
+  /* Typography powered by next/font */
   --font-sans:
-    'Poppins', 'Kantumruy Pro', 'Noto Sans Khmer', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    var(--font-poppins), var(--font-khmer), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     sans-serif;
-  --font-poppins: 'Poppins', 'Inter', sans-serif;
-  --font-khmer: 'Kantumruy Pro', 'Noto Sans Khmer', sans-serif;
+  --font-poppins: var(--font-poppins), 'Inter', sans-serif;
+  --font-khmer: var(--font-khmer), 'Noto Sans Khmer', sans-serif;
 }
 
 :root {

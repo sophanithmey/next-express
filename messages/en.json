@@ -885,5 +885,58 @@
     "phnomPenhZoneBadge": "Phnom Penh Service Zone",
     "outOfBoundsError": "Pin must be within the Phnom Penh region. Please select a location inside the highlighted boundary.",
     "gpsOutsidePhnomPenh": "Your current GPS location is outside Phnom Penh. Pinning is restricted to the Phnom Penh region."
+  },
+  "SystemStatus": {
+    "maintenance": {
+      "eyebrow": "SYSTEM MAINTENANCE",
+      "title": "We'll Be Back Soon",
+      "description": "We're currently improving our platform to provide you with a better delivery experience. Please check back shortly.",
+      "scheduledWindow": "Scheduled Maintenance Window",
+      "estimatedCompletion": "Estimated completion: {time}",
+      "notice": "Our core delivery services are temporarily paused. Ongoing active deliveries are not affected.",
+      "refresh": "Check Status Again",
+      "contactSupport": "Contact Support"
+    },
+    "error500": {
+      "eyebrow": "SYSTEM ERROR",
+      "title": "Something Went Wrong",
+      "description": "We encountered an unexpected problem. Please try again in a moment.",
+      "tryAgain": "Try Again",
+      "home": "Go to Homepage"
+    },
+    "error503": {
+      "eyebrow": "SERVICE UNAVAILABLE",
+      "title": "Service Temporarily Unavailable",
+      "description": "Our service is temporarily unavailable. We're working to restore everything as quickly as possible.",
+      "tryAgain": "Try Again",
+      "home": "Go to Homepage"
+    },
+    "error404": {
+      "eyebrow": "PAGE NOT FOUND",
+      "title": "Page Not Found",
+      "description": "The page you're looking for doesn't exist or may have been moved.",
+      "home": "Back to Homepage"
+    },
+    "errorNetwork": {
+      "eyebrow": "CONNECTION PROBLEM",
+      "title": "Connection Problem",
+      "description": "We couldn't connect to our servers. Please check your internet connection and try again.",
+      "tryAgain": "Retry Connection",
+      "home": "Go to Homepage"
+    },
+    "errorGeneral": {
+      "eyebrow": "UNEXPECTED ISSUE",
+      "title": "Something Didn't Go as Planned",
+      "description": "An unexpected error occurred while processing your request.",
+      "tryAgain": "Try Again",
+      "home": "Go to Homepage"
+    },
+    "common": {
+      "errorReference": "Reference ID: {id}",
+      "callSupport": "Call {phone}",
+      "telegramSupport": "Telegram Support",
+      "liveSupportTitle": "Need urgent help?",
+      "liveSupportDesc": "Our support team is available daily 07:00 AM – 10:00 PM."
+    }
   }
 }

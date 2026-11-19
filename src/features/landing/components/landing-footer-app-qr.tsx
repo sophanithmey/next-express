@@ -1,20 +1,18 @@
-'use client';
-
 import React from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { QrCode } from 'lucide-react';
+import { APP_CONFIG } from '@/lib/constants';
 
 interface LandingFooterAppQrProps {
-  qrDataUrl: string;
-  appDownloadUrl: string;
+  appDownloadUrl?: string;
 }
 
 /**
- * Modern minimalist QR pod with center Wingmall brand badge.
+ * Modern minimalist QR pod with center Wingmall brand badge using static optimized asset.
  */
 export function LandingFooterAppQr({
-  qrDataUrl,
-  appDownloadUrl,
+  appDownloadUrl = APP_CONFIG.appDownloadUrl,
 }: LandingFooterAppQrProps) {
   const t = useTranslations('Footer');
 
@@ -27,21 +25,18 @@ export function LandingFooterAppQr({
       className='group relative shrink-0 flex flex-col items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white p-2 shadow-2xs hover:border-secondary-400 hover:shadow-xs transition-all cursor-pointer'
     >
       <div className='relative flex items-center justify-center rounded-lg bg-slate-50/70 p-1'>
-        {qrDataUrl ? (
-          <img
-            src={qrDataUrl}
-            alt={t('qrAlt')}
-            width={76}
-            height={76}
-            className='h-[76px] w-[76px] rounded-xs object-contain transition-transform group-hover:scale-102'
-          />
-        ) : (
-          <div className='h-[76px] w-[76px] rounded-xs bg-slate-100 animate-pulse' />
-        )}
+        <Image
+          src='/images/wingmall-app-qr.png'
+          alt={t('qrAlt')}
+          width={76}
+          height={76}
+          loading="lazy"
+          className='h-[76px] w-[76px] rounded-xs object-contain transition-transform group-hover:scale-102'
+        />
 
         {/* Center Wingmall Brand Badge */}
         <div className='pointer-events-none absolute flex h-5.5 w-5.5 items-center justify-center rounded-md bg-white p-0.5 shadow-2xs ring-1 ring-slate-200/80'>
-          <img
+          <Image
             src='/apple-touch-icon.png'
             alt='Wingmall Logo'
             width={18}

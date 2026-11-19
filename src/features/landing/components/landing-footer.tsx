@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import { LandingFooterBrand } from './landing-footer-brand';
 import { LandingFooterAbout } from './landing-footer-about';

@@ -23,6 +23,7 @@ export const APP_CONFIG = {
 export const WINGMALL_URL = APP_CONFIG.wingmallUrl;
 
 export const SESSION_COOKIE_NAME = 'express_seller_session';
+export const HAS_SESSION_COOKIE_NAME = 'express_has_session';
 export const MAX_DROPOFF_STOPS = 5;
 export const MAX_TOTAL_COD_USD = 60;
 export const MAX_BULK_ORDERS = 50;

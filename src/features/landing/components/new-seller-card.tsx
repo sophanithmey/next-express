@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import { UserPlus, Smartphone, MessageSquareCode, KeyRound, CheckCircle2 } from 'lucide-react';

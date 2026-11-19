@@ -1,8 +1,6 @@
-'use client';
-
 import React from 'react';
 import { useTranslations } from 'next-intl';
-import { useAppDownload } from '../hooks/use-app-download';
+import { APP_CONFIG } from '@/lib/constants';
 import { LandingFooterAppQr } from './landing-footer-app-qr';
 import { LandingFooterStoreBadges } from './landing-footer-store-badges';
 
@@ -12,7 +10,7 @@ import { LandingFooterStoreBadges } from './landing-footer-store-badges';
  */
 export function LandingFooterAppDownload() {
   const t = useTranslations('Footer');
-  const { qrDataUrl, appDownloadUrl } = useAppDownload();
+  const appDownloadUrl = APP_CONFIG.appDownloadUrl;
 
   return (
     <div className='lg:col-span-3'>
@@ -29,10 +27,7 @@ export function LandingFooterAppDownload() {
 
         {/* Viewfinder QR Pod & Store Badges */}
         <div className='flex items-center gap-3'>
-          <LandingFooterAppQr
-            qrDataUrl={qrDataUrl}
-            appDownloadUrl={appDownloadUrl}
-          />
+          <LandingFooterAppQr appDownloadUrl={appDownloadUrl} />
           <LandingFooterStoreBadges appDownloadUrl={appDownloadUrl} />
         </div>
       </div>

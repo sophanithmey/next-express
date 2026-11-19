@@ -165,3 +165,35 @@ export function getServerEnv(): ServerEnvConfig {
   };
 }
 
+/**
+ * Validates critical environment settings on startup without exposing secret values.
+ */
+export function validateServerEnvOnStartup(): { isValid: boolean; issues: string[] } {
+  const issues: string[] = [];
+  const env = getServerEnv();
+
+  if (process.env.NODE_ENV === 'production') {
+    if (
+      !process.env.SESSION_SECRET?.trim() ||
+      env.sessionSecret === DEFAULT_DEV_SESSION_SECRET ||
+      env.sessionSecret.length < 32
+    ) {
+      issues.push('SESSION_SECRET must be at least 32 characters long in production.');
+    }
+
+    if (!env.mockAuthApi) {
+      if (!env.identityClientId) {
+        issues.push('IDENTITY_CONSUMER_CLIENT_ID is required when MOCK_AUTH_API is false.');
+      }
+      if (!env.identityClientSecret) {
+        issues.push('IDENTITY_CONSUMER_CLIENT_SECRET is required when MOCK_AUTH_API is false.');
+      }
+    }
+  }
+
+  return {
+    isValid: issues.length === 0,
+    issues,
+  };
+}
+
