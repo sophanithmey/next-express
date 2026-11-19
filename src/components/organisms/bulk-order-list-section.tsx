@@ -7,6 +7,7 @@ import { DropoffStop } from '@/features/booking/types/booking-types';
 import { BulkOrderDraft } from '@/features/booking/services/bulk-order-parser';
 import { BulkOrderFeeBreakdown } from '@/features/booking/services/bulk-batch-submitter';
 import { useBulkOrderListSection } from '@/features/booking/hooks/use-bulk-order-list-section';
+import { useSortableList } from '@/hooks/use-sortable-list';
 import { MAX_BULK_ORDERS } from '@/lib/constants';
 import { BulkOrderListHeader } from '../molecules/bulk-order-list-header';
 import { BulkOrderEmptyDropzone } from '../molecules/bulk-order-empty-dropzone';
@@ -22,6 +23,7 @@ interface BulkOrderListSectionProps {
   onDirectFileUpload: (file: File) => void;
   onAddOrder: () => void;
   onRemoveOrder: (orderId: string) => void;
+  onReorderOrders?: (oldIndex: number, newIndex: number) => void;
   onClearOrders: () => void;
   onAddStop: (orderId: string) => void;
   onUpdateStop: (orderId: string, stopIndex: number, updated: DropoffStop) => void;
@@ -40,6 +42,7 @@ export function BulkOrderListSection({
   onDirectFileUpload,
   onAddOrder,
   onRemoveOrder,
+  onReorderOrders,
   onClearOrders,
   onAddStop,
   onUpdateStop,
@@ -64,6 +67,18 @@ export function BulkOrderListSection({
     onDirectFileUpload,
   });
 
+  const sortableContainerRef = useSortableList(
+    orders.length,
+    (oldIndex, newIndex) => {
+      onReorderOrders?.(oldIndex, newIndex);
+    },
+    {
+      handle: '.order-drag-handle',
+      animation: 200,
+      disabled: orders.length <= 1,
+    },
+  );
+
   return (
     <section className="rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-2xs space-y-4">
       <BulkOrderListHeader
@@ -84,12 +99,13 @@ export function BulkOrderListSection({
             onAddOrder={onAddOrder}
           />
         ) : (
-          <div className="space-y-3">
+          <div ref={sortableContainerRef} className="space-y-3">
             {orders.map((order, idx) => (
               <BulkOrderCard
                 key={order.id}
                 order={order}
                 index={idx}
+                canReorder={orders.length > 1}
                 estimatedFee={perOrderFees[order.id]?.fee ?? 1.75}
                 isExpanded={isOrderExpanded(order.id, idx)}
                 errors={orderErrors[order.id]}

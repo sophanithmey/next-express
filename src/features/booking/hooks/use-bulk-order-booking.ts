@@ -72,12 +72,16 @@ export function useBulkOrderBooking({
   const { isAuthenticated, openAuthModal } = useAuthState();
 
   const [orders, setOrders] = useState<BulkOrderDraft[]>([]);
-  const [selectedPayment, setSelectedPayment] = useState<PaymentMethodType>('khqr');
+  const [selectedPayment, setSelectedPayment] =
+    useState<PaymentMethodType>('khqr');
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
   const [tipAmount, setTipAmount] = useState<number>(0);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitProgress, setSubmitProgress] = useState({ completed: 0, total: 0 });
+  const [submitProgress, setSubmitProgress] = useState({
+    completed: 0,
+    total: 0,
+  });
   const [submissionResults, setSubmissionResults] = useState<
     BulkBatchSubmissionItem[] | null
   >(null);
@@ -140,7 +144,8 @@ export function useBulkOrderBooking({
       const kindMatch = paymentOptions.find(
         (opt) =>
           opt.isAvailable &&
-          normalizePaymentKind(opt.providerCode) === normalizePaymentKind(current),
+          normalizePaymentKind(opt.providerCode) ===
+            normalizePaymentKind(current),
       );
       if (kindMatch) return kindMatch.providerCode;
 
@@ -159,16 +164,26 @@ export function useBulkOrderBooking({
     const provider = isCardPaymentProvider(selectedPayment)
       ? selectedPayment
       : 'card';
-    const redirectUrl = await paymentCardsState.createCard(provider, 'ST_EXPRESS');
+    const redirectUrl = await paymentCardsState.createCard(
+      provider,
+      'ST_EXPRESS',
+    );
     const safeRedirectUrl = sanitizePaymentRedirectUrl(redirectUrl);
     if (safeRedirectUrl && typeof window !== 'undefined') {
       window.open(safeRedirectUrl, '_blank', 'noopener,noreferrer');
       toast.info(tPayment('cardRedirectOpened'));
     }
-  }, [isAuthenticated, openAuthModal, selectedPayment, paymentCardsState, tPayment]);
+  }, [
+    isAuthenticated,
+    openAuthModal,
+    selectedPayment,
+    paymentCardsState,
+    tPayment,
+  ]);
 
   const batchSummary = useMemo(
-    () => calculateBulkBatchFees(pickup, orders, deliveryOption, deliverySchedule),
+    () =>
+      calculateBulkBatchFees(pickup, orders, deliveryOption, deliverySchedule),
     [pickup, orders, deliveryOption, deliverySchedule],
   );
 
@@ -201,16 +216,22 @@ export function useBulkOrderBooking({
     [pickup, orders],
   );
 
-  const handleImportOrders = useCallback((imported: BulkOrderDraft[]) => {
-    const bounded = imported.slice(0, MAX_BULK_ORDERS);
-    setOrders(bounded);
-    setHasAttemptedSubmit(false);
-    setSubmissionResults(null);
-    const stopsTotal = bounded.reduce((sum, o) => sum + o.stops.length, 0);
-    toast.success(
-      tBooking('bulkLoadedToast', { orders: bounded.length, stops: stopsTotal }),
-    );
-  }, [tBooking]);
+  const handleImportOrders = useCallback(
+    (imported: BulkOrderDraft[]) => {
+      const bounded = imported.slice(0, MAX_BULK_ORDERS);
+      setOrders(bounded);
+      setHasAttemptedSubmit(false);
+      setSubmissionResults(null);
+      const stopsTotal = bounded.reduce((sum, o) => sum + o.stops.length, 0);
+      toast.success(
+        tBooking('bulkLoadedToast', {
+          orders: bounded.length,
+          stops: stopsTotal,
+        }),
+      );
+    },
+    [tBooking],
+  );
 
   const handleLoadSample = useCallback(() => {
     const parsed = parseBulkOrderText(SAMPLE_BULK_CSV);
@@ -247,6 +268,27 @@ export function useBulkOrderBooking({
     setOrders((prev) => prev.filter((o) => o.id !== orderId));
   }, []);
 
+  const handleReorderOrders = useCallback(
+    (oldIndex: number, newIndex: number) => {
+      if (oldIndex === newIndex) return;
+      setOrders((prev) => {
+        if (
+          oldIndex < 0 ||
+          oldIndex >= prev.length ||
+          newIndex < 0 ||
+          newIndex >= prev.length
+        ) {
+          return prev;
+        }
+        const next = [...prev];
+        const [moved] = next.splice(oldIndex, 1);
+        next.splice(newIndex, 0, moved);
+        return next;
+      });
+    },
+    [],
+  );
+
   const handleClearOrders = useCallback(() => {
     setOrders([]);
     setAppliedPromo(null);
@@ -276,7 +318,9 @@ export function useBulkOrderBooking({
           o.id === orderId
             ? {
                 ...o,
-                stops: o.stops.map((s, idx) => (idx === stopIndex ? updated : s)),
+                stops: o.stops.map((s, idx) =>
+                  idx === stopIndex ? updated : s,
+                ),
               }
             : o,
         ),
@@ -344,15 +388,20 @@ export function useBulkOrderBooking({
           discountAmount,
           tipAmount,
           locale,
-          onProgress: (completed, total) => setSubmitProgress({ completed, total }),
+          onProgress: (completed, total) =>
+            setSubmitProgress({ completed, total }),
         });
         setSubmissionResults(results);
         await queryClient.invalidateQueries({ queryKey: bookingKeys.lists() });
 
-        const successCount = results.filter((r) => r.status === 'success').length;
+        const successCount = results.filter(
+          (r) => r.status === 'success',
+        ).length;
         if (successCount === results.length) {
           clearBulkOrdersDraft();
-          toast.success(tBooking('bulkSubmitSuccessToast', { count: successCount }));
+          toast.success(
+            tBooking('bulkSubmitSuccessToast', { count: successCount }),
+          );
         } else {
           toast.warning(
             tBooking('bulkSubmitPartialToast', {
@@ -468,6 +517,7 @@ export function useBulkOrderBooking({
     handleDirectFileUpload,
     handleAddOrder,
     handleRemoveOrder,
+    handleReorderOrders,
     handleClearOrders,
     handleAddStop,
     handleUpdateStop,

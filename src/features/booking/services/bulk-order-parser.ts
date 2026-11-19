@@ -567,6 +567,7 @@ export async function parseBulkOrderFile(file: File): Promise<string> {
       type: 'array',
       cellFormula: false,
       cellHTML: false,
+      dense: true,
     });
     const firstSheetName = wb.SheetNames[0];
     if (!firstSheetName) return '';

@@ -7,21 +7,14 @@ import { Label } from '../../atoms/label';
 import { Package, ChevronDown, AlertTriangle, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useTranslations } from 'next-intl';
+import { ParcelCategoryChips } from '../../molecules/parcel-category-chips';
+import { ParcelCollapsedPreview } from '../../molecules/parcel-collapsed-preview';
 
 interface ParcelCodSectionProps {
   parcel: ParcelInfo;
   onChangeParcel: (parcel: ParcelInfo) => void;
   defaultExpanded?: boolean;
 }
-
-const QUICK_CATEGORIES = [
-  { id: 'apparel', labelKey: 'catApparel', emoji: '👗' },
-  { id: 'cosmetics', labelKey: 'catCosmetics', emoji: '💄' },
-  { id: 'electronics', labelKey: 'catElectronics', emoji: '📱' },
-  { id: 'food', labelKey: 'catFood', emoji: '🍜' },
-  { id: 'documents', labelKey: 'catDocuments', emoji: '📄' },
-  { id: 'general', labelKey: 'catGeneral', emoji: '📦' },
-] as const;
 
 export function ParcelCodSection({
   parcel,
@@ -95,7 +88,7 @@ export function ParcelCodSection({
           <ChevronDown
             className={cn(
               'h-3.5 w-3.5 transition-transform duration-200',
-              isExpanded && 'rotate-180'
+              isExpanded && 'rotate-180',
             )}
           />
         </button>
@@ -103,63 +96,20 @@ export function ParcelCodSection({
 
       {/* Collapsed Compact Preview */}
       {!isExpanded && (
-        <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-slate-400 shrink-0">
-              <Package className="h-3.5 w-3.5" />
-            </span>
-            <span
-              className={cn(
-                'truncate',
-                hasDescription
-                  ? 'font-medium text-slate-800'
-                  : 'text-slate-400 italic'
-              )}
-            >
-              {hasDescription ? description : tParcel('noDescription')}
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsExpanded(true)}
-            className="text-xs font-semibold text-amber-800 hover:text-amber-900 hover:underline cursor-pointer shrink-0"
-          >
-            {hasDescription ? tCommon('edit') : `+ ${tParcel('addDetails')}`}
-          </button>
-        </div>
+        <ParcelCollapsedPreview
+          hasDescription={hasDescription}
+          description={description}
+          onExpand={() => setIsExpanded(true)}
+        />
       )}
 
       {/* Expanded Parcel Controls */}
       {isExpanded && (
         <div className="mt-4 pt-3.5 border-t border-slate-100 space-y-3.5 animate-in fade-in duration-150">
-          {/* Quick Category Chips */}
-          <div className="space-y-1.5">
-            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-              {tParcel('quickCategories')}
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {QUICK_CATEGORIES.map((cat) => {
-                const label = tParcel(cat.labelKey);
-                const isSelected = description.includes(label);
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => handleSelectCategory(label)}
-                    className={cn(
-                      'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition cursor-pointer active:scale-95',
-                      isSelected
-                        ? 'bg-primary-50 text-slate-950 border-primary-400 font-bold shadow-2xs'
-                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200/80'
-                    )}
-                  >
-                    <span>{cat.emoji}</span>
-                    <span>{label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <ParcelCategoryChips
+            description={description}
+            onSelectCategory={handleSelectCategory}
+          />
 
           {/* Description Input Field with Clear Button */}
           <div className="space-y-1">
@@ -199,13 +149,13 @@ export function ParcelCodSection({
                 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer active:scale-95',
                 isFragile
                   ? 'bg-amber-50 text-amber-900 border-amber-300 shadow-2xs'
-                  : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200'
+                  : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200',
               )}
             >
               <AlertTriangle
                 className={cn(
                   'h-3.5 w-3.5',
-                  isFragile ? 'text-amber-600' : 'text-slate-400'
+                  isFragile ? 'text-amber-600' : 'text-slate-400',
                 )}
               />
               <span>{fragileText}</span>

@@ -68,6 +68,10 @@ function buildOrderRow(order: BookingOrder): (string | number)[] {
  */
 export async function exportOrdersToXlsx(orders: BookingOrder[], filename?: string): Promise<string> {
   const XLSX = await import('xlsx');
+  if (typeof window === 'undefined') {
+    const fs = await import('fs');
+    XLSX.set_fs(fs);
+  }
   const data = [EXPORT_HEADERS, ...orders.map(buildOrderRow)];
   const ws = XLSX.utils.aoa_to_sheet(data);
 

@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Heart, HandCoins, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { APP_CONFIG } from '@/lib/constants';
 import { cn } from '@/lib/cn';
+import { useRiderTip } from '@/hooks/use-rider-tip';
 
 const PRESET_TIPS = [0.5, 1, 2] as const;
-const MAX_CUSTOM_TIP = 100;
 
 interface RiderTipSelectorProps {
   tipAmount: number;
@@ -21,49 +21,16 @@ export function RiderTipSelector({
   compact = false,
 }: RiderTipSelectorProps) {
   const tPayment = useTranslations('Payment');
-  const [isCustomMode, setIsCustomMode] = useState(false);
-  const [customInput, setCustomInput] = useState('');
-
-  const isPresetSelected = (amount: number) => !isCustomMode && tipAmount === amount;
-  const isNoTipSelected = !isCustomMode && tipAmount === 0;
-
-  const handleSelectNoTip = () => {
-    setIsCustomMode(false);
-    setCustomInput('');
-    onChangeTip(0);
-  };
-
-  const handleSelectPreset = (amount: number) => {
-    setIsCustomMode(false);
-    setCustomInput('');
-    onChangeTip(amount);
-  };
-
-  const handleOpenCustom = () => {
-    setIsCustomMode(true);
-    if (tipAmount > 0) {
-      setCustomInput(String(tipAmount));
-    }
-  };
-
-  const handleCustomChange = (raw: string) => {
-    // Allow numbers and single decimal point with up to 2 decimals
-    if (raw !== '' && !/^\d*\.?\d{0,2}$/.test(raw)) {
-      return;
-    }
-    setCustomInput(raw);
-
-    if (raw === '' || raw === '.') {
-      onChangeTip(0);
-      return;
-    }
-
-    const parsed = parseFloat(raw);
-    if (!Number.isNaN(parsed)) {
-      const clamped = Math.min(MAX_CUSTOM_TIP, Math.max(0, parsed));
-      onChangeTip(Math.round(clamped * 100) / 100);
-    }
-  };
+  const {
+    isCustomMode,
+    customInput,
+    isPresetSelected,
+    isNoTipSelected,
+    handleSelectNoTip,
+    handleSelectPreset,
+    handleOpenCustom,
+    handleCustomChange,
+  } = useRiderTip({ tipAmount, onChangeTip });
 
   return (
     <div
@@ -116,7 +83,7 @@ export function RiderTipSelector({
             !compact && 'min-h-11 px-3',
             isNoTipSelected
               ? 'border-primary-500 bg-primary-100 text-slate-950 font-bold ring-1 ring-primary-500'
-              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-100/80'
+              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-100/80',
           )}
         >
           {tPayment('noTip')}
@@ -134,7 +101,7 @@ export function RiderTipSelector({
                 !compact && 'min-h-11 px-3',
                 active
                   ? 'border-primary-500 bg-primary-100 text-slate-950 ring-1 ring-primary-500 shadow-2xs'
-                  : 'border-slate-200 bg-white text-slate-700 hover:border-primary-300 hover:bg-primary-50/40'
+                  : 'border-slate-200 bg-white text-slate-700 hover:border-primary-300 hover:bg-primary-50/40',
               )}
             >
               {APP_CONFIG.currencySymbol}
@@ -151,7 +118,7 @@ export function RiderTipSelector({
             compact ? 'col-span-2' : 'min-h-11 px-3 col-span-2 sm:col-span-1',
             isCustomMode
               ? 'border-primary-500 bg-primary-100 text-slate-950 font-bold ring-1 ring-primary-500'
-              : 'border-slate-200 bg-white text-slate-700 hover:border-primary-300 hover:bg-primary-50/40'
+              : 'border-slate-200 bg-white text-slate-700 hover:border-primary-300 hover:bg-primary-50/40',
           )}
         >
           {tPayment('tipCustom')}
@@ -200,4 +167,3 @@ export function RiderTipSelector({
     </div>
   );
 }
-

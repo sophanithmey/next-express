@@ -14,6 +14,7 @@ import { BulkOrderStopRow } from '../molecules/bulk-order-stop-row';
 interface BulkOrderCardProps {
   order: BulkOrderDraft;
   index: number;
+  canReorder?: boolean;
   estimatedFee: number;
   isExpanded: boolean;
   errors?: Record<string, string>;
@@ -30,6 +31,7 @@ interface BulkOrderCardProps {
 export function BulkOrderCard({
   order,
   index,
+  canReorder = false,
   estimatedFee,
   isExpanded,
   errors = {},
@@ -64,6 +66,7 @@ export function BulkOrderCard({
     >
       <BulkOrderCardHeader
         index={index}
+        canReorder={canReorder}
         stopsCount={order.stops.length}
         orderCod={orderCod}
         isCodOverLimit={isCodOverLimit}

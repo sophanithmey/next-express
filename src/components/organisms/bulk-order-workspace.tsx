@@ -9,17 +9,15 @@ import {
 import { CreateSavedLocationInput } from '@/features/booking/schemas/location-schema';
 import { SavedLocationItem } from '../molecules/location-picker-saved-list';
 import { useBulkOrderBooking } from '@/features/booking/hooks/use-bulk-order-booking';
-import { applyConfirmedPickupLocation } from '@/features/booking/services/booking-location-helper';
 import { getSpeedOptionFees } from '@/features/booking/services/pricing-service';
-import { PickupSection } from './booking-sections/pickup-section';
-import { DeliveryOptionsSection } from './booking-sections/delivery-options-section';
-import { BulkOrderListSection } from './bulk-order-list-section';
+import { BulkOrderWorkspaceMain } from './bulk-order-workspace-main';
 import { BulkOrderSummary } from './bulk-order-summary';
 import { BulkOrderResultView } from './bulk-order-result-view';
 import { BulkUploadOrderModal } from './bulk-upload-order-modal';
-import { BulkOrderActionBar } from '../molecules/bulk-order-action-bar';
-import { LocationPickerModal } from '../molecules/location-picker-modal';
-import { useTranslations } from 'next-intl';
+import {
+  BulkMapTarget,
+  BulkOrderLocationModal,
+} from '../molecules/bulk-order-location-modal';
 
 interface BulkOrderWorkspaceProps {
   pickup: PickupLocation;
@@ -34,11 +32,6 @@ interface BulkOrderWorkspaceProps {
   ) => Promise<SavedLocationItem | 'auth_required'>;
 }
 
-type MapTarget =
-  | { type: 'pickup' }
-  | { type: 'stop'; orderId: string; stopIndex: number }
-  | null;
-
 export function BulkOrderWorkspace({
   pickup,
   onChangePickup,
@@ -49,11 +42,8 @@ export function BulkOrderWorkspace({
   savedLocations,
   onCreateLocation,
 }: BulkOrderWorkspaceProps) {
-  const tPickup = useTranslations('Pickup');
-  const tRecipient = useTranslations('Recipient');
-
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [mapTarget, setMapTarget] = useState<MapTarget>(null);
+  const [mapTarget, setMapTarget] = useState<BulkMapTarget>(null);
 
   const bulk = useBulkOrderBooking({
     pickup,
@@ -93,71 +83,28 @@ export function BulkOrderWorkspace({
   const targetStop =
     mapTarget?.type === 'stop' ? targetOrder?.stops[mapTarget.stopIndex] : undefined;
 
-  const pickupErrors = bulk.hasAttemptedSubmit ? bulk.validation.pickupErrors : {};
-
   return (
     <>
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
         {/* Left Column: Shared Pickup, Delivery Speed, and Bulk Orders List */}
-        <div className="lg:col-span-7 xl:col-span-8 space-y-5">
-          <PickupSection
-            pickup={pickup}
-            onChangePickup={onChangePickup}
-            onOpenMap={() => setMapTarget({ type: 'pickup' })}
-            isCod={bulk.batchSummary.totalCod > 0}
-            error={pickupErrors['pickup.address']}
-            phoneError={pickupErrors['pickup.senderPhone']}
-            bankNameError={pickupErrors['pickup.settlementAccountName']}
-            bankNumberError={pickupErrors['pickup.settlementAccountNumber']}
-            savedLocations={savedLocations}
-          />
-
-          <BulkOrderListSection
-            orders={bulk.orders}
-            perOrderFees={bulk.batchSummary.perOrder}
-            orderErrors={bulk.validation.orderErrors}
-            showErrors={bulk.hasAttemptedSubmit}
-            onOpenUploadModal={() => setIsUploadModalOpen(true)}
-            onLoadSample={bulk.handleLoadSample}
-            onDirectFileUpload={(file) => void bulk.handleDirectFileUpload(file)}
-            onAddOrder={bulk.handleAddOrder}
-            onRemoveOrder={bulk.handleRemoveOrder}
-            onClearOrders={bulk.handleClearOrders}
-            onAddStop={bulk.handleAddStop}
-            onUpdateStop={bulk.handleUpdateStop}
-            onRemoveStop={bulk.handleRemoveStop}
-            onOptimizeOrderRoute={bulk.handleOptimizeOrderRoute}
-            onOpenStopMap={(orderId, stopIndex) =>
-              setMapTarget({ type: 'stop', orderId, stopIndex })
-            }
-          />
-
-          <DeliveryOptionsSection
-            selectedOption={deliveryOption}
-            onChangeOption={onChangeDeliveryOption}
-            schedule={deliverySchedule}
-            onChangeSchedule={onChangeDeliverySchedule}
-            instantFee={instantFee}
-            sameDayFee={sameDayFee}
-            scheduledFee={scheduledFee}
-          />
-
-          <BulkOrderActionBar
-            ordersCount={bulk.orders.length}
-            totalStops={bulk.batchSummary.totalStops}
-            subtotalFee={bulk.batchSummary.totalFee}
-            finalPayableFee={bulk.finalPayableFee}
-            discountAmount={bulk.discountAmount}
-            appliedPromo={bulk.appliedPromo}
-            tipAmount={bulk.tipAmount}
-            totalCod={bulk.batchSummary.totalCod}
-            invalidOrderCount={bulk.validation.invalidOrderCount}
-            hasPickupErrors={Object.keys(bulk.validation.pickupErrors).length > 0}
-            isSubmitting={bulk.isSubmitting}
-            submitProgress={bulk.submitProgress}
-            onSubmit={bulk.handleSubmitBatch}
-          />
-        </div>
+        <BulkOrderWorkspaceMain
+          pickup={pickup}
+          onChangePickup={onChangePickup}
+          deliveryOption={deliveryOption}
+          onChangeDeliveryOption={onChangeDeliveryOption}
+          deliverySchedule={deliverySchedule}
+          onChangeDeliverySchedule={onChangeDeliverySchedule}
+          savedLocations={savedLocations}
+          bulk={bulk}
+          instantFee={instantFee}
+          sameDayFee={sameDayFee}
+          scheduledFee={scheduledFee}
+          onOpenPickupMap={() => setMapTarget({ type: 'pickup' })}
+          onOpenUploadModal={() => setIsUploadModalOpen(true)}
+          onOpenStopMap={(orderId, stopIndex) =>
+            setMapTarget({ type: 'stop', orderId, stopIndex })
+          }
+        />
 
         {/* Right Column: Batch Summary, Voucher, Rider Tip & Payment Methods */}
         <div className="lg:col-span-5 xl:col-span-4">
@@ -205,50 +152,15 @@ export function BulkOrderWorkspace({
       />
 
       {/* Map Picker Modal for Shared Pickup or Any Order Stop */}
-      <LocationPickerModal
-        isOpen={mapTarget !== null}
+      <BulkOrderLocationModal
+        mapTarget={mapTarget}
         onClose={() => setMapTarget(null)}
-        title={
-          mapTarget?.type === 'pickup'
-            ? tPickup('selectLocation')
-            : tRecipient('destinationIndex', {
-                index: (mapTarget?.stopIndex ?? 0) + 1,
-              })
-        }
-        selectedAddress={
-          mapTarget?.type === 'pickup'
-            ? pickup.address
-            : targetStop?.dropoff.address || ''
-        }
-        initialCoords={
-          mapTarget?.type === 'pickup'
-            ? pickup.coordinates
-            : targetStop?.dropoff.coordinates || pickup.coordinates
-        }
+        pickup={pickup}
+        onChangePickup={onChangePickup}
+        targetStop={targetStop}
         savedLocations={savedLocations}
-        defaultContact={mapTarget?.type === 'pickup' ? pickup.senderPhone || '' : ''}
         onCreateLocation={onCreateLocation}
-        onSelect={(loc) => {
-          if (!mapTarget) return;
-          if (mapTarget.type === 'pickup') {
-            onChangePickup(applyConfirmedPickupLocation(pickup, loc));
-            return;
-          }
-          if (targetStop) {
-            bulk.handleUpdateStop(mapTarget.orderId, mapTarget.stopIndex, {
-              ...targetStop,
-              dropoff: {
-                ...targetStop.dropoff,
-                address: loc.address,
-                coordinates: {
-                  lat: Number(loc.coordinates.lat),
-                  lng: Number(loc.coordinates.lng),
-                },
-                placeId: loc.placeId,
-              },
-            });
-          }
-        }}
+        onUpdateStop={bulk.handleUpdateStop}
       />
     </>
   );

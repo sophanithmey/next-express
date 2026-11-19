@@ -1,20 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Link } from '@/i18n/routing';
-import { PlusCircle } from 'lucide-react';
+import React from 'react';
 import { BookingOrder, DashboardStatistics } from '../types/booking-types';
 import { useBookingHistory } from '../hooks/use-booking-history';
+import { useBookingViewMode } from '../hooks/use-booking-view-mode';
 import { BookingHistoryTable } from '@/components/organisms/booking-history-table';
 import { BookingHistoryJiraBoard } from '@/components/organisms/booking-history-jira-board';
 import { Button } from '@/components/atoms/button';
 import { BookingOperationsStats } from './booking-operations-stats';
-import { BookingHistoryToolbar, BookingViewMode } from './booking-history-toolbar';
+import { BookingHistoryToolbar } from './booking-history-toolbar';
+import { BookingHistoryHeader } from './booking-history-header';
 import {
   DATE_PRESET_OPTIONS,
   formatCustomDateRangeLabel,
 } from '../services/booking-date-filter';
-import { useLocale, useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 
 interface BookingHistoryManagerProps {
   initialOrders: BookingOrder[];
@@ -31,29 +31,8 @@ export function BookingHistoryManager({
   stats: initialStats,
   sellerName,
 }: BookingHistoryManagerProps) {
-  const tHistory = useTranslations('BookingHistory');
   const locale = useLocale();
-  const [viewMode, setViewMode] = useState<BookingViewMode>('compact');
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('wing_booking_view_mode') as BookingViewMode;
-      if (saved === 'table' || saved === 'compact') {
-        setViewMode(saved);
-      }
-    } catch {
-      // LocalStorage access may be restricted
-    }
-  }, []);
-
-  const handleViewModeChange = (mode: BookingViewMode) => {
-    setViewMode(mode);
-    try {
-      localStorage.setItem('wing_booking_view_mode', mode);
-    } catch {
-      // Ignore
-    }
-  };
+  const { viewMode, handleViewModeChange } = useBookingViewMode('compact');
 
   const {
     orders,
@@ -94,50 +73,18 @@ export function BookingHistoryManager({
     DATE_PRESET_OPTIONS.find((opt) => opt.id === datePreset) ||
     DATE_PRESET_OPTIONS[0];
   const activeDateLabel =
-    (datePreset === 'custom'
-      ? formatCustomDateRangeLabel(customDateRange, locale)
-      : null) || tHistory(activeDatePresetOption.labelKey);
+    datePreset === 'custom'
+      ? formatCustomDateRangeLabel(customDateRange, locale) || undefined
+      : undefined;
 
   return (
     <div className="space-y-5">
       {/* Sleek Operations Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-              {tHistory('operationsHeader')}
-            </h1>
-            {sellerName && (
-              <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                <span>{sellerName}</span>
-              </span>
-            )}
-            <span className="rounded-full border border-slate-200/80 bg-slate-100/80 px-2 py-0.5 font-mono text-[11px] font-bold text-slate-600">
-              {tHistory('ordersCountBadge', { count: totalCount })}
-            </span>
-            {isLocalDemoMode && (
-              <span className="rounded-full border border-primary-300 bg-primary-50 px-2 py-0.5 text-[10px] font-semibold text-primary-950">
-                {tHistory('localDemoBadge')}
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-slate-500 mt-0.5">
-            {tHistory('operationsSubtitle')}
-          </p>
-        </div>
-
-        <Link href="/booking" prefetch={true}>
-          <Button
-            variant="primary"
-            size="md"
-            leftIcon={<PlusCircle className="h-4 w-4 text-slate-950" />}
-            className="bg-primary-500 hover:bg-primary-400 text-slate-950 rounded-xl shadow-xs font-bold"
-          >
-            {tHistory('newDeliveryButton')}
-          </Button>
-        </Link>
-      </div>
+      <BookingHistoryHeader
+        sellerName={sellerName}
+        totalCount={totalCount}
+        isLocalDemoMode={isLocalDemoMode}
+      />
 
       {/* Streamlined Operations Metrics Strip */}
       {stats && (

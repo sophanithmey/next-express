@@ -1,25 +1,20 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Link } from '@/i18n/routing';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import {
   AlertCircle,
   Banknote,
-  Check,
   CheckCircle2,
   ChevronDown,
-  Copy,
-  ExternalLink,
-  Link2,
   MapPin,
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { BulkBatchSubmissionItem } from '@/features/booking/services/bulk-batch-submitter';
-import { buildTrackingSharePayload } from '@/features/booking/services/tracking-share-helper';
+import { useBulkResultClipboard } from '@/features/booking/hooks/use-bulk-result-clipboard';
 import { APP_CONFIG } from '@/lib/constants';
 import { cn } from '@/lib/cn';
 import { BulkOrderResultStops } from './bulk-order-result-stops';
+import { BulkOrderResultTrackingBox } from './bulk-order-result-tracking-box';
 
 interface BulkOrderResultRowProps {
   item: BulkBatchSubmissionItem;
@@ -27,55 +22,23 @@ interface BulkOrderResultRowProps {
 }
 
 export function BulkOrderResultRow({ item, index }: BulkOrderResultRowProps) {
-  const locale = useLocale();
   const tBooking = useTranslations('Booking');
   const tPayment = useTranslations('Payment');
   const tCommon = useTranslations('Common');
 
-  const [copiedField, setCopiedField] = useState<'id' | 'link' | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const order = item.createdOrder;
   const isSuccess = item.status === 'success' && Boolean(order);
-  const tracking = order?.trackingNumber || '';
   const stops = item.draft.stops;
   const orderCod = order?.cod?.amount ?? 0;
   const orderFee = order?.deliveryFee ?? 0;
   const firstStop = stops[0];
 
-  const handleCopyId = async () => {
-    if (!tracking) return;
-    try {
-      await navigator.clipboard.writeText(tracking);
-      setCopiedField('id');
-      toast.success(`${tCommon('copied')}: ${tracking}`);
-      setTimeout(() => setCopiedField(null), 1800);
-    } catch {
-      // Ignore clipboard failures in restricted contexts
-    }
-  };
-
-  const handleCopyLink = async () => {
-    if (!tracking || !order) return;
-    try {
-      const origin =
-        typeof window !== 'undefined' ? window.location.origin : '';
-      const { fullTrackingUrl } = buildTrackingSharePayload({
-        tracking,
-        locale,
-        origin,
-        recipient: firstStop?.recipient.name || 'Recipient',
-        dropoff: firstStop?.dropoff.address || '',
-        codAmount: orderCod,
-      });
-      await navigator.clipboard.writeText(fullTrackingUrl);
-      setCopiedField('link');
-      toast.success(tPayment('linkCopied'));
-      setTimeout(() => setCopiedField(null), 1800);
-    } catch {
-      // Ignore clipboard failures
-    }
-  };
+  const { copiedField, handleCopyId, handleCopyLink } = useBulkResultClipboard({
+    order,
+    firstStop,
+  });
 
   return (
     <div
@@ -145,67 +108,13 @@ export function BulkOrderResultRow({ item, index }: BulkOrderResultRowProps) {
         </div>
 
         {/* Middle Row: Tracking + Quick Copy / Share Actions OR Error Alert */}
-        {isSuccess && order ? (
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0">
-                {tPayment('trackingRef')}
-              </span>
-              <span className="font-mono text-xs sm:text-sm font-extrabold text-secondary-700 truncate">
-                {tracking}
-              </span>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-1.5 shrink-0">
-              <button
-                type="button"
-                onClick={() => void handleCopyId()}
-                className="inline-flex min-h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
-                title={tCommon('copy')}
-              >
-                {copiedField === 'id' ? (
-                  <Check className="h-3 w-3 text-success-600" />
-                ) : (
-                  <Copy className="h-3 w-3 text-slate-500" />
-                )}
-                <span>
-                  {copiedField === 'id' ? tCommon('copied') : tCommon('copy')}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => void handleCopyLink()}
-                className="inline-flex min-h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
-                title={tBooking('bulkResultCopyLink')}
-              >
-                {copiedField === 'link' ? (
-                  <Check className="h-3 w-3 text-success-600" />
-                ) : (
-                  <Link2 className="h-3 w-3 text-secondary-600" />
-                )}
-                <span>
-                  {copiedField === 'link'
-                    ? tCommon('copied')
-                    : tBooking('bulkResultCopyLink')}
-                </span>
-              </button>
-
-              <Link
-                href={`/bookings/${order.id}`}
-                className="inline-flex min-h-8 items-center gap-1 rounded-lg bg-secondary-50 border border-secondary-200/80 px-2.5 py-1 text-[11px] font-bold text-secondary-700 hover:bg-secondary-100 transition"
-              >
-                <span>{tCommon('viewDetails')}</span>
-                <ExternalLink className="h-3 w-3" />
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-start gap-2 rounded-xl border border-danger-200 bg-danger-50 px-3 py-2 text-xs text-danger-800">
-            <AlertCircle className="h-4 w-4 text-danger-600 shrink-0 mt-0.5" />
-            <span>{item.error || 'Failed to create order'}</span>
-          </div>
-        )}
+        <BulkOrderResultTrackingBox
+          order={order}
+          error={item.error}
+          copiedField={copiedField}
+          onCopyId={() => void handleCopyId()}
+          onCopyLink={() => void handleCopyLink()}
+        />
 
         {/* Footer Preview: First Stop Summary + Expand Stops Toggle */}
         <div className="flex items-center justify-between gap-2 pt-0.5 text-xs">

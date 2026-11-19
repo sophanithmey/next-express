@@ -11,6 +11,7 @@ import {
   getTodayDateKey,
 } from '../services/booking-date-filter';
 import { cn } from '@/lib/cn';
+import { BookingDateCustomPopover } from './booking-date-custom-popover';
 
 interface BookingDatePresetFilterProps {
   value: BookingDatePreset;
@@ -32,7 +33,6 @@ export function BookingDatePresetFilter({
   disabled = false,
 }: BookingDatePresetFilterProps) {
   const tHistory = useTranslations('BookingHistory');
-  const tCommon = useTranslations('Common');
   const locale = useLocale();
   const [isOpen, setIsOpen] = useState(false);
   const [showCustomInputs, setShowCustomInputs] = useState(value === 'custom');
@@ -161,50 +161,14 @@ export function BookingDatePresetFilter({
           </div>
 
           {showCustomInputs && (
-            <div className="mt-2 space-y-2.5 border-t border-slate-100 pt-2.5 px-1.5 pb-1">
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                    {tHistory('dateFrom')}
-                  </label>
-                  <input
-                    type="date"
-                    value={draftStart}
-                    onChange={(e) => setDraftStart(e.target.value)}
-                    className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50/70 px-2 text-xs text-slate-900 focus:border-secondary-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary-500/20"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                    {tHistory('dateTo')}
-                  </label>
-                  <input
-                    type="date"
-                    value={draftEnd}
-                    onChange={(e) => setDraftEnd(e.target.value)}
-                    className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50/70 px-2 text-xs text-slate-900 focus:border-secondary-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-secondary-500/20"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  className="h-7 rounded-lg px-2.5 text-xs font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition cursor-pointer"
-                >
-                  {tCommon('cancel')}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleApplyCustom}
-                  disabled={!draftStart && !draftEnd}
-                  className="h-7 rounded-lg bg-primary-500 hover:bg-primary-600 disabled:opacity-50 px-3 text-xs font-bold text-slate-950 transition cursor-pointer shadow-2xs"
-                >
-                  {tHistory('applyDateRange')}
-                </button>
-              </div>
-            </div>
+            <BookingDateCustomPopover
+              draftStart={draftStart}
+              draftEnd={draftEnd}
+              onChangeStart={setDraftStart}
+              onChangeEnd={setDraftEnd}
+              onApply={handleApplyCustom}
+              onCancel={() => setIsOpen(false)}
+            />
           )}
         </div>
       )}

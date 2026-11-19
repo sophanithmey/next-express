@@ -1,24 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
-import {
-  BulkOrderDraft,
-  ParsedBulkOrder,
-  parseBulkOrderText,
-  convertOrdersToBulkDrafts,
-  downloadSampleCsvTemplate,
-  downloadSampleXlsxTemplate,
-  parseBulkOrderFile,
-  SAMPLE_BULK_CSV,
-} from '@/features/booking/services/bulk-order-parser';
+import React from 'react';
+import { BulkOrderDraft } from '@/features/booking/services/bulk-order-parser';
+import { useBulkUploadModal } from '@/features/booking/hooks/use-bulk-upload-modal';
 import { Button } from '../atoms/button';
 import { BulkOrderPreviewTable } from '../molecules/bulk-order-preview-table';
+import { BulkUploadModalToolbar } from '../molecules/bulk-upload-modal-toolbar';
 import {
   MAX_BULK_ORDERS,
   MAX_STOPS_PER_BULK_ORDER,
   MAX_TOTAL_COD_USD,
 } from '@/lib/constants';
-import { X, Package, Download, Zap, UploadCloud, Info, AlertCircle } from 'lucide-react';
+import { X, Package, Info, AlertCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface BulkUploadOrderModalProps {
@@ -34,48 +27,21 @@ export function BulkUploadOrderModal({
 }: BulkUploadOrderModalProps) {
   const tBooking = useTranslations('Booking');
   const tCommon = useTranslations('Common');
-  const [inputText, setInputText] = useState('');
-  const [parsedOrders, setParsedOrders] = useState<ParsedBulkOrder[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
+
+  const {
+    inputText,
+    parsedOrders,
+    isUploading,
+    importOrderCount,
+    totalStopCount,
+    codOverLimitOrders,
+    handleTextChange,
+    handleLoadSample,
+    handleFileUpload,
+    handleImport,
+  } = useBulkUploadModal({ onApplyOrders, onClose });
 
   if (!isOpen) return null;
-
-  const handleTextChange = (text: string) => {
-    setInputText(text);
-    setParsedOrders(parseBulkOrderText(text));
-  };
-
-  const handleLoadSample = () => handleTextChange(SAMPLE_BULK_CSV);
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      setIsUploading(true);
-      const text = await parseBulkOrderFile(file);
-      handleTextChange(text);
-    } finally {
-      setIsUploading(false);
-      e.target.value = '';
-    }
-  };
-
-  const importableOrders = parsedOrders
-    .filter((o) => !o.exceedsOrderLimit && o.validStopCount > 0)
-    .slice(0, MAX_BULK_ORDERS);
-  const importOrderCount = importableOrders.length;
-  const totalStopCount = importableOrders.reduce(
-    (sum, o) => sum + o.validStopCount,
-    0,
-  );
-  const codOverLimitOrders = importableOrders.filter((o) => o.isCodOverLimit);
-
-  const handleImport = () => {
-    if (importOrderCount === 0) return;
-    const drafts = convertOrdersToBulkDrafts(importableOrders);
-    onApplyOrders(drafts);
-    onClose();
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs animate-in fade-in select-none">
@@ -122,45 +88,11 @@ export function BulkUploadOrderModal({
         </div>
 
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-6 py-3 border-b border-slate-100 bg-slate-50/40 text-xs">
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => void downloadSampleXlsxTemplate()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 font-bold text-emerald-800 shadow-2xs transition cursor-pointer"
-            >
-              <Download className="h-3.5 w-3.5 text-emerald-600" />
-              <span>{tBooking('bulkDownloadXlsx')}</span>
-            </button>
-            <button
-              type="button"
-              onClick={downloadSampleCsvTemplate}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 font-bold text-slate-700 shadow-2xs transition cursor-pointer"
-            >
-              <Download className="h-3.5 w-3.5 text-slate-500" />
-              <span>{tBooking('bulkDownloadCsv')}</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleLoadSample}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 font-bold text-amber-800 shadow-2xs transition cursor-pointer"
-            >
-              <Zap className="h-3.5 w-3.5 text-amber-600" />
-              <span>{tBooking('bulkLoadSample')}</span>
-            </button>
-          </div>
-          <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary-300 bg-primary-50 hover:bg-primary-100 font-bold text-primary-950 shadow-2xs transition cursor-pointer">
-            <UploadCloud className="h-3.5 w-3.5 text-amber-700" />
-            <span>{isUploading ? tCommon('loading') : tBooking('bulkUploadFile')}</span>
-            <input
-              type="file"
-              accept=".xlsx,.xls,.csv,.txt"
-              onChange={handleFileUpload}
-              disabled={isUploading}
-              className="hidden"
-            />
-          </label>
-        </div>
+        <BulkUploadModalToolbar
+          isUploading={isUploading}
+          onLoadSample={handleLoadSample}
+          onFileUpload={handleFileUpload}
+        />
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">

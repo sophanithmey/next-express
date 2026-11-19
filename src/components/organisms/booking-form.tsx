@@ -16,17 +16,12 @@ import { DropoffSection } from './booking-sections/dropoff-section';
 import { DeliveryOptionsSection } from './booking-sections/delivery-options-section';
 import { ParcelCodSection } from './booking-sections/parcel-cod-section';
 import { BookingHorizontalForm } from './booking-horizontal-form';
-import { LocationPickerModal } from '../molecules/location-picker-modal';
 import { SavedLocationItem } from '../molecules/location-picker-saved-list';
 import { CreateSavedLocationInput } from '@/features/booking/schemas/location-schema';
 import { StickyBookingActionBar } from '../molecules/sticky-booking-action-bar';
 import { BookingLayoutMode } from '../molecules/booking-layout-switcher';
+import { BookingFormMapModal } from '../molecules/booking-form-map-modal';
 import { getSpeedOptionFees } from '@/features/booking/services/pricing-service';
-import {
-  applyConfirmedDropoffLocation,
-  applyConfirmedPickupLocation,
-} from '@/features/booking/services/booking-location-helper';
-import { useTranslations } from 'next-intl';
 
 interface BookingFormProps {
   formData: BookingFormData;
@@ -71,8 +66,6 @@ export function BookingForm({
   onSaveDraft,
   isSavingDraft = false,
 }: BookingFormProps) {
-  const tPickup = useTranslations('Pickup');
-  const tRecipient = useTranslations('Recipient');
   const [modalMode, setModalMode] = useState<'pickup' | 'dropoff' | null>(null);
   const [activeStopIndex, setActiveStopIndex] = useState(0);
 
@@ -172,48 +165,16 @@ export function BookingForm({
       </form>
 
       {/* Map selection dialog */}
-      <LocationPickerModal
-        isOpen={modalMode !== null}
+      <BookingFormMapModal
+        modalMode={modalMode}
+        activeStopIndex={activeStopIndex}
         onClose={() => setModalMode(null)}
-        title={
-          modalMode === 'pickup'
-            ? tPickup('selectLocation')
-            : tRecipient('destinationIndex', { index: activeStopIndex + 1 })
-        }
-        selectedAddress={
-          modalMode === 'pickup'
-            ? formData.pickup.address
-            : formData.dropoffs?.[activeStopIndex]?.dropoff.address ||
-              formData.dropoff.address
-        }
-        initialCoords={
-          modalMode === 'pickup'
-            ? formData.pickup.coordinates
-            : formData.dropoffs?.[activeStopIndex]?.dropoff.coordinates ||
-              formData.dropoff.coordinates
-        }
+        formData={formData}
         savedLocations={savedLocations}
-        defaultContact={modalMode === 'pickup' ? formData.pickup.senderPhone || '' : ''}
         onCreateLocation={onCreateLocation}
-        onSelect={(loc) => {
-          if (modalMode === 'pickup') {
-            onChangePickup(applyConfirmedPickupLocation(formData.pickup, loc));
-            return;
-          }
-          const { nextDropoffs, primaryDropoffToSync } =
-            applyConfirmedDropoffLocation({
-              dropoffs: formData.dropoffs,
-              fallbackDropoff: formData.dropoff,
-              activeStopIndex,
-              selected: loc,
-            });
-          if (nextDropoffs) {
-            onChangeDropoffs?.(nextDropoffs);
-          }
-          if (primaryDropoffToSync) {
-            onChangeDropoff(primaryDropoffToSync);
-          }
-        }}
+        onChangePickup={onChangePickup}
+        onChangeDropoff={onChangeDropoff}
+        onChangeDropoffs={onChangeDropoffs}
       />
     </>
   );

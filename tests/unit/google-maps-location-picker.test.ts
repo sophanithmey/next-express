@@ -227,7 +227,9 @@ describe('Google Maps Location Picker Suite', () => {
       Map: vi.fn(),
       Geocoder: vi.fn(),
       marker: {
-        AdvancedMarkerElement: vi.fn(() => advMarkerInstance),
+        AdvancedMarkerElement: vi.fn(function () {
+          return advMarkerInstance;
+        }),
       },
     } as unknown as GoogleMapsNamespace;
 
@@ -251,19 +253,21 @@ describe('Google Maps Location Picker Suite', () => {
       Map: vi.fn(),
       Geocoder: vi.fn(),
       marker: {
-        AdvancedMarkerElement: vi.fn(() => {
+        AdvancedMarkerElement: vi.fn(function () {
           throw new Error('Map ID missing');
         }),
       },
-      Marker: vi.fn(() => ({
-        setPosition: classicSetPos,
-        setMap: vi.fn(),
-        getPosition: () => ({ lat: () => 11.58, lng: () => 104.9 }),
-        addListener: vi.fn((_ev: string, cb: NonNullable<typeof callbacks.classicDrag>) => {
-          callbacks.classicDrag = cb;
-          return { remove: vi.fn() };
-        }),
-      })),
+      Marker: vi.fn(function () {
+        return {
+          setPosition: classicSetPos,
+          setMap: vi.fn(),
+          getPosition: () => ({ lat: () => 11.58, lng: () => 104.9 }),
+          addListener: vi.fn((_ev: string, cb: NonNullable<typeof callbacks.classicDrag>) => {
+            callbacks.classicDrag = cb;
+            return { remove: vi.fn() };
+          }),
+        };
+      }),
     } as unknown as GoogleMapsNamespace;
 
     const classicHandle = createDraggableMarker(
