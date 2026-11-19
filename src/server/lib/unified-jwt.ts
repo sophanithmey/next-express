@@ -186,4 +186,3 @@ export function computeExpiresInSeconds(
   }
   return undefined;
 }
-

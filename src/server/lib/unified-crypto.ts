@@ -41,4 +41,3 @@ export function encryptUnifiedPassword(
   );
   return encrypted.toString('base64');
 }
-

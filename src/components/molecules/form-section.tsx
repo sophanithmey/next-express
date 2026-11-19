@@ -27,7 +27,7 @@ export function FormSection({
   return (
     <section className="rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-2xs space-y-4">
       <div className="flex items-center justify-between border-b border-slate-100 pb-3 gap-2">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 min-w-0">
           <div
             className={cn(
               'flex h-8 w-8 items-center justify-center rounded-xl text-xs font-bold transition shadow-2xs shrink-0',
@@ -36,14 +36,14 @@ export function FormSection({
           >
             {icon || number}
           </div>
-          <div>
-            <h2 className={cn('text-sm font-bold tracking-tight', titleClassName || 'text-slate-900')}>
+          <div className="min-w-0">
+            <h2 className={cn('text-sm font-bold tracking-tight truncate', titleClassName || 'text-slate-900')}>
               {title}
             </h2>
-            {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+            {subtitle && <p className="text-xs text-slate-500 mt-0.5 truncate">{subtitle}</p>}
           </div>
         </div>
-        {action && <div>{action}</div>}
+        {action && <div className="shrink-0">{action}</div>}
       </div>
 
       <div className="space-y-4">{children}</div>

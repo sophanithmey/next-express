@@ -83,4 +83,3 @@ export function handleUnifiedAxiosError(
 
   throw new ConsumerApiError(fallbackMessage, 503);
 }
-

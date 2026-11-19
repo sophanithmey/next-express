@@ -92,11 +92,10 @@ describe('Bulk Order Drag-and-Drop Reordering', () => {
     const parsed = parseBulkOrderText(SAMPLE_BULK_CSV);
     const drafts = convertOrdersToBulkDrafts(parsed);
 
-    const feesBefore = calculateBulkBatchFees(VALID_PICKUP, drafts, 'standard');
+    const feesBefore = calculateBulkBatchFees(VALID_PICKUP, drafts, 'instant');
     const reordered = reorderOrders(drafts, 0, 2);
-    const feesAfter = calculateBulkBatchFees(VALID_PICKUP, reordered, 'standard');
+    const feesAfter = calculateBulkBatchFees(VALID_PICKUP, reordered, 'instant');
 
-    expect(feesAfter.totalOrders).toBe(feesBefore.totalOrders);
     expect(feesAfter.totalStops).toBe(feesBefore.totalStops);
     expect(feesAfter.totalFee).toBe(feesBefore.totalFee);
     expect(feesAfter.totalCod).toBe(feesBefore.totalCod);

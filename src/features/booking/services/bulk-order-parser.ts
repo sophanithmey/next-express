@@ -5,6 +5,7 @@ import {
 } from '../types/booking-types';
 import {
   MAX_BULK_ORDERS,
+  MAX_DROPOFF_STOPS,
   MAX_STOPS_PER_BULK_ORDER,
   MAX_TOTAL_COD_USD,
 } from '@/lib/constants';
@@ -581,4 +582,89 @@ export async function parseBulkOrderFile(file: File): Promise<string> {
     reader.onerror = () => reject(new Error('Failed to read file'));
     reader.readAsText(file);
   });
+}
+
+export const SAMPLE_DROPOFF_ROWS = [
+  ['Recipient Name', 'Recipient Phone', 'Drop-off Address', 'COD Amount', 'Delivery Note'],
+  ['Sokha Chan', '012345678', 'St 310 BKK1 Khan Boeng Keng Kang Phnom Penh', 25, 'Leave with security'],
+  ['Dara Vong', '098112233', '11.5564, 104.9282', 18.5, 'Call before arriving'],
+  ['Vanna Ros', '077445566', 'Street 271 Toul Kork Phnom Penh', 0, 'Yellow gate'],
+];
+
+export const SAMPLE_DROPOFF_CSV = SAMPLE_DROPOFF_ROWS.map((r) => r.join(',')).join('\n');
+
+/**
+ * Downloads a sample CSV template for multi-drop delivery destinations.
+ */
+export function downloadSampleDropoffCsvTemplate(): void {
+  const blob = new Blob([SAMPLE_DROPOFF_CSV], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'wingexpress-dropoff-stops-template.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Downloads a sample Excel (.xlsx) template for multi-drop delivery destinations.
+ */
+export async function downloadSampleDropoffXlsxTemplate(): Promise<void> {
+  const XLSX = await import('xlsx');
+  const ws = XLSX.utils.aoa_to_sheet(SAMPLE_DROPOFF_ROWS);
+  ws['!cols'] = [{ wch: 18 }, { wch: 18 }, { wch: 42 }, { wch: 14 }, { wch: 28 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Dropoff Stops');
+  XLSX.writeFile(wb, 'wingexpress-dropoff-stops-template.xlsx');
+}
+
+/**
+ * Parses drop-off stops from spreadsheet text (capped at MAX_DROPOFF_STOPS = 5).
+ */
+export function parseDropoffStopsFromText(text: string): DropoffStop[] {
+  const parsedOrders = parseBulkOrderText(text);
+  const allStops: DropoffStop[] = [];
+  let stopCounter = 1;
+
+  for (const order of parsedOrders) {
+    for (const s of order.stops) {
+      if (allStops.length >= MAX_DROPOFF_STOPS) break;
+      allStops.push({
+        id: createUniqueId('stop'),
+        recipient: {
+          name: s.recipientName || '',
+          phoneNumber: s.phoneNumber || '',
+          notes: s.note || '',
+        },
+        dropoff: {
+          address: s.address || '',
+          coordinates: s.coordinates || {
+            lat: 11.5512 + stopCounter * 0.005,
+            lng: 104.9256 + stopCounter * 0.005,
+          },
+        },
+        codAmount: typeof s.codAmount === 'number' && s.codAmount > 0 ? s.codAmount : 0,
+      });
+      stopCounter++;
+    }
+    if (allStops.length >= MAX_DROPOFF_STOPS) break;
+  }
+
+  return allStops;
+}
+
+/**
+ * Parses drop-off stops from an Excel or CSV file.
+ */
+export async function parseDropoffStopsFromFile(file: File): Promise<{
+  stops: DropoffStop[];
+  totalParsed: number;
+}> {
+  const text = await parseBulkOrderFile(file);
+  const parsedOrders = parseBulkOrderText(text);
+  const totalParsed = parsedOrders.reduce((sum, o) => sum + o.stops.length, 0);
+  const stops = parseDropoffStopsFromText(text);
+  return { stops, totalParsed };
 }
