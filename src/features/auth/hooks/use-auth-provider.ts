@@ -7,6 +7,13 @@ import { authApiService, SessionStateResponse } from '../services/auth-api-servi
 import { AuthContextValue, UserProfile } from '../types/auth-types';
 import { authKeys } from './auth-keys';
 
+import { HAS_SESSION_COOKIE_NAME } from '@/lib/constants';
+
+function hasClientSessionCookie(): boolean {
+  if (typeof document === 'undefined') return false;
+  return document.cookie.includes(`${HAS_SESSION_COOKIE_NAME}=1`);
+}
+
 /**
  * Manages authentication session queries, login/logout state, and auth modal callbacks.
  */
@@ -21,17 +28,22 @@ export function useAuthProvider(initialUser: UserProfile | null = null) {
   const sessionQuery = useQuery<SessionStateResponse>({
     queryKey: authKeys.session(),
     queryFn: () => authApiService.getSession(),
-    initialData: {
-      isAuthenticated: initialUser !== null,
-      user: initialUser,
-    },
+    initialData: initialUser
+      ? {
+          isAuthenticated: true,
+          user: initialUser,
+        }
+      : undefined,
     staleTime: 60_000,
   });
 
-  const user = sessionQuery.data?.user ?? null;
+  const user = sessionQuery.data?.user ?? initialUser ?? null;
 
   const login = useCallback(
     (newUser: UserProfile) => {
+      if (typeof document !== 'undefined') {
+        document.cookie = `${HAS_SESSION_COOKIE_NAME}=1; path=/; max-age=604800; SameSite=Lax`;
+      }
       queryClient.setQueryData<SessionStateResponse>(authKeys.session(), {
         isAuthenticated: true,
         user: newUser,
@@ -46,6 +58,9 @@ export function useAuthProvider(initialUser: UserProfile | null = null) {
   const logoutMutation = useMutation({
     mutationFn: () => authApiService.logout(),
     onSettled: () => {
+      if (typeof document !== 'undefined') {
+        document.cookie = `${HAS_SESSION_COOKIE_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+      }
       queryClient.setQueryData<SessionStateResponse>(authKeys.session(), {
         isAuthenticated: false,
         user: null,

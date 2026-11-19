@@ -1,35 +1,41 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { Button } from '@/components/atoms/button';
-import { AlertCircle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { SystemStatusPage } from '@/components/system-status/system-status-page';
+import { SystemStatusVariant } from '@/components/system-status/types';
 
-export default function ErrorPage({
-  error,
-  reset,
-}: {
+interface ErrorPageProps {
   error: Error & { digest?: string };
   reset: () => void;
-}) {
+}
+
+export default function ErrorPage({ error, reset }: ErrorPageProps) {
+  const [variant, setVariant] = useState<SystemStatusVariant>('500');
+
   useEffect(() => {
-    console.error('Application Error:', error);
+    // Determine whether this was likely a network / offline connectivity error
+    const isNetwork =
+      typeof navigator !== 'undefined' &&
+      (!navigator.onLine ||
+        error.message?.toLowerCase().includes('network') ||
+        error.message?.toLowerCase().includes('failed to fetch'));
+
+    if (isNetwork) {
+      setVariant('network');
+    } else {
+      setVariant('500');
+    }
   }, [error]);
 
   return (
-    <div className='flex min-h-[60vh] flex-col items-center justify-center p-6 text-center'>
-      <div className='flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 mb-4'>
-        <AlertCircle className='h-6 w-6' />
-      </div>
-      <h2 className='text-lg font-bold text-slate-900'>Something went wrong</h2>
-      <p className='mt-1 max-w-md text-xs text-slate-500'>
-        An unexpected error occurred while loading this view. You can safely try
-        again.
-      </p>
-      <div className='mt-5'>
-        <Button variant='primary' size='sm' onClick={() => reset()}>
-          Try Again
-        </Button>
-      </div>
-    </div>
+    <main className="flex min-h-[calc(100vh-140px)] flex-1 items-center justify-center py-8">
+      <SystemStatusPage
+        variant={variant}
+        errorId={error.digest}
+        onRetry={reset}
+        primaryActionHref="/"
+        showSupport={true}
+      />
+    </main>
   );
 }

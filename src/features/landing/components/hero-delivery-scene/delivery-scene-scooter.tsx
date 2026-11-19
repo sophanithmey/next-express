@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 
 function AnimatedScooterWheel({ cx, cy }: { cx: number; cy: number }) {

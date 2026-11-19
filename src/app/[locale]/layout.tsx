@@ -1,20 +1,35 @@
 import type { Metadata } from 'next';
 import '../globals.css';
+import { Poppins, Kantumruy_Pro } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing, Locale } from '@/i18n/routing';
 import { QueryProvider } from '@/lib/query/query-provider';
 import { AuthProvider } from '@/features/auth/components/auth-provider';
-import { authServerService } from '@/server/services/auth-server-service';
 import { AppHeader } from '@/components/organisms/app-header';
 import { ToastProvider } from '@/components/atoms/toast-provider';
+import { authServerService } from '@/server/services/auth-server-service';
 import {
   DEFAULT_SEO_DESCRIPTION,
   DEFAULT_SEO_IMAGE,
   DEFAULT_SEO_TITLE,
   resolveMetadataBase,
 } from '@/lib/seo';
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-poppins',
+  display: 'swap',
+});
+
+const kantumruyPro = Kantumruy_Pro({
+  subsets: ['khmer', 'latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-khmer',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   metadataBase: resolveMetadataBase(),
@@ -70,7 +85,7 @@ export default async function LocaleLayout({
   const user = await authServerService.getCurrentUser().catch(() => null);
 
   return (
-    <html lang={locale}>
+    <html lang={locale} className={`${poppins.variable} ${kantumruyPro.variable}`}>
       <body className="min-h-screen bg-slate-50 antialiased flex flex-col font-sans">
         <NextIntlClientProvider messages={messages} locale={locale}>
           <QueryProvider>

@@ -66,14 +66,27 @@ export function assertSameOriginRequest(request: Request): NextResponse | null {
   return null;
 }
 
+const MAX_REQUEST_BODY_BYTES = 1024 * 1024; // 1 MB limit for incoming JSON bodies
+
 /**
  * Parses and validates JSON request bodies with a Zod schema.
+ * Rejects payloads exceeding the 1 MB size limit with a 413 status code.
  */
 export async function parseRequestBody<TSchema extends ZodTypeAny>(
   request: Request,
   schema: TSchema,
   fallbackError = 'Validation failed',
 ): Promise<{ data: z.output<TSchema> } | { errorResponse: NextResponse }> {
+  const contentLength = Number(request.headers.get('content-length') || '0');
+  if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_BODY_BYTES) {
+    return {
+      errorResponse: NextResponse.json(
+        { message: 'Request payload exceeds the 1 MB limit', code: 'PAYLOAD_TOO_LARGE' },
+        { status: 413 },
+      ),
+    };
+  }
+
   const rawBody: unknown = await request.json().catch(() => ({}));
   const parsed = schema.safeParse(rawBody);
   if (!parsed.success) {

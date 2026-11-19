@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import { MapPin, CreditCard, Radar } from 'lucide-react';

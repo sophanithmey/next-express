@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import { DeliverySceneHouse } from './hero-delivery-scene/delivery-scene-house';
 import { DeliverySceneScooter } from './hero-delivery-scene/delivery-scene-scooter';

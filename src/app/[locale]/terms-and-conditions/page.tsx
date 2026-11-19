@@ -1,5 +1,7 @@
-import TermsOfUsePage, { generateMetadata } from '../terms-of-use/page';
+import TermsOfUsePage, {
+  generateMetadata,
+  generateStaticParams,
+} from '../terms-of-use/page';
 
-export { generateMetadata };
+export { generateMetadata, generateStaticParams };
 export default TermsOfUsePage;
-

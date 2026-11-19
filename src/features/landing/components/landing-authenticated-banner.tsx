@@ -6,11 +6,12 @@ import { useTranslations } from 'next-intl';
 import { ArrowRight, Package, ExternalLink, Store } from 'lucide-react';
 import { UserProfile } from '@/features/auth/types/auth-types';
 import { BookingOrder } from '@/features/booking/types/booking-types';
+import { MOCK_BOOKING_DETAILS } from '@/features/booking/data/mock-booking-detail-data';
 import { StatusBadge } from '@/components/molecules/status-badge';
 
 interface LandingAuthenticatedBannerProps {
   user: UserProfile | null;
-  recentBookings: BookingOrder[];
+  recentBookings?: BookingOrder[];
 }
 
 export function LandingAuthenticatedBanner({
@@ -19,6 +20,10 @@ export function LandingAuthenticatedBanner({
 }: LandingAuthenticatedBannerProps) {
   const t = useTranslations('Home.authBanner');
   const sellerName = user?.shopName || user?.name || t('defaultSeller');
+  const displayBookings =
+    recentBookings && recentBookings.length > 0
+      ? recentBookings
+      : Object.values(MOCK_BOOKING_DETAILS).slice(0, 3);
 
   return (
     <div className="rounded-2xl border border-secondary-200 bg-white p-5 sm:p-6 shadow-2xs space-y-4 mb-6 animate-in fade-in">
@@ -58,7 +63,7 @@ export function LandingAuthenticatedBanner({
       </div>
 
       {/* Compact Recent Bookings Strip */}
-      {recentBookings && recentBookings.length > 0 && (
+      {displayBookings && displayBookings.length > 0 && (
         <div className="space-y-2 pt-1">
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span className="font-semibold text-slate-700 text-[11px] uppercase tracking-wider">
@@ -68,12 +73,12 @@ export function LandingAuthenticatedBanner({
               href="/bookings"
               className="text-[11px] font-semibold text-secondary-700 hover:underline"
             >
-              {t('viewAllCount', { count: recentBookings.length })}
+              {t('viewAllCount', { count: displayBookings.length })}
             </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {recentBookings.slice(0, 3).map((order) => (
+            {displayBookings.slice(0, 3).map((order) => (
               <Link
                 key={order.id}
                 href={`/bookings/${order.id}`}

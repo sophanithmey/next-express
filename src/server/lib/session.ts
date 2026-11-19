@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { EncryptJWT, jwtDecrypt } from 'jose';
 import { DEFAULT_DEV_SESSION_SECRET, getServerEnv } from './env';
 import { SessionData, UserProfile } from '@/features/auth/types/auth-types';
-import { SESSION_COOKIE_NAME } from '@/lib/constants';
+import { HAS_SESSION_COOKIE_NAME, SESSION_COOKIE_NAME } from '@/lib/constants';
 
 let cachedKey: Uint8Array | null = null;
 let cachedSecretValue: string | null = null;
@@ -29,6 +29,18 @@ async function getEncryptionKey(): Promise<Uint8Array> {
   cachedKey = new Uint8Array(hashBuffer);
   cachedSecretValue = env.sessionSecret;
   return cachedKey;
+}
+
+function isSecureCookieContext(): boolean {
+  if (process.env.SESSION_SECURE_COOKIE === 'false') return false;
+  if (process.env.SESSION_SECURE_COOKIE === 'true') return true;
+  if (process.env.NODE_ENV !== 'production') return false;
+  // If deployed on Vercel or explicitly configured with an HTTPS URL, use Secure cookies
+  if (process.env.VERCEL || process.env.NEXT_PUBLIC_APP_URL?.startsWith('https://')) {
+    return true;
+  }
+  // Allow local production testing on http://localhost without browsers dropping insecure cookies
+  return false;
 }
 
 export const sessionService = {
@@ -58,10 +70,18 @@ export const sessionService = {
       .setExpirationTime(Math.floor(expiresAt / 1000))
       .encrypt(key);
 
+    const isSecure = isSecureCookieContext();
     const cookieStore = await cookies();
     cookieStore.set(SESSION_COOKIE_NAME, token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isSecure,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: data.expiresIn || 7 * 86400,
+    });
+    cookieStore.set(HAS_SESSION_COOKIE_NAME, '1', {
+      httpOnly: false,
+      secure: isSecure,
       sameSite: 'lax',
       path: '/',
       maxAge: data.expiresIn || 7 * 86400,
@@ -119,6 +139,6 @@ export const sessionService = {
   async clearSession(): Promise<void> {
     const cookieStore = await cookies();
     cookieStore.delete(SESSION_COOKIE_NAME);
+    cookieStore.delete(HAS_SESSION_COOKIE_NAME);
   },
 };
-

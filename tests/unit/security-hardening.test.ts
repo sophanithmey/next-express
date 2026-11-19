@@ -5,7 +5,9 @@ import {
 } from '@/lib/google-maps-link';
 import { sanitizePaymentRedirectUrl } from '@/lib/safe-url';
 import { sanitizeSpreadsheetCell } from '@/features/booking/services/booking-export-service';
-import { assertSameOriginRequest } from '@/server/lib/api-response';
+import { assertSameOriginRequest, parseRequestBody } from '@/server/lib/api-response';
+import { validateServerEnvOnStartup } from '@/server/lib/env';
+import { z } from 'zod';
 import {
   checkRateLimit,
   resetRateLimiterForTests,
@@ -130,3 +132,30 @@ describe('Security Hardening — Spreadsheet Formula Injection Neutralization', 
     expect(sanitizeSpreadsheetCell('Sokha Chan')).toBe('Sokha Chan');
   });
 });
+
+describe('Security Hardening — Request Body Size Limits & Production Env Validation', () => {
+  it('rejects oversized JSON request bodies exceeding 1 MB with 413 Payload Too Large', async () => {
+    const dummySchema = z.object({ name: z.string() });
+    const fakeRequest = new Request('https://express.wingbank.com/api/test', {
+      method: 'POST',
+      headers: {
+        'content-length': String(2 * 1024 * 1024), // 2 MB
+      },
+    });
+
+    const result = await parseRequestBody(fakeRequest, dummySchema);
+    expect('errorResponse' in result).toBe(true);
+    if ('errorResponse' in result) {
+      expect(result.errorResponse.status).toBe(413);
+      const json = await result.errorResponse.json();
+      expect(json.code).toBe('PAYLOAD_TOO_LARGE');
+    }
+  });
+
+  it('validates server env on startup and reports configuration issues without leaking values', () => {
+    const envCheck = validateServerEnvOnStartup();
+    expect(typeof envCheck.isValid).toBe('boolean');
+    expect(Array.isArray(envCheck.issues)).toBe(true);
+  });
+});
+

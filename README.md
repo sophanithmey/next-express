@@ -6,16 +6,18 @@ A high-performance, production-ready WingExpress Web Application engineered to m
 
 ## 1. Technology Stack
 
-- **Framework**: Next.js 15 App Router (React 19, TypeScript in strict mode)
-- **Architecture**: Backend-for-Frontend (BFF) with React Server Components & Route Handlers
+- **Framework**: Next.js 16 App Router (React 19, TypeScript in strict mode, Turbopack)
+- **Architecture**: Backend-for-Frontend (BFF) with React Server Components, Route Handlers & Proxy
 - **Styling**: Tailwind CSS (clean SaaS aesthetic, subtle borders, soft shadows, no `bg-gradient`)
 - **Forms & Validation**: React Hook Form, Zod
 - **Icons**: Lucide React
 - **Mapping & Geocoding**: Google Maps (with route preview, zone quick-select, coordinate parser & direct pin links)
 - **Session Security**: JWE (AES-256-GCM) encrypted HttpOnly cookies powered by `jose`
-- **Testing**: Vitest
+- **Testing**: Vitest (194 tests across 35 test suites)
+- **Linting**: ESLint 9 with Flat Config (`eslint.config.mjs`)
 - **Package Management**: Yarn managed via Corepack and NVM
 - **Target Deployment**: Vercel
+- **Security & Modernization Audits**: Documented in `docs/` (`modernization-audit.md`, `security-audit.md`, `migration-report.md`)
 
 ---
 
@@ -129,16 +131,12 @@ All files and directories use **strict kebab-case** naming:
 
 ---
 
-## 7. Testing & Build
+## 8. Documentation & Production Guides
 
-```bash
-# Run automated test suite (schemas, pricing math, encryption, API adapters)
-yarn test
+Full project documentation is available in the [`docs/`](./docs) folder:
 
-# Create optimized production build
-yarn build
-
-# Start production server
-yarn start
-```
+- [Production Readiness & Deployment Guide](./docs/production-readiness-guide.md): What to add, remove, and configure for live production deployment.
+- [Performance Optimization Report](./docs/performance-optimization-report.md): Core Web Vitals analysis, TTFB reduction, and Server Component architecture.
+- [Security Audit Report](./docs/security-audit.md): Production security boundaries, JWE session tokens, CSRF protection, and rate limiting.
+- [Next.js Migration Report](./docs/migration-report.md): Migration from Next.js 15 to Next.js 16.4.6 with Turbopack and React 19.
 
