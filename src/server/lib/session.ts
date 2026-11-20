@@ -1,4 +1,5 @@
 import 'server-only';
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { EncryptJWT, jwtDecrypt } from 'jose';
 import { DEFAULT_DEV_SESSION_SECRET, getServerEnv } from './env';
@@ -127,11 +128,12 @@ export const sessionService = {
 
   /**
    * Returns current user without exposing any access token.
+   * Cached at request-level via React cache() to prevent redundant JWT decryption in RSC.
    */
-  async getCurrentUser(): Promise<UserProfile | null> {
-    const session = await this.getSession();
+  getCurrentUser: cache(async function (): Promise<UserProfile | null> {
+    const session = await sessionService.getSession();
     return session ? session.user : null;
-  },
+  }),
 
   /**
    * Clears the encrypted session cookie.

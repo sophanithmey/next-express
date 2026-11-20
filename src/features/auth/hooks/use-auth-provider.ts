@@ -28,12 +28,10 @@ export function useAuthProvider(initialUser: UserProfile | null = null) {
   const sessionQuery = useQuery<SessionStateResponse>({
     queryKey: authKeys.session(),
     queryFn: () => authApiService.getSession(),
-    initialData: initialUser
-      ? {
-          isAuthenticated: true,
-          user: initialUser,
-        }
-      : undefined,
+    initialData: {
+      isAuthenticated: Boolean(initialUser),
+      user: initialUser,
+    },
     staleTime: 60_000,
   });
 

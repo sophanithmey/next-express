@@ -5,6 +5,7 @@ export const routing = defineRouting({
   locales: ['en', 'km'],
   defaultLocale: 'en',
   localePrefix: 'as-needed',
+  localeDetection: false,
 });
 
 export type Locale = (typeof routing.locales)[number];
